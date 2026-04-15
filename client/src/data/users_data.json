@@ -1,0 +1,189 @@
+[
+    {
+      "_id": "user001",
+      "name": "Alice Johnson",
+      "company": "TechNova",
+      "email": "alice@technova.com",
+      "phone": "555-1011",
+      "address": "123 Innovation Rd",
+      "postal": "90001",
+      "city": "Los Angeles",
+      "country": "USA",
+      "role": "client",
+      "status": "Active",
+      "lastLogin": "2026-09-22T09:15:00Z",
+      "createdAt": "2025-01-01T12:00:00Z",
+      "updatedAt": "2025-09-01T09:00:00Z",
+      "rentals": [
+        {
+          "_id": "rental001",
+          "payId": "pay001",
+          "nTva": "US123456",
+          "duration": 86,
+          "startDate": "2025-09-23",
+          "message": "Yearly plan",
+          "status": "Active",
+          "deductionAuto": true,
+          "nextBillingDate": "2026-12-18",
+          "createdAt": "2025-01-01T12:00:00Z",
+          "updatedAt": "2025-09-23T09:00:00Z",
+          "registrations": [
+            {
+              "_id": "reg001",
+              "computerName": "Alice-PC",
+              "computerCode": "A1B2C3",
+              "authCode": "AUTH001",
+              "expirationDate": "2026-01-01",
+              "createdAt": "2026-01-01T12:00:00Z",
+              "updatedAt": "2026-09-01T09:00:00Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "user002",
+      "name": "Bob Smith",
+      "company": "SoftReach",
+      "email": "bob@softreach.com",
+      "phone": "555-2022",
+      "address": "456 Business Ave",
+      "postal": "94016",
+      "city": "San Francisco",
+      "country": "USA",
+      "role": "client",
+      "status": "Active",
+      "lastLogin": "2025-09-20T08:00:00Z",
+      "createdAt": "2025-02-15T12:00:00Z",
+      "updatedAt": "2025-08-20T10:00:00Z",
+      "rentals": [
+        {
+          "_id": "rental002",
+          "payId": "pay002",
+          "nTva": "US987654",
+          "duration": 6,
+          "startDate": "2025-03-01",
+          "message": "6-days plan",
+          "status": "Expired",
+          "deductionAuto": false,
+          "nextBillingDate": "2025-09-01",
+          "createdAt": "2025-03-01T09:00:00Z",
+          "updatedAt": "2025-09-01T09:00:00Z",
+          "registrations": [
+            {
+              "_id": "reg002",
+              "computerName": "Bob-Laptop",
+              "computerCode": "B4D5E6",
+              "authCode": "AUTH002",
+              "expirationDate": "2025-09-01",
+              "createdAt": "2025-03-01T09:00:00Z",
+              "updatedAt": "2025-08-01T09:00:00Z"
+            },
+            {
+              "_id": "reg003",
+              "computerName": "Bob-Tablet",
+              "computerCode": "T7Y8U9",
+              "authCode": "AUTH003",
+              "expirationDate": "2025-07-01",
+              "createdAt": "2025-03-15T09:00:00Z",
+              "updatedAt": "2025-07-01T09:00:00Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_id": "user003",
+      "name": "Clara Davis",
+      "company": "NextLevel",
+      "email": "clara@nextlevel.com",
+      "phone": "555-3033",
+      "address": "789 Growth St",
+      "postal": "33101",
+      "city": "Miami",
+      "country": "USA",
+      "role": "client",
+      "status": "Active",
+      "lastLogin": "2025-09-21T10:45:00Z",
+      "createdAt": "2025-03-20T11:00:00Z",
+      "updatedAt": "2025-09-01T09:00:00Z",
+      "rentals": []
+    },
+    {
+      "_id": "user004",
+      "name": "David Martinez",
+      "company": "Visionary Inc.",
+      "email": "david@visionary.com",
+      "phone": "555-4044",
+      "address": "321 Vision Blvd",
+      "postal": "60601",
+      "city": "Chicago",
+      "country": "USA",
+      "role": "admin",
+      "status": "Active",
+      "lastLogin": "2025-09-22T07:30:00Z",
+      "createdAt": "2024-12-01T12:00:00Z",
+      "updatedAt": "2025-08-15T12:00:00Z",
+      "rentals": []
+    },
+    {
+      "_id": "user005",
+      "name": "Eva Gomez",
+      "company": "CloudWorks",
+      "email": "eva@cloudworks.io",
+      "phone": "555-5055",
+      "address": "654 Server Way",
+      "postal": "75201",
+      "city": "Dallas",
+      "country": "USA",
+      "role": "client",
+      "status": "Active",
+      "lastLogin": "2025-09-23T09:00:00Z",
+      "createdAt": "2025-05-10T12:00:00Z",
+      "updatedAt": "2025-09-01T09:00:00Z",
+      "rentals": []
+    },  
+    {
+      "_id": "user006",
+      "name": "Frank Zhang",
+      "company": "AppCore",
+      "email": "frank@appcore.io",
+      "phone": "555-6066",
+      "address": "123 Startup St",
+      "postal": "02139",
+      "city": "Cambridge",
+      "country": "USA",
+      "role": "client",
+      "status": "Active",
+      "lastLogin": "2025-09-20T14:22:00Z",
+      "createdAt": "2025-04-15T08:00:00Z",
+      "updatedAt": "2025-08-10T08:00:00Z",
+      "rentals": [
+        {
+          "_id": "rental006",
+          "payId": "pay006",
+          "nTva": "US1237890",
+          "duration": 12,
+          "startDate": "2025-06-01",
+          "message": "Annual subscription",
+          "status": "Expired",
+          "deductionAuto": true,
+          "nextBillingDate": "2026-06-01",
+          "createdAt": "2025-06-01T10:00:00Z",
+          "updatedAt": "2025-09-01T09:00:00Z",
+          "registrations": [
+            {
+              "_id": "reg006",
+              "computerName": "Frank-WorkPC",
+              "computerCode": "FZ001",
+              "authCode": "AUTH006",
+              "expirationDate": "2026-06-01",
+              "createdAt": "2025-06-01T10:00:00Z",
+              "updatedAt": "2025-09-01T09:00:00Z"
+            }
+          ]
+        }
+      ]
+    }
+]
+  

@@ -1,0 +1,1293 @@
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import { useLanguage } from "@/lang/LanguageProvider";
+import { Lock, User } from "lucide-react";
+import { getUser } from "@/utils/auth";
+import { coupon, user, users, settings, tauxTva } from "@/data/mockData";
+import { toast } from "sonner";
+import apiClient from "@/services/api";
+import { useLocation } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import Loading from "../elements/Loading";
+import { Building, MapPin, Home, FileText } from "lucide-react";
+import countries from "@/data/countries.json";
+import NewUser from "../dashboard/NewUser";
+
+const NewLicenceAdmin = () => {
+  const [userData, setuserData] = useState<any>({});
+  const [ValidateDateExp, setValidateDateExp] = useState(false);
+  const [usersData, setusersData] = useState<any>([]);
+  const [couponData, setCoupon] = useState<any[]>([]);
+  const [SettingsData, setSettings] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const licenses = location.state?.commandData;
+  const idRental = location.state?.id;
+  const freetrial = location.state?.freeTrial || false;
+  const [formData, setFormData] = useState<any>({
+    userId: "",
+    licenses: 1,
+    idRental: null,
+    users: [
+      {
+        username: "",
+        email: "",
+        computerName: "",
+        identificationCode: "",
+        startFromDate: null,
+      },
+    ],
+    id_coupon: "",
+    totalPayer: "",
+    message: "",
+    expirationDate: "",
+    autoRenewal: false,
+    id_paiement: "68de5ca745ef19db9415a248",
+    agree: true,
+    tva: "",
+    freetrial: false,
+    startDate: new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split("T")[0],
+    sendFacture: false,
+  });
+
+  const [formDataUser, setFormDataUser] = useState({
+    name: "",
+    company: "",
+    adresse: "",
+    country: "",
+    tva: "",
+  });
+
+  useEffect(() => {
+    // Fetch current admin user, all clients, available coupons and global settings
+    const getData = async () => {
+      try {
+        const getUser = await user();
+        const getUsers = await users();
+        const getCoupon = await coupon();
+        const getSettings = await settings();
+
+        setuserData(getUser);
+        setCoupon(getCoupon);
+        setusersData(getUsers);
+        setSettings(getSettings);
+      } catch (error) {
+        // console.error('Failed to fetch rentals:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getData();
+  }, []);
+
+  const userIdn = getUser();
+
+  const { t } = useLanguage();
+
+  const [today, setToday] = useState(new Date());
+
+  const [couponCode, setCouponCode] = useState("");
+  const [CouponValue, setCouponValue] = useState({ type: "percent", value: 0 });
+
+  const [_, setMinDate] = useState("");
+  const [state, setState] = useState("Client");
+
+  useEffect(() => {
+    // Initialize default start and expiration dates when creating a new license
+    if (licenses) return;
+    const dataToday = new Date();
+    dataToday.setDate(dataToday.getDate() + 1);
+    const formattedDate = dataToday.toISOString().split("T")[0];
+    setMinDate(formattedDate);
+    dataToday.setDate(dataToday.getDate() + 29);
+    const formattedDateExp = dataToday.toISOString().split("T")[0];
+    setFormData((prev: any) => ({
+      ...prev,
+      expirationDate: formattedDateExp,
+      freetrial,
+    }));
+  }, []);
+
+  useEffect(() => {
+    // When editing/renewing existing licenses, preload their data and compute new expiration
+    if (!licenses) return;
+
+    const expDate = new Date();
+    let formattedDate: React.SetStateAction<string>;
+    const dateToday = new Date();
+
+    if (expDate > dateToday) {
+      expDate.setDate(expDate.getDate() + 30);
+      formattedDate = expDate.toISOString().split("T")[0];
+    } else {
+      dateToday.setDate(dateToday.getDate() + 30);
+      formattedDate = dateToday.toISOString().split("T")[0];
+    }
+
+    setMinDate(formattedDate);
+
+    const users: any[] = [];
+    for (const license of licenses) {
+      users.push({
+        id: license?._id,
+        username: license?.username,
+        email: license?.email || "",
+        computerName: license?.computerName,
+        identificationCode: license?.computerCode,
+      });
+    }
+    setFormData((prev: any) => ({
+      ...prev,
+      userId: licenses[0].userId,
+      licenses: licenses.length,
+      idRental,
+      users,
+      expirationDate: formattedDate,
+      freetrial,
+    }));
+
+    setToday(
+      expDate >= today ? new Date(licenses[0].expirationDate) : new Date()
+    );
+  }, []);
+
+  useEffect(() => {
+    // When switching to "Moi-même", clear selected client userId
+    if (state === "Moi-même") {
+      setFormData((prev: any) => ({
+        ...prev,
+        userId: "",
+      }));
+    }
+  }, [state]);
+
+  // Validate form fields and send the admin rental creation/renewal request to the backend
+  const handleSubmit = async () => {
+    if (formData.startDate && formData.expirationDate) {
+      const startDate = new Date(formData.startDate);
+      const expirationDate = new Date(formData.expirationDate);
+
+      if (expirationDate <= startDate) {
+        toast.warning(
+          "La date d'expiration doit être postérieure à la date de début"
+        );
+        return false;
+      }
+    } else if (formData.startDate || formData.expirationDate) {
+      toast.warning(
+        "Veuillez renseigner à la fois la date de début et la date d'expiration"
+      );
+      return false;
+    }
+
+    if (state === "Client") {
+      if (
+        !usersData.find((e: any) => e._id === formData.userId)?.address ||
+        !usersData.find((e: any) => e._id === formData.userId)?.country
+      ) {
+        toast.warning(t("dashboardClient_orders_completeCompanyInfoFirst"));
+        return;
+      }
+    }
+
+    if (!ValidateDateExp) {
+      toast.warning("Veuillez valider la date d'expiration avant de continuer");
+      return;
+    }
+
+    if (!formData.agree) {
+      toast.warning(t("dashboardClient_orders_acceptTerms"));
+      return;
+    }
+
+    if (state === "Client" && !formData.userId) {
+      toast.warning(t("dashboardClient_orders_selectUser"));
+      return;
+    }
+
+    // Validate licences
+    formData.users.forEach(
+      (
+        user: {
+          username: string;
+          computerName: string;
+          identificationCode: string;
+        },
+        index: number
+      ) => {
+        if (!user.username.trim()) {
+          toast.warning(
+            `${t("checkout_licence")} ${index + 1}: ${t(
+              "dashboardClient_orders_usernameRequired"
+            )}`
+          );
+          return;
+        }
+        if (!user.computerName.trim()) {
+          toast.warning(
+            `${t("checkout_licence")} ${index + 1}: ${t(
+              "dashboardClient_orders_computerNameRequired"
+            )}`
+          );
+          return;
+        }
+        if (!user.identificationCode.trim()) {
+          toast.warning(
+            `${t("checkout_licence")} ${index + 1}: ${t(
+              "dashboardClient_orders_idCodeRequired"
+            )}`
+          );
+          return;
+        }
+      }
+    );
+
+    if (!formData.id_paiement.trim()) {
+      toast.warning(t("dashboardClient_orders_paymentMethodRequired"));
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await apiClient.post("/rental/admin", formData);
+
+      if (res.status === 201) {
+        toast.success(t("dashboardClient_orders_paymentSuccess"));
+        await localStorage.setItem("reloadCount", "0");
+        navigate("/tableau-de-board/commande", {
+          state: {
+            freetrial: formData.freeTrial,
+            id: res.data.id,
+            isSend: formData.sendFacture,
+          },
+        });
+      } else {
+        toast.success(res.data.message);
+      }
+    } catch (error: any) {
+      toast.error(error.response.data.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Validate the entered coupon code and apply its discount if it is still valid
+  const verifyCoupon = () => {
+    if (!couponCode) {
+      toast.warning(t("dashboardClient_orders_couponCodeRequired"));
+      return;
+    }
+
+    const getIdCoupon: any = couponData?.find((e) => e.code === couponCode);
+    if (!getIdCoupon) {
+      toast.warning(t("dashboardClient_orders_invalidCoupon"));
+      return;
+    }
+
+    const expireDate = new Date(getIdCoupon.validateTo);
+    if (expireDate && today < expireDate) {
+      toast.warning(t("dashboardClient_orders_invalidCoupon"));
+      return;
+    }
+
+    if (getIdCoupon.totalUse >= getIdCoupon.maxUse) {
+      toast.warning(t("dashboardClient_orders_invalidCoupon"));
+      return;
+    }
+
+    setFormData((prev: any) => ({
+      ...prev,
+      id_coupon: couponCode,
+    }));
+
+    setCouponValue({ type: getIdCoupon.type, value: getIdCoupon.value });
+
+    toast.success(t("dashboardClient_orders_couponApplied"));
+  };
+
+  // Handle licenses count change and keep the users array length in sync
+  const handleLicensesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const licenses = Number(e.target.value);
+    if (licenses < 1) return; // prevent zero or negative licenses
+
+    setFormData((prev: { users: any }) => {
+      const users = [...prev.users];
+      if (licenses > users.length) {
+        // add empty user objects
+        for (let i = users.length; i < licenses; i++) {
+          users.push({
+            username: "",
+            email: "",
+            computerName: "",
+            identificationCode: "",
+          });
+        }
+      } else if (licenses < users.length) {
+        // truncate the users array
+        users.splice(licenses);
+      }
+      return { ...prev, licenses, users };
+    });
+  };
+
+  // Handle change for each user's license fields (username, email, computer, code)
+  const handleUserChange = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev: { users: any }) => {
+      const users = [...prev.users];
+      users[index] = { ...users[index], [name]: value };
+      return { ...prev, users };
+    });
+  };
+
+  // Handle other Inputs like dates, checkboxes and the note/message field
+  const handleOtherChange = (e: any) => {
+    const { name, value, type, checked } = e.target;
+    if (name === "expirationDate") {
+      setValidateDateExp(false);
+    }
+
+    setFormData((prev: any) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const expiration = new Date(formData.expirationDate);
+  // Calculate the difference in milliseconds
+  const diffTime =
+    expiration.getTime() - new Date(formData.startDate).getTime();
+
+  // Convert milliseconds to days
+  const daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  const [pricePerDay, setPricePerDay] = useState(5);
+  useEffect(() => {
+    // Compute the price per day for the selected client, or 0 if free trial / self mode
+    const priceUser =
+      formData.userId && usersData && Array.isArray(usersData)
+        ? usersData.find((e: any) => e._id === formData?.userId)?.basedPrice ||
+          5
+        : 5;
+
+    setPricePerDay(formData.freeTrial || state === "Moi-même" ? 0 : priceUser);
+  }, [formData.freeTrial, state, formData.userId, usersData]);
+  //const pricePerDay = (formData.freeTrial || state === "Moi-même") ? 0 : 5;
+
+  const discountType: any = "percent";
+  const discountValue =
+    discountType === "percent" ? CouponValue.value / 100 : CouponValue.value;
+  const discountSup =
+    formData.licenses > (SettingsData?.licenseThresholdForDiscount || 4)
+      ? 0.1
+      : 0;
+  const basedPrice = daysUntilExpiration * formData.licenses * pricePerDay;
+
+  const totalHT =
+    discountType === "percent"
+      ? basedPrice * (1 - discountValue) * (1 - discountSup)
+      : (basedPrice - discountValue) * (1 - discountSup);
+
+  const tva = formData.userId ? formData.tva / 100 : 0;
+
+  let totalPayer = (totalHT * tva + totalHT).toFixed(2);
+
+  useEffect(() => {
+    setFormData((prev: any) => ({
+      ...prev,
+      totalPayer: totalPayer,
+    }));
+  }, [totalPayer]);
+
+  const navigate = useNavigate();
+
+  const handleQuickDate = (months: number) => {
+    if (formData.freeTrial) return;
+
+    const today = new Date();
+    const newDate = new Date(today.setMonth(today.getMonth() + months));
+
+    // Format date as YYYY-MM-DD for the input
+    const formattedDate = newDate.toISOString().split("T")[0];
+
+    // Update your form data
+    handleOtherChange({
+      target: {
+        name: "expirationDate",
+        value: formattedDate,
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (!formData.freeTrial) return;
+
+    const today = new Date();
+    today.setDate(today.getDate() + 15);
+
+    // Format date as YYYY-MM-DD for the input
+    const formattedDate = today.toISOString().split("T")[0];
+    handleOtherChange({
+      target: {
+        name: "expirationDate",
+        value: formattedDate,
+      },
+    });
+  }, [formData.freeTrial]);
+
+  useEffect(() => {
+    // Fetch the applicable VAT (TVA) rate for the selected user based on country and VAT status
+    const fetchTax = async () => {
+      if(!formData.userId) return
+      const getTax = await tauxTva(formData.userId);
+      const tvaActive = usersData.find(
+        (e: { _id: any }) => e._id === formData.userId
+      )?.nTva;
+
+      const checkIfItsZero = countries.find(
+        (e) => e.code === getTax.country
+      )?.isZero;
+
+      const valueTva = checkIfItsZero && tvaActive ? 0 : getTax.taux_tva;
+      setFormData((prev: any) => ({
+        ...prev,
+        tva: valueTva,
+      }));
+    };
+
+    fetchTax();
+  }, [formData.userId, loading]);
+
+  useEffect(() => {
+    // When a client is selected, populate the billing information summary
+    if (!formData.userId) return;
+
+    const userObject = usersData.find((e: any) => e._id === formData.userId);
+    setFormDataUser({
+      name: userObject?.name,
+      company: userObject?.company || "",
+      adresse: userObject?.address || "",
+      country:
+        countries.find(
+          (c) =>
+            c.code ===
+            usersData.find((u: any) => u._id === formData.userId)?.country
+        )?.code || "",
+      tva: userObject?.nTva || "",
+    });
+  }, [formData.userId, usersData]);
+
+  // Handle change on billing info fields for the selected user
+  const handleChangeUserForm = (e: {
+    target: { name: string; value: string };
+  }) => {
+    const { name, value } = e.target;
+    setFormDataUser((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleUpdateUser = async () => {
+    try {
+      if (
+        !formDataUser.name ||
+        !formDataUser.country ||
+        !formDataUser.adresse
+      ) {
+        toast.warning(
+          "Veuillez remplir tous les champs obligatoires avant de continuer.",
+          {
+            position: "top-center",
+          }
+        );
+        return;
+      }
+
+      const res = await apiClient.put(
+        `/user/${formData.userId}/admin`,
+        formDataUser
+      );
+      if (res.status === 200) {
+        toast.success(res.data.message, {
+          position: "top-center",
+        });
+      } else {
+        toast.warning(res.data.message, {
+          position: "top-center",
+        });
+      }
+    } catch (error: any) {
+      // console.log(error)
+      toast.error(error?.response.data.message || "", {
+        position: "top-center",
+      });
+    }
+  };
+
+  if (!userIdn.role) {
+    return <Loading />;
+  }
+
+  if (!userData._id) {
+    return <Loading />;
+  }
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  return (
+    <div className="space-y-6 mb-6">
+      {/* Header */}
+      <div className="flex flex-col gap-1">
+        <h2 className="text-2xl font-bold tracking-tight">
+          {t("dashboardClient_orders_addLicense")}
+        </h2>
+        <p className="text-sm text-black/40">
+          {t("dashboardClient_orders_fillLicenseInfo")}
+        </p>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setState("Moi-même")}
+          className={`text-sm font-medium cursor-pointer p-2 px-4 rounded-lg transition-all duration-200 ${
+            state === "Moi-même" ? "bg-stone-800 text-white" : "bg-transparent"
+          }`}
+        >
+          {t("dashboardClient_orders_myself")}
+        </button>
+        <button
+          onClick={() => setState("Client")}
+          className={`text-sm font-medium cursor-pointer p-2 px-4 rounded-lg transition-all duration-200 ${
+            state === "Client" ? "bg-stone-800 text-white" : "bg-transparent"
+          }`}
+        >
+          {t("dashboardClient_orders_client")}
+        </button>
+      </div>
+      <div className="flex items-start max-lg:flex-col gap-5">
+        <div className="w-[65%] max-lg:w-full flex flex-col gap-5">
+          {state === "Client" && (
+            <div className="bg-white rounded-xl shadow-sm p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <h4 className="font-semibold text-lg text-gray-900">
+                  {t("dashboardClient_orders_billingInfo")}
+                </h4>
+              </div>
+
+              {/* User Selection */}
+              <div className="grid gap-6">
+                <div className="grid gap-3">
+                  <div className="flex justify-between items-center">
+                    <Label
+                      htmlFor="company"
+                      className="text-sm font-medium text-gray-700"
+                    >
+                      {t("dashboardClient_orders_selectUserLabel")}
+                    </Label>
+                    <NewUser type="icon" />
+                  </div>
+                  <Select
+                    value={formData.userId}
+                    onValueChange={(value) =>
+                      setFormData((prev: any) => ({ ...prev, userId: value }))
+                    }
+                  >
+                    <SelectTrigger className="w-full py-6 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-colors">
+                      <SelectValue
+                        placeholder={t(
+                          "dashboardClient_orders_selectUserLabel"
+                        )}
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="border-gray-200 shadow-lg">
+                      {usersData
+                        .filter((e: any) => e.role !== "admin")
+                        .map((user: any, i: number) => (
+                          <SelectItem
+                            key={i}
+                            value={user._id}
+                            className="text-sm hover:bg-gray-50 cursor-pointer"
+                          >
+                            <div className="flex flex-col items-start">
+                              <span className="font-medium text-gray-900">
+                                {user.name}
+                              </span>
+                              <span className="text-gray-500 text-xs">
+                                {user.company}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-3">
+                  <Label
+                    htmlFor="name"
+                    className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                  >
+                    <User className="w-4 h-4 text-gray-400" />
+                    {t("dashboard_settings_name")}
+                  </Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formDataUser.name}
+                    onChange={handleChangeUserForm}
+                    className="h-11 bg-gray-50 border-gray-200 text-gray-600 focus:bg-white transition-colors"
+                  />
+                </div>
+
+                {/* Company Information Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Company Details */}
+                  <div className="space-y-6">
+                    <div className="grid gap-3">
+                      <Label
+                        htmlFor="company"
+                        className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                      >
+                        <Building className="w-4 h-4 text-gray-400" />
+                        {t("dashboardClient_orders_companyName")}
+                      </Label>
+                      <Input
+                        id="company"
+                        name="company"
+                        value={formDataUser.company}
+                        onChange={handleChangeUserForm}
+                        className="h-11 bg-gray-50 border-gray-200 text-gray-600 focus:bg-white transition-colors"
+                      />
+                    </div>
+
+                    <div className="grid gap-3">
+                      <Label
+                        htmlFor="country"
+                        className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                      >
+                        <MapPin className="w-4 h-4 text-gray-400" />
+                        {t("dashboardClient_orders_country")}
+                      </Label>
+                      <Select
+                        value={formDataUser.country}
+                        onValueChange={(value) =>
+                          handleChangeUserForm({
+                            target: { name: "country", value },
+                          })
+                        }
+                      >
+                        <SelectTrigger className="w-full py-[21px] bg-gray-50 border-gray-200 text-gray-600 focus:bg-white transition-colors">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {countries.map((c) => (
+                            <SelectItem key={c.code} value={c.code}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Address & Tax Details */}
+                  <div className="space-y-6">
+                    <div className="grid gap-3">
+                      <Label
+                        htmlFor="adresse"
+                        className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                      >
+                        <Home className="w-4 h-4 text-gray-400" />
+                        {t("dashboardClient_orders_address")}
+                      </Label>
+                      <Input
+                        id="adresse"
+                        name="adresse"
+                        value={formDataUser.adresse}
+                        onChange={handleChangeUserForm}
+                        className="h-11 bg-gray-50 border-gray-200 text-gray-600 focus:bg-white transition-colors"
+                      />
+                    </div>
+
+                    <div className="grid gap-3">
+                      <Label
+                        htmlFor="tva"
+                        className="text-sm font-medium text-gray-700 flex items-center gap-2"
+                      >
+                        <FileText className="w-4 h-4 text-gray-400" />
+                        {t("pay_01_tva")}
+                      </Label>
+                      <Input
+                        id="tva"
+                        name="tva"
+                        value={formDataUser.tva}
+                        onChange={handleChangeUserForm}
+                        className="h-11 bg-gray-50 border-gray-200 text-gray-600 focus:bg-white transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleUpdateUser}
+                  className="bg-stone-600 text-white py-3 text-xs font-semibold rounded-lg transition-all duration-200 hover:bg-stone-900"
+                >
+                  {t("dashboardAdmin_users_save")}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-white p-8 rounded-xl shadow-sm">
+            {/* Header Section */}
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+              <div>
+                <h4 className="font-semibold text-gray-900 text-lg">
+                  {t("dashboardClient_orders_licenseInfo")}
+                </h4>
+                <p className="text-sm text-gray-500 mt-1">
+                  Configuration des licences et utilisateurs
+                </p>
+              </div>
+            </div>
+
+            {/* Number of Licenses */}
+            <div className="mb-6">
+              <Label
+                htmlFor="licenses"
+                className="text-sm font-medium text-gray-700 mb-2 block"
+              >
+                {t("dashboardClient_orders_numberOfLicenses")}
+              </Label>
+              <div className="relative">
+                <Input
+                  id="licenses"
+                  name="licenses"
+                  type="number"
+                  min={1}
+                  value={formData.licenses}
+                  onChange={handleLicensesChange}
+                  readOnly={freetrial || licenses?.length > 0}
+                  className="bg-gray-50 border-gray-200 text-gray-700 pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all"
+                />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* User Licenses */}
+            <div className="space-y-4">
+              {formData.users.map((user: any, index: number) => (
+                <div
+                  key={index}
+                  className="p-6 border-2 border-slate-100 rounded-xl bg-gradient-to-r from-slate-50 to-white-50"
+                >
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm font-bold">
+                        {index + 1}
+                      </span>
+                    </div>
+                    <h5 className="font-semibold text-gray-900 text-lg">
+                      {t("dashboardClient_orders_license1")} {index + 1}
+                    </h5>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Username */}
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor={`username-${index}`}
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        {t("dashboardClient_orders_username")}
+                      </Label>
+                      <Input
+                        id={`username-${index}`}
+                        name="username"
+                        placeholder={t("dashboardClient_orders_username")}
+                        value={user.username}
+                        onChange={(e) => handleUserChange(index, e)}
+                        // readOnly={licenses?.length > 0}
+                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    {/* Email */}
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor={`email-${index}`}
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        {t("dashboardClient_orders_email")}
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id={`email-${index}`}
+                          name="email"
+                          type="email"
+                          placeholder=""
+                          value={user.email}
+                          onChange={(e) => handleUserChange(index, e)}
+                          // readOnly={licenses?.length > 0}
+                          className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 pl-10"
+                        />
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <svg
+                            className="h-5 w-5 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                      <p className="text-xs text-blue-600 font-medium">
+                        {t("dashboardClient_orders_authCodeSent")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                    {/* Computer Name */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label
+                          htmlFor={`computerName-${index}`}
+                          className="text-sm font-medium text-gray-700"
+                        >
+                          {t("dashboardClient_orders_computerName")}
+                        </Label>
+                      </div>
+                      <Input
+                        id={`computerName-${index}`}
+                        name="computerName"
+                        placeholder="Nom de votre ordinateur"
+                        value={user.computerName}
+                        onChange={(e) => handleUserChange(index, e)}
+                        // readOnly={licenses?.length > 0}
+                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                      <p className="text-xs text-gray-500">
+                        {t("dashboardClient_orders_computerNameHint")}
+                      </p>
+                    </div>
+
+                    {/* Identification Code */}
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor={`identificationCode-${index}`}
+                        className="text-sm font-medium text-gray-700"
+                      >
+                        {t("dashboardClient_orders_idCode")}
+                      </Label>
+                      <Input
+                        id={`identificationCode-${index}`}
+                        name="identificationCode"
+                        placeholder="Code d'identification unique"
+                        value={user.identificationCode}
+                        onChange={(e) => handleUserChange(index, e)}
+                        // readOnly={licenses?.length > 0}
+                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 font-mono"
+                      />
+                      <p className="text-xs text-gray-500">
+                        {t("dashboardClient_orders_idCodeHint")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Expiration Date */}
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="grid gap-3">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="startDate"
+                    className="text-sm font-semibold text-gray-800"
+                  >
+                    Date de début
+                  </Label>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Date Input with Icon */}
+                    <div className="relative flex-1">
+                      <Input
+                        id="startDate"
+                        name="startDate"
+                        type="date"
+                        // min={minDate}
+                        max={formData.expirationDate}
+                        value={formData.startDate}
+                        onChange={handleOtherChange}
+                        readOnly={formData.freeTrial}
+                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 pl-10 pr-4 py-2.5 h-11 transition-colors"
+                      />
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg
+                          className="h-5 w-5 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="expirationDate"
+                    className="text-sm font-semibold text-gray-800"
+                  >
+                    {t("dashboardClient_orders_expirationDate")}
+                  </Label>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Date Input with Icon */}
+                    <div className="relative flex-1">
+                      <Input
+                        id="expirationDate"
+                        name="expirationDate"
+                        type="date"
+                        min={formData.startDate}
+                        value={formData.expirationDate}
+                        onChange={handleOtherChange}
+                        readOnly={formData.freeTrial}
+                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 pl-10 pr-4 py-2.5 h-11 transition-colors"
+                      />
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg
+                          className="h-5 w-5 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Validation Button */}
+                    <button
+                      type="button"
+                      onClick={() => setValidateDateExp(true)}
+                      disabled={!formData.expirationDate || formData.freeTrial}
+                      className="px-6 py-2.5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border border-transparent rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 shadow-sm hover:shadow-md"
+                    >
+                      {"Validate Date"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Date Selection */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleQuickDate(2)}
+                        disabled={formData.freeTrial}
+                        className="px-4 py-2 text-xs font-medium bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                      >
+                        2 mois
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickDate(3)}
+                        disabled={formData.freeTrial}
+                        className="px-4 py-2 text-xs font-medium bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                      >
+                        3 mois
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickDate(6)}
+                        disabled={formData.freeTrial}
+                        className="px-4 py-2 text-xs font-medium bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                      >
+                        6 mois
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hint Text */}
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  {t("dashboardClient_orders_expirationDateHint")}
+                </p>
+
+                {/* Validation Status */}
+                {ValidateDateExp && (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <svg
+                      className="h-4 w-4 text-green-600 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span className="text-sm text-green-700 font-medium">
+                      Date validée avec succès
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Auto Renewal 
+              {!freeTrial && (
+                <div className="flex items-center gap-3 mt-4 p-3 bg-white rounded-lg border border-gray-200">
+                  <input
+                    id="autoRenewal"
+                    name="autoRenewal"
+                    type="checkbox"
+                    checked={formData.autoRenewal}
+                    onChange={handleOtherChange}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="autoRenewal" className="text-xs text-gray-700 cursor-pointer">
+                    {t("dashboardClient_orders_enableAutoRenewal")}
+                  </Label>
+                  <div className="ml-auto bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                    Recommandé
+                  </div>
+                </div>
+              )*/}
+            </div>
+          </div>
+        </div>
+        <div className="bg-white p-10 w-[35%] max-lg:w-full rounded-lg sticky top-5 z-50">
+          <h4 className="text-sm font-bold mb-6">
+            {t("dashboardClient_orders_billingSummary")}
+          </h4>
+          <div className="flex justify-between mb-2">
+            <span className="text-sm font-medium">
+              {t("checkout_price_j")} ({formData.licenses}{" "}
+              {t("checkout_licence")})
+            </span>
+            <span className="font-bold text-sm">
+              {formData.licenses * pricePerDay} €
+            </span>
+          </div>
+
+          <div className="flex justify-between mb-2">
+            <span className="text-sm font-medium">{t("pay_03_num_j")}</span>
+            <span className="font-bold text-sm">
+              {daysUntilExpiration} {t("pay_03_j")}
+            </span>
+          </div>
+
+          <div className="flex justify-between mb-2">
+            <span className="text-sm font-medium">
+              {t("checkout_discount")}
+            </span>
+            <span className="font-bold text-sm text-red-600">
+              -{" "}
+              {discountType === "percent"
+                ? (discountValue * 100).toFixed(2)
+                : discountValue.toFixed(2)}{" "}
+              {discountType === "percent" ? "%" : "€"}
+            </span>
+          </div>
+
+          <div className="flex justify-between mb-2 pb-2">
+            <span className="text-sm font-medium">{t("pay_03_discount")}</span>
+            <span className="font-bold text-sm text-red-600">
+              - {(discountSup * 100).toFixed(2)} %
+            </span>
+          </div>
+
+          <div className="flex justify-between mb-2 pt-4 border-t border-gray-300">
+            <span className="text-sm font-medium">
+              {t("checkout_sous_total")}
+            </span>
+            <span className="font-bold text-sm">{totalHT} €</span>
+          </div>
+
+          <div className="flex justify-between mb-2">
+            <span className="text-sm font-medium">
+              {t("checkout_tva")} ({(tva * 100).toFixed(2)} %)
+            </span>
+            <span className="font-bold text-sm">
+              {(totalHT * tva).toFixed(2)} €
+            </span>
+          </div>
+
+          <div className="flex justify-between items-end font-bold text-sm pt-4 border-t border-gray-300 mb-6">
+            <span>{t("checkout_total")}</span>
+            <div className="flex flex-col items-end">
+              {(CouponValue.value > 0 || formData.licenses > 4) && (
+                <small className="line-through text-red-800">
+                  {basedPrice * (1 + tva)} € TTC
+                </small>
+              )}
+              <span>{totalPayer} € TTC</span>
+            </div>
+          </div>
+
+          <div className="relative text-[#B2BCCA] w-full mb-7">
+            <label
+              htmlFor="promo"
+              className="absolute top-[-11px] left-2 px-4 bg-white font-medium text-sm"
+            >
+              {t("checkout_code_discount")}
+            </label>
+            <input
+              type="text"
+              id="promo"
+              name="promo"
+              value={couponCode}
+              onChange={(e) => setCouponCode(e.target.value)}
+              placeholder={t("dashboardClient_orders_typeHere")}
+              className="border border-[#B2BCCA] w-full p-3 px-6 rounded-lg text-sm text-stone-800"
+              required
+            />
+            <div className="absolute right-2 top-0 h-full flex items-center">
+              <button
+                onClick={verifyCoupon}
+                className="bg-secondary text-xs p-2 px-5 font-bold text-stone-100 rounded-lg transition-all duration-200 hover:bg-stone-700 cursor-pointer"
+              >
+                {t("checkout_check")}
+              </button>
+            </div>
+          </div>
+
+          <div className="relative text-[#B2BCCA] w-full mb-4">
+            <label
+              htmlFor="manoteil"
+              className="absolute top-[-11px] left-2 px-4 bg-white font-medium text-sm"
+            >
+              {t("checkout_note")}
+            </label>
+            <textarea
+              placeholder={t("dashboardClient_orders_typeHere")}
+              name="message"
+              onChange={handleOtherChange}
+              value={formData.message}
+              className="border border-[#B2BCCA] w-full p-3 px-6 rounded-lg text-sm text-stone-800"
+              rows={3}
+            ></textarea>
+          </div>
+          <label className="flex items-start text-xs text-gray-600 mb-1 mt-4">
+            <input
+              type="checkbox"
+              className="mr-2"
+              name="freeTrial"
+              checked={formData.freeTrial}
+              onChange={handleOtherChange}
+            />
+            <p className="font-medium text-stone-500">
+              Envoyer un code provisoire
+            </p>
+          </label>
+          <label className="flex items-start text-xs text-gray-600 mb-1 mt-4">
+            <input
+              type="checkbox"
+              className="mr-2"
+              name="sendFacture"
+              checked={formData.sendFacture}
+              onChange={handleOtherChange}
+            />
+            <p className="font-medium text-stone-500">
+              Envoyer la facture{" "}
+              {usersData &&
+                ` à ${
+                  usersData.find((e: any) => e._id === formData.userId)?.name
+                }`}
+            </p>
+          </label>
+
+          <label className="flex items-start text-xs text-gray-600 mb-6 mt-4">
+            <input
+              type="checkbox"
+              className="mr-2"
+              name="agree"
+              checked={formData.agree}
+              onChange={handleOtherChange}
+            />
+            <p
+              className="font-medium text-stone-500"
+              dangerouslySetInnerHTML={{
+                __html: t("checkout_checkbox_description"),
+              }}
+            />
+          </label>
+
+          <button
+            className={`w-full bg-blue-900 cursor-pointer transition-all duration-200 hover:bg-blue-800 text-white py-2 rounded-md font-bold text-sm`}
+            onClick={handleSubmit}
+          >
+            {t("checkout_paiment")} {totalPayer} €
+          </button>
+
+          <div className="flex items-center justify-center mt-4 gap-1">
+            <Lock size={16} color="#99a1af" />
+            <p className="text-center font-medium text-xs text-gray-400">
+              {t("dashboardClient_orders_paymentSecureStripe")}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p className="text-center font-medium text-sm">
+          {t("dashboardClient_orders_problemContact")}{" "}
+          <Link to="/contact" className="underline">
+            {t("dashboardClient_orders_contactUsNow")}
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default NewLicenceAdmin;

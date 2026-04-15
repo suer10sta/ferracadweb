@@ -1,0 +1,178 @@
+[
+  {
+    "id": 1,
+    "slug": "decouverte-de-ferracad",
+    "tags": ["Ferracad", "Architecture", "Technologie"],
+    "title": "À la découverte de Ferracad : une révolution dans la conception assistée par ordinateur",
+    "description_seo": "Explorez comment Ferracad transforme la CAO avec ses outils innovants dédiés aux professionnels de l'architecture et du design industriel.",
+    "time_read": "6 min",
+    "views": 1245,
+    "likes": 350,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2025/05/07/Potpourri-Feature-1426x842.jpg"
+  },
+  {
+    "id": 2,
+    "slug": "fonctionnalites-avancees-ferracad",
+    "tags": ["Fonctionnalités", "Ferracad", "Productivité"],
+    "title": "Les fonctionnalités avancées de Ferracad que vous devez connaître",
+    "description_seo": "Découvrez les outils puissants de Ferracad qui boostent la productivité des architectes et ingénieurs dans leurs projets complexes.",
+    "time_read": "8 min",
+    "views": 980,
+    "likes": 275,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2025/06/03/How-to-use-AutoCAD-commands-1426x842.jpg"
+  },
+  {
+    "id": 3,
+    "slug": "avis-utilisateurs-ferracad-2025",
+    "tags": ["Témoignages", "Ferracad", "Utilisateurs"],
+    "title": "Ce que pensent les utilisateurs de Ferracad en 2025",
+    "description_seo": "Retour d'expérience des utilisateurs sur Ferracad : ergonomie, performance, gain de temps... leurs avis sans filtre.",
+    "time_read": "5 min",
+    "views": 1520,
+    "likes": 420,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2025/07/22/AutoCAD-Systems-Variable_Feature-1426x842.jpeg"
+  },
+  {
+    "id": 4,
+    "slug": "introduction-ferracad-cao",
+    "tags": ["Ferracad", "Architecture", "Technologie"],
+    "title": "Introduction à Ferracad pour la conception assistée par ordinateur",
+    "description_seo": "Explorez comment Ferracad transforme la CAO avec ses outils innovants dédiés aux professionnels de l'architecture et du design industriel.",
+    "time_read": "6 min",
+    "views": 1245,
+    "likes": 350,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2025/04/22/AutoCAD-Drawing-for-Beginners-1426x842.jpg"
+  },
+  {
+    "id": 5,
+    "slug": "fonctionnalites-ferracad-ingenieurs",
+    "tags": ["Fonctionnalités", "Ferracad", "Productivité"],
+    "title": "Fonctionnalités Ferracad pour les ingénieurs modernes",
+    "description_seo": "Découvrez les outils puissants de Ferracad qui boostent la productivité des architectes et ingénieurs dans leurs projets complexes.",
+    "time_read": "8 min",
+    "views": 980,
+    "likes": 275,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2025/02/10/Ribbon-Customization-Feature-1426x842.jpeg"
+  },
+  {
+    "id": 6,
+    "slug": "retours-utilisateurs-ferracad",
+    "tags": ["Témoignages", "Ferracad", "Utilisateurs"],
+    "title": "Les retours des utilisateurs sur Ferracad",
+    "description_seo": "Retour d'expérience des utilisateurs sur Ferracad : ergonomie, performance, gain de temps... leurs avis sans filtre.",
+    "time_read": "5 min",
+    "views": 1520,
+    "likes": 420,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2025/06/18/Found-Energy-2-1426x842.jpg"
+  },
+  {
+    "id": 7,
+    "slug": "comparatif-ferracad-vs-autocad",
+    "tags": ["Comparaison", "Ferracad", "AutoCAD"],
+    "title": "Ferracad vs AutoCAD : lequel choisir en 2025 ?",
+    "description_seo": "Un comparatif approfondi entre Ferracad et AutoCAD pour vous aider à choisir l'outil de CAO le plus adapté à vos besoins.",
+    "time_read": "7 min",
+    "views": 890,
+    "likes": 310,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2025/03/25/AutoCAD-2026-1900x1026.jpg"
+  },
+  {
+    "id": 8,
+    "slug": "astuces-ferracad-productivite",
+    "tags": ["Productivité", "Ferracad", "Astuces"],
+    "title": "10 astuces pour améliorer votre productivité sur Ferracad",
+    "description_seo": "Gagnez du temps au quotidien grâce à ces astuces pratiques pour mieux exploiter Ferracad.",
+    "time_read": "6 min",
+    "views": 1130,
+    "likes": 360,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2024/07/24/PID392254_Autodesk_AutoCAD-thumbnail-content-library-1930x832-1-1426x828.jpg"
+  },
+  {
+    "id": 9,
+    "slug": "ferracad-etudes-enseignement",
+    "tags": ["Éducation", "Ferracad", "Formation"],
+    "title": "Ferracad dans l'enseignement : un outil pédagogique de pointe",
+    "description_seo": "Découvrez comment Ferracad est intégré dans les écoles d’ingénieurs et universités pour former les concepteurs de demain.",
+    "time_read": "5 min",
+    "views": 765,
+    "likes": 290,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2025/03/25/AutoCAD-2026-1426x842.jpg"
+  },
+  {
+    "id": 10,
+    "slug": "mise-a-jour-ferracad-2025",
+    "tags": ["Ferracad", "Mises à jour", "Technologie"],
+    "title": "Ferracad 2025 : toutes les nouveautés de la dernière mise à jour",
+    "description_seo": "Un tour complet des nouvelles fonctionnalités et améliorations de la version 2025 de Ferracad.",
+    "time_read": "9 min",
+    "views": 1420,
+    "likes": 480,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2024/09/27/AutoCAD-Inside-the-Factory-Feature-1426x832.jpg"
+  },
+  {
+    "id": 11,
+    "slug": "workflow-bim-ferracad",
+    "tags": ["BIM", "Ferracad", "Interopérabilité"],
+    "title": "L’intégration de Ferracad dans les workflows BIM",
+    "description_seo": "Comment Ferracad s'intègre efficacement dans les processus BIM pour une conception fluide et collaborative.",
+    "time_read": "7 min",
+    "views": 1015,
+    "likes": 330,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2023/11/13/Support_files-1426x842.jpg"
+  },
+  {
+    "id": 12,
+    "slug": "collaboration-cloud-ferracad",
+    "tags": ["Cloud", "Collaboration", "Ferracad"],
+    "title": "Collaborer en temps réel grâce au cloud Ferracad",
+    "description_seo": "Découvrez les avantages de la collaboration en ligne avec les nouvelles fonctionnalités cloud de Ferracad.",
+    "time_read": "6 min",
+    "views": 875,
+    "likes": 305,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2025/05/20/Top-10-Reasons-Sheet-Set-Manager-Feature-1426x842.jpeg"
+  },
+  {
+    "id": 13,
+    "slug": "application-mobile-ferracad",
+    "tags": ["Mobile", "Application", "Ferracad"],
+    "title": "Ferracad mobile : concevez où que vous soyez",
+    "description_seo": "Travaillez sur vos projets depuis votre smartphone ou tablette grâce à l'application mobile Ferracad.",
+    "time_read": "4 min",
+    "views": 640,
+    "likes": 250,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2025/08/07/Object-Snaps-Basics-Feature-1426x842.jpeg"
+  },
+  {
+    "id": 14,
+    "slug": "ferracad-intelligence-artificielle",
+    "tags": ["IA", "Automatisation", "Ferracad"],
+    "title": "Ferracad et l'intelligence artificielle : un duo gagnant",
+    "description_seo": "Comment Ferracad utilise l'IA pour automatiser les tâches répétitives et améliorer la précision des designs.",
+    "time_read": "7 min",
+    "views": 1325,
+    "likes": 410,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2025/06/17/Viewbase-Feature-1426x807.jpeg"
+  },
+  {
+    "id": 15,
+    "slug": "tutoriels-ferracad-debutants",
+    "tags": ["Débutants", "Tutoriels", "Ferracad"],
+    "title": "Tutoriels Ferracad : bien débuter en CAO",
+    "description_seo": "Une série de tutoriels simples pour apprendre à utiliser Ferracad efficacement dès le départ.",
+    "time_read": "10 min",
+    "views": 725,
+    "likes": 295,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2025/07/08/2D-Objects-Feature-1426x842.jpg"
+  },
+  {
+    "id": 16,
+    "slug": "design-industriel-avec-ferracad",
+    "tags": ["Design industriel", "Ferracad", "Innovation"],
+    "title": "Comment Ferracad révolutionne le design industriel",
+    "description_seo": "Zoom sur les fonctionnalités de Ferracad qui transforment la manière de concevoir dans le secteur industriel.",
+    "time_read": "8 min",
+    "views": 1180,
+    "likes": 375,
+    "mainImg": "https://www.autodesk.com/blogs/autocad/wp-content/uploads/sites/35/2024/09/27/AutoCAD-Inside-the-Factory-Feature-1426x832.jpg"
+  }
+]

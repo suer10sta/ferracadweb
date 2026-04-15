@@ -1,0 +1,1415 @@
+import React, { useEffect, useState } from "react";
+import { HiExternalLink } from "react-icons/hi";
+import { IoGift } from "react-icons/io5";
+import { MdInfo } from "react-icons/md";
+import { Link, useNavigate } from "react-router-dom";
+import { Label } from "../ui/label";
+import { Input } from "../ui/input";
+import { useLanguage } from "@/lang/LanguageProvider";
+import countries from "@/data/countries.json";
+import { getUser } from "@/utils/auth";
+import { user, settings, couponById, tauxTva, registrations } from "@/data/mockData";
+import { toast } from "sonner";
+import apiClient from "@/services/api";
+import { useLocation } from "react-router-dom";
+import Loading from "../elements/Loading";
+import {
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "../ui/button";
+import {
+  FaLock,
+  FaInfoCircle,
+  FaCcVisa,
+  FaCcMastercard,
+  FaCcAmex,
+  FaCcDiscover,
+  FaCreditCard,
+  FaCalendarAlt,
+  FaCcDinersClub
+} from 'react-icons/fa';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const ELEMENT_OPTIONS = {
+  style: {
+    base: {
+      // color: '#2d3748',
+      fontSize: "14px",
+      fontFamily: "Ubuntu, sans-serif",
+      // '::placeholder': {
+      //   color: '#a0aec0',
+      // },
+    },
+    invalid: { color: "#ef4444" },
+  },
+};
+
+const NewLicence = () => {
+  const [userData, setuserData] = useState<any>({});
+  const [SettingsData, setSettings] = useState<any>({});
+  const [registrationData, setregistrationData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const licenses = location.state?.commandData;
+  const idRental = location.state?.id;
+  const freeTrial = location.state?.freeTrial || false;
+  const stripe = useStripe();
+  const elements = useElements();
+  const [selectedRegistrations, setSelectedRegistrations] = useState<string[]>([]);
+  const [ValidateDateExp, setValidateDateExp] = useState(false);
+  const [minDate, setMinDate] = useState("");
+
+  const [formData, setFormData] = useState<any>({
+    licenses: 1,
+    idRental: null,
+    users: [
+      {
+        username: "",
+        email: "",
+        computerName: "",
+        identificationCode: "",
+        startFromDate: null,
+      },
+    ],
+    id_coupon: "",
+    totalPayer: "",
+    message: "",
+    expirationDate: "",
+    autoRenewal: false,
+    id_paiement: "68de5ca745ef19db9415a248",
+    agree: false,
+    tva: "",
+    freetrial: location.state?.freeTrial || false,
+    daysUntilExpiration: 0,
+  });
+
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const getUser = await user();
+        const getSettings = await settings();
+        const getTax = await tauxTva();
+        const getRegistrations = await registrations();
+        const checkIfItsZero = countries.find((e) => e.code === getTax.country)?.isZero;
+        const valueTva = getUser.nTva ? checkIfItsZero ? 0 : getTax.taux_tva : getTax.taux_tva;
+
+        setFormData((prev: any) => ({
+          ...prev,
+          tva: valueTva
+        }));
+
+        setregistrationData(getRegistrations.filter((e: { rentalId: any; }) => !e.rentalId) || []);
+
+        setuserData(getUser);
+        setSettings(getSettings);
+      } catch (error) {
+        // console.error("Failed to fetch rentals:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getData();
+  }, [loading]);
+
+  const userIdn = getUser();
+
+  const { t } = useLanguage();
+
+  const [today, setToday] = useState(new Date());
+
+  const [couponCode, setCouponCode] = useState("");
+  const [CouponValue, setCouponValue] = useState({ type: "percent", value: 0 });
+
+  useEffect(() => {
+    if (licenses) return;
+    const dataToday = new Date();
+    dataToday.setDate(dataToday.getDate() + 1);
+    const formattedDate = dataToday.toISOString().split("T")[0];
+    setMinDate(formattedDate);
+    dataToday.setDate(dataToday.getDate() + 29);
+    const formattedDateExp = dataToday.toISOString().split("T")[0];
+    setFormData((prev: any) => ({
+      ...prev,
+      expirationDate: formattedDateExp,
+      freeTrial,
+    }));
+  }, []);
+
+  useEffect(() => {
+    if (!licenses) return;
+
+    const expDate = new Date(licenses[0].expirationDate);
+    let formattedDate: React.SetStateAction<string>;
+    const dateToday = new Date();
+
+    if (expDate > dateToday) {
+      expDate.setDate(expDate.getDate() + 1);
+      formattedDate = expDate.toISOString().split("T")[0];
+    } else {
+      dateToday.setDate(dateToday.getDate() + 1);
+      formattedDate = dateToday.toISOString().split("T")[0];
+    }
+
+    setMinDate(formattedDate);
+
+    const users: any[] = [];
+    for (const license of licenses) {
+      users.push({
+        id: license?._id,
+        username: license?.username,
+        email: license?.email || "",
+        computerName: license?.computerName,
+        identificationCode: license?.computerCode,
+      });
+    }
+    setFormData((prev: any) => ({
+      ...prev,
+      licenses: licenses?.length,
+      idRental,
+      users,
+      expirationDate: formattedDate,
+      freeTrial,
+    }));
+
+    setToday(
+      expDate >= today ? new Date(licenses[0].expirationDate) : new Date()
+    );
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!userData.company || !userData.address || !userData.country) {
+      toast.warning(t("dashboardClient_orders_completeCompanyInfoFirst"))
+      return;
+    }
+
+    if (!formData.agree) {
+      toast.warning(t("dashboardClient_orders_acceptTerms"));
+      return;
+    }
+
+    if (!freeTrial) {
+      if (!ValidateDateExp) {
+        toast.warning("Veuillez valider la date d'expiration avant de continuer");
+        return;
+      }
+    }
+
+    // Validate licences
+    let licensesValid = false;
+    formData.users.forEach(
+      (
+        user: {
+          username: string;
+          computerName: string;
+          identificationCode: string;
+        },
+        index: number
+      ) => {
+        if (!user.username.trim()) {
+          toast.warning(
+            `${t("dashboardClient_orders_license1")} ${index + 1}: ${t(
+              "dashboardClient_orders_usernameRequired"
+            )}`
+          );
+          licensesValid = true;
+          return;
+        }
+        if (!user.computerName.trim()) {
+          toast.warning(
+            `${t("dashboardClient_orders_license1")} ${index + 1}: ${t(
+              "dashboardClient_orders_computerNameRequired"
+            )}`
+          );
+          licensesValid = true;
+          return;
+        }
+        if (!user.identificationCode.trim()) {
+          toast.warning(
+            `${t("dashboardClient_orders_license1")} ${index + 1}: ${t(
+              "dashboardClient_orders_idCodeRequired"
+            )}`
+          );
+          licensesValid = true;
+          return;
+        }
+      }
+    );
+
+    if (licensesValid) {
+      return;
+    }
+
+    if (!formData.id_paiement.trim()) {
+      toast.warning(t("dashboardClient_orders_paymentMethodRequired"));
+      return;
+    }
+
+    // --- CASE 1: FREE TRIAL ---
+    if (formData.freeTrial) {
+      setLoading(true);
+      try {
+        const res = await apiClient.post("/rental/admin", formData);
+
+        if (res.status === 201) {
+          toast.success(t("dashboardClient_orders_paymentSuccess"));
+          await localStorage.setItem("reloadCount", "0");
+          navigate('/tableau-de-board/commande', {
+            state: {
+              freetrial: formData.freeTrial,
+              id: res.data.id,
+            },
+          });
+        } else {
+          toast.success(res.data.message);
+        }
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || "Error creating free trial order");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // --- CASE 2: PAID ORDER (Requires Stripe) ---
+    if (!stripe || !elements) {
+      toast.error(t("dashboardClient_orders_stripeNotReady"));
+      return;
+    }
+
+    const NumberElement = elements.getElement(CardNumberElement);
+    if (!NumberElement) {
+      toast.error(t("dashboardClient_orders_enterCardInfo"));
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const { error, paymentMethod } = await stripe.createPaymentMethod({
+        type: "card",
+        card: NumberElement,
+        billing_details: {
+          email: userData.email || "",
+          name: userData.name || "",
+        },
+      });
+
+      if (error) {
+        toast.error(error.message || t("dashboardClient_orders_paymentError"));
+        setLoading(false);
+        return;
+      }
+
+      // Create Payment Intent
+      const createIntentResponse = await apiClient.post("/rental/create-payment-intent", {
+        ...formData,
+        paymentMethodId: paymentMethod.id,
+      });
+
+      let currentPaymentIntentId = createIntentResponse.data.payment_intent_id;
+      let requiresAction = createIntentResponse.data.requires_action;
+
+      if (requiresAction) {
+        const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(createIntentResponse.data.client_secret);
+
+        if (confirmError) {
+          throw new Error(confirmError.message || "Échec de l'authentification 3D Secure");
+        }
+
+        currentPaymentIntentId = paymentIntent.id;
+      }
+
+      // Finalize Payment
+      let confirmResponse = await apiClient.post("/rental/confirm-payment", {
+        paymentIntentId: currentPaymentIntentId
+      });
+
+      while (confirmResponse.data.requires_action) {
+        const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(confirmResponse.data.client_secret);
+
+        if (confirmError) {
+          throw new Error(confirmError.message || "Échec de l'authentification 3D Secure pour l'abonnement");
+        }
+
+        confirmResponse = await apiClient.post("/rental/confirm-payment", {
+          paymentIntentId: paymentIntent.id
+        });
+      }
+
+      toast.success(t("dashboardClient_orders_paymentSuccess"));
+      await localStorage.setItem("reloadCount", "0");
+      navigate("/tableau-de-board/commande", {
+        state: {
+          id: confirmResponse.data.id,
+        },
+      });
+
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || t("dashboardClient_orders_payment_decline"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyCoupon = async () => {
+    try {
+      // Check if code is empty
+      if (!couponCode) {
+        toast.warning(t("dashboardClient_orders_couponCodeRequired"));
+        return;
+      }
+
+      // Call API
+      const response = await couponById(couponCode);
+      // console.log("Coupon response:", response);
+
+      // Defensive checks
+      if (!response) {
+        toast.error("");
+        return;
+      }
+
+      // Check HTTP status
+      if (response?.id) {
+        const coupon = response;
+
+        // Update state
+        setFormData((prev: any) => ({
+          ...prev,
+          id_coupon: coupon.id,
+        }));
+
+        setCouponValue({
+          type: coupon.percent_off ? "percentage" : "fixed",
+          value: coupon.percent_off || coupon.amount_off,
+        });
+
+        toast.success(t("dashboardClient_orders_couponApplied"));
+      } else {
+        // Display error returned by API or fallback message
+        const message = response.data?.error;
+        toast.warning(message);
+      }
+    } catch (error: any) {
+      // console.error("verifyCoupon error:", error);
+
+      // Handle network / unexpected errors gracefully
+      if (error.response) {
+        // Server responded with an error
+        toast.error(error.response.data?.error);
+      } else if (error.request) {
+        // No response from server
+        toast.error("error no coupon");
+      } else {
+        // Something unexpected happened
+        toast.error("server error");
+      }
+    }
+  };
+
+  // Handle licenses count change
+  const handleLicensesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const licenses = Number(e.target.value);
+    if (licenses < 1) return; // prevent zero or negative licenses
+
+    setFormData((prev: { users: any }) => {
+      const users = [...prev.users];
+      if (licenses > users.length) {
+        // add empty user objects
+        for (let i = users.length; i < licenses; i++) {
+          users.push({
+            username: "",
+            email: "",
+            computerName: "",
+            identificationCode: "",
+          });
+        }
+      } else if (licenses < users.length) {
+        // truncate the users array
+        users.splice(licenses);
+      }
+      return { ...prev, licenses, users };
+    });
+  };
+
+  // Handle change for each user's Input
+  const handleUserChange = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev: { users: any }) => {
+      const users = [...prev.users];
+      users[index] = { ...users[index], [name]: value };
+      return { ...prev, users };
+    });
+  };
+
+  // Handle other Inputs like expirationDate and autoRenewal
+  const handleOtherChange = (e: any) => {
+    const { name, value, type, checked } = e.target;
+    if (name === "expirationDate") {
+      setValidateDateExp(false);
+    }
+
+    setFormData((prev: any) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const expiration = new Date(formData.expirationDate);
+  // Calculate the difference in milliseconds
+  const diffTime = expiration.getTime() - today.getTime();
+
+  // Convert milliseconds to days
+  const daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  const [pricePerDay, setPricePerDay] = useState(5)
+  useEffect(() => {
+    // const priceUser = formData.userId ? usersData.find((e: any) => e._id === formData.userId)?.basedPrice : 5
+    setPricePerDay(
+      freeTrial ? 0 : (userData.basedPrice || 5)
+    )
+  }, [formData.freeTrial, userData])
+  // const pricePerDay = freeTrial ? 0 : 5;
+
+  const discountType: any = "percent";
+  const discountValue =
+    discountType === "percent" ? CouponValue.value / 100 : CouponValue.value;
+  const discountSup =
+    formData.licenses > (SettingsData?.licenseThresholdForDiscount || 4)
+      ? 0.1
+      : 0;
+  const basedPrice = daysUntilExpiration * formData.licenses * pricePerDay;
+
+  const totalHT =
+    discountType === "percent"
+      ? basedPrice * (1 - discountValue) * (1 - discountSup)
+      : (basedPrice - discountValue) * (1 - discountSup);
+
+  const tva = formData.tva / 100;
+
+  let totalPayer = (totalHT * tva + totalHT).toFixed(2);
+
+  useEffect(() => {
+    setFormData((prev: any) => ({
+      ...prev,
+      totalPayer: totalPayer,
+      daysUntilExpiration,
+    }));
+  }, [totalPayer, daysUntilExpiration]);
+
+  const navigate = useNavigate();
+
+  const [os, setOs] = useState<"Windows" | "Mac" | "Other">("Other");
+  const [popupOs, setPopupOs] = useState(false);
+
+  useEffect(() => {
+    const platform = navigator.userAgent.toLowerCase();
+    if (platform.includes("win")) setOs("Windows");
+    else if (platform.includes("mac")) setOs("Mac");
+    else setOs("Other");
+  }, []);
+
+  const handleClick = () => {
+    if (os === "Windows") {
+      // cannot open settings directly, but you can open docs or show instructions
+      window.open(
+        "ms-settings:about",
+        "_self"
+      );
+    } else if (os === "Mac") {
+      // macOS doesn’t support a direct URL scheme for System Settings
+      alert(
+        "To find your computer name on Mac:\n1. Click the Apple menu \n2. Choose 'System Settings' → 'General' → 'About'\n3. See 'Name' at the top."
+      );
+    } else {
+      setPopupOs(true);
+    }
+  };
+
+  const [cardType, setCardType] = useState("");
+
+  const handleCardNumberChange = (event: { brand: any; }) => {
+    setCardType(event.brand);
+  };
+
+  // Map Stripe card brands to icons
+  const getCardIcon = (brand: any) => {
+    switch (brand) {
+      case "visa":
+        return <FaCcVisa className="text-2xl text-gray-600" />;
+      case "mastercard":
+        return <FaCcMastercard className="text-2xl text-gray-600" />;
+      case "amex":
+        return <FaCcAmex className="text-2xl text-gray-600" />;
+      case "discover":
+        return <FaCcDiscover className="text-2xl text-gray-600" />;
+      default:
+        return <FaCreditCard className="text-2xl text-gray-400" />; // fallback generic icon
+    }
+  };
+
+  const handleQuickDate = (months: number) => {
+    if (freeTrial) return;
+
+    const today = new Date();
+    const newDate = new Date(today.setMonth(today.getMonth() + months));
+
+    // Format date as YYYY-MM-DD for the input
+    const formattedDate = newDate.toISOString().split('T')[0];
+
+    // Update your form data
+    handleOtherChange({
+      target: {
+        name: 'expirationDate',
+        value: formattedDate
+      }
+    });
+  };
+
+  useEffect(() => {
+    if (!formData.freeTrial) return;
+
+    const today = new Date();
+    today.setDate(today.getDate() + 30);
+
+    // Format date as YYYY-MM-DD for the input
+    const formattedDate = today.toISOString().split('T')[0];
+    handleOtherChange({
+      target: {
+        name: 'expirationDate',
+        value: formattedDate
+      }
+    });
+
+  }, [formData.freeTrial])
+
+  const handleRegistrationSelect = (index: number, regId: string) => {
+    const selectedReg = registrationData.find((r) => r._id === regId);
+
+    setFormData((prev: any) => {
+      const users = [...prev.users];
+      if (selectedReg) {
+        users[index] = {
+          ...users[index],
+          username: selectedReg.username || "",
+          email: selectedReg.email || "",
+          computerName: selectedReg.computerName || "",
+          identificationCode: selectedReg.computerCode || "",
+        };
+      }
+      return { ...prev, users };
+    });
+
+    // Update which registration is selected at that index
+    setSelectedRegistrations((prev) => {
+      const updated = [...prev];
+      updated[index] = regId;
+      return updated;
+    });
+  };
+
+  if (!userIdn.role) {
+    return <Loading />;
+  }
+
+  if (!userData._id) {
+    return <Loading />;
+  }
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  return (
+    <div className="space-y-6 mb-6">
+      {/* popup for tell user how to find name of compter */}
+      <Dialog open={popupOs} onOpenChange={setPopupOs}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Find your computer name</DialogTitle>
+            <DialogDescription>
+              Choose your operating system below for detailed instructions.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 grid gap-3">
+            {[
+              {
+                name: "Windows",
+                href: "https://support.microsoft.com/en-us/office/do-you-need-help-locating-your-computer-name-00384381-8aa9-4398-b81b-475f09fed618",
+                icon: "🪟",
+              },
+              {
+                name: "Mac",
+                href: "https://support.apple.com/en-us/HT201581",
+                icon: "🍎",
+              },
+              {
+                name: "Ubuntu / Debian",
+                href: "https://tech.rochester.edu/tutorials/finding-the-computer-name-on-linux/",
+                icon: "🐧",
+              },
+            ].map((os) => (
+              <a
+                key={os.name}
+                href={os.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between w-full rounded-lg border border-border bg-muted/30 px-4 py-2 transition-colors hover:bg-muted hover:border-primary/40"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">{os.icon}</span>
+                  <span className="font-medium text-primary">{os.name}</span>
+                </div>
+                <span className="text-sm text-muted-foreground">
+                  View guide ↗
+                </span>
+              </a>
+            ))}
+          </div>
+          <DialogFooter className="mt-6">
+            <Button onClick={() => setPopupOs(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Header */}
+      <div className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">
+            {t("dashboardClient_orders_addLicense")}{" "}
+            {freeTrial && (
+              <span className="">
+                ({t("dashboardClient_orders_freeTrial")})
+              </span>
+            )}
+          </h2>
+          <p className="text-sm text-black/40">
+            {t("dashboardClient_orders_fillLicenseInfo")}
+          </p>
+        </div>
+        <div className="flex flex-col gap-3">
+          {(!userData.address || !userData.country) && (
+            <div className="bg-yellow-100 flex items-center justify-between gap-2 p-3 rounded-lg">
+              <div className="flex items-center gap-2">
+                <MdInfo className="text-yellow-800 mt-1" />
+                <p className="text-yellow-800 text-xs font-medium">
+                  {t("dashboardClient_orders_completeCompanyInfoFirst")}
+                </p>
+              </div>
+              <Link to="/tableau-de-board/parametres">
+                <HiExternalLink />
+              </Link>
+            </div>
+          )}
+          <div className="bg-green-100 flex items-center justify-between gap-2 p-3 rounded-lg">
+            <div className="flex items-center gap-2">
+              <IoGift className="text-green-800" />
+              <p className="text-xs font-medium">
+                <span className="font-bold">-10%</span>{" "}
+                {t("dashboardClient_orders_discountForMoreLicenses")}{" "}
+                {SettingsData?.licenseThresholdForDiscount || 4}{" "}
+                {t("dashboardClient_orders_licences")}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-start max-lg:flex-col gap-5">
+        <div className="w-[65%] max-lg:w-full flex flex-col gap-5">
+          <div className="bg-white p-8 rounded-xl shadow-sm">
+            {/* En-tête avec icône */}
+            <div className="flex items-center gap-3 mb-3 pb-4 border-b border-gray-100">
+              <div>
+                <h4 className="font-semibold text-gray-900 text-lg">
+                  {t("dashboardClient_orders_billingInfo")}
+                </h4>
+                <p className="text-sm text-gray-500 mt-1">
+                  {t('dashboardClient_orders_info_fac')}
+                </p>
+              </div>
+            </div>
+
+            {/* Grille des informations */}
+            <div className="space-y-6">
+              {/* Ligne 1 - Société et Adresse */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="company" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    {t("dashboardClient_orders_companyName")}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="company"
+                      name="company"
+                      value={userData.company}
+                      readOnly
+                      className="bg-gray-50 border-gray-200 text-gray-700 pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all"
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="adress" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {t("dashboardClient_orders_address")}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="adress"
+                      name="adress"
+                      value={userData.address}
+                      readOnly
+                      className="bg-gray-50 border-gray-200 text-gray-700 pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all"
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ligne 2 - Pays et TVA */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="pays" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {t("dashboardClient_orders_country")}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="pays"
+                      name="pays"
+                      value={countries.find((e) => e.code === userData.country)?.name}
+                      readOnly
+                      className="bg-gray-50 border-gray-200 text-gray-700 pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all"
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tvanum" className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+                    </svg>
+                    {t("pay_01_tva")}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="tvanum"
+                      name="tvanum"
+                      value={userData.nTva}
+                      readOnly
+                      className="bg-gray-50 border-gray-200 text-gray-700 pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all font-mono text-sm"
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Note informative */}
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p className="text-sm text-blue-800 font-medium">{t('dashboardClient_orders_fac_title')}</p>
+                  <p className="text-xs text-blue-700 mt-1">
+                    {t('dashboardClient_orders_subtitle')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-8 rounded-xl shadow-sm">
+            {/* Header Section */}
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 text-lg">
+                  {t("dashboardClient_orders_licenseInfo")}
+                </h4>
+                <p className="text-sm text-gray-500 mt-1">
+                  {t('dashboardClient_orders_subtitle_licence')}
+                </p>
+              </div>
+            </div>
+
+            {/* Number of Licenses */}
+            <div className="mb-6">
+              <Label htmlFor="licenses" className="text-sm font-medium text-gray-700 mb-2 block">
+                {t("dashboardClient_orders_numberOfLicenses")}
+              </Label>
+              <div className="relative">
+                <Input
+                  id="licenses"
+                  name="licenses"
+                  type="number"
+                  min={1}
+                  value={formData.licenses}
+                  onChange={handleLicensesChange}
+                  readOnly={freeTrial || licenses?.length > 0}
+                  className="bg-gray-50 border-gray-200 text-gray-700 pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all"
+                />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* User Licenses */}
+            <div className="space-y-4">
+              {formData.users.map((user: any, index: number) => (
+                <div
+                  key={index}
+                  className="p-6 border-2 border-slate-100 rounded-xl bg-gradient-to-r from-slate-50 to-white-50"
+                >
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-slate-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm font-bold">{index + 1}</span>
+                    </div>
+                    <h5 className="font-semibold text-gray-900 text-lg">
+                      {t("dashboardClient_orders_license1")} {index + 1}
+                    </h5>
+                  </div>
+                  {
+                    !formData.freeTrial && (
+                      <div className="grid grid-cols-1 gap-2 mb-4">
+                        <Label htmlFor={`username-${index}`} className="text-sm font-medium text-gray-700">
+                          Licences de période d'essai
+                        </Label>
+                        <Select
+                          onValueChange={(value) => handleRegistrationSelect(index, value)}
+                          value={selectedRegistrations[index] || ""}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Sélectionnez une licence non liée" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {registrationData.filter((reg) => !selectedRegistrations.includes(reg._id) || selectedRegistrations[index] === reg._id).map((reg) => (
+                              <SelectItem key={reg._id} value={reg._id}>
+                                <span className="text-sm font-medium">{reg.username} ({reg.computerName})</span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )
+                  }
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Username */}
+                    <div className="space-y-2">
+                      <Label htmlFor={`username-${index}`} className="text-sm font-medium text-gray-700">
+                        {t("dashboardClient_orders_username")}
+                      </Label>
+                      <Input
+                        id={`username-${index}`}
+                        name="username"
+                        placeholder={t("dashboardClient_orders_username")}
+                        value={user.username}
+                        onChange={(e) => handleUserChange(index, e)}
+                        readOnly={licenses?.length > 0}
+                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    {/* Email */}
+                    <div className="space-y-2">
+                      <Label htmlFor={`email-${index}`} className="text-sm font-medium text-gray-700">
+                        {t("dashboardClient_orders_email")}
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id={`email-${index}`}
+                          name="email"
+                          type="email"
+                          placeholder="support@ferracad.com"
+                          value={user.email}
+                          onChange={(e) => handleUserChange(index, e)}
+                          readOnly={licenses?.length > 0}
+                          className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 pl-10"
+                        />
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <p className="text-xs text-blue-600 font-medium">
+                        {t("dashboardClient_orders_authCodeSent")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                    {/* Computer Name */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor={`computerName-${index}`} className="text-sm font-medium text-gray-700">
+                          {t("dashboardClient_orders_computerName")}
+                        </Label>
+                      </div>
+                      <Input
+                        id={`computerName-${index}`}
+                        name="computerName"
+                        placeholder="Nom de votre ordinateur"
+                        value={user.computerName}
+                        onChange={(e) => handleUserChange(index, e)}
+                        readOnly={licenses?.length > 0}
+                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                      />
+                      <button
+                        onClick={handleClick}
+                        className="cursor-pointer text-xs text-blue-600 hover:text-blue-800 font-semibold underline transition-colors"
+                      >
+                        {t('dashboardClient_orders_computerNameRequired_how')}
+                      </button>
+                      <p className="text-xs text-gray-500">
+                        {t("dashboardClient_orders_computerNameHint")}
+                      </p>
+                    </div>
+
+                    {/* Identification Code */}
+                    <div className="space-y-2">
+                      <Label htmlFor={`identificationCode-${index}`} className="text-sm font-medium text-gray-700">
+                        {t("dashboardClient_orders_idCode")}
+                      </Label>
+                      <Input
+                        id={`identificationCode-${index}`}
+                        name="identificationCode"
+                        placeholder="Code d'identification unique"
+                        value={user.identificationCode}
+                        onChange={(e) => handleUserChange(index, e)}
+                        readOnly={licenses?.length > 0}
+                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 font-mono"
+                      />
+                      <p className="text-xs text-gray-500">
+                        {t("dashboardClient_orders_idCodeHint")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Expiration Date */}
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="grid gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="expirationDate" className="text-sm font-semibold text-gray-800">
+                    {t("dashboardClient_orders_expirationDate")}
+                  </Label>
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Date Input with Icon */}
+                    <div className="relative flex-1">
+                      <Input
+                        id="expirationDate"
+                        name="expirationDate"
+                        type="date"
+                        min={minDate}
+                        value={formData.expirationDate}
+                        onChange={handleOtherChange}
+                        readOnly={freeTrial}
+                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 pl-10 pr-4 py-2.5 h-11 transition-colors"
+                      />
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    </div>
+
+                    {/* Validation Button */}
+                    <button
+                      type="button"
+                      onClick={() => setValidateDateExp(true)}
+                      disabled={!formData.expirationDate || freeTrial}
+                      className="px-6 py-2.5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border border-transparent rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 shadow-sm hover:shadow-md"
+                    >
+                      {"Validate Date"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Date Selection */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleQuickDate(2)}
+                        disabled={formData.freeTrial}
+                        className="px-4 py-2 text-xs font-medium bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                      >
+                        2 mois
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickDate(3)}
+                        disabled={formData.freeTrial}
+                        className="px-4 py-2 text-xs font-medium bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                      >
+                        3 mois
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleQuickDate(6)}
+                        disabled={formData.freeTrial}
+                        className="px-4 py-2 text-xs font-medium bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                      >
+                        6 mois
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hint Text */}
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  {t("dashboardClient_orders_expirationDateHint")}
+                </p>
+
+                {/* Validation Status */}
+                {ValidateDateExp && (
+                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <svg className="h-4 w-4 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <span className="text-sm text-green-700 font-medium">Date validée avec succès</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Auto Renewal 
+              {!freeTrial && (
+                <div className="flex items-center gap-3 mt-4 p-3 bg-white rounded-lg border border-gray-200">
+                  <input
+                    id="autoRenewal"
+                    name="autoRenewal"
+                    type="checkbox"
+                    checked={formData.autoRenewal}
+                    onChange={handleOtherChange}
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  />
+                  <Label htmlFor="autoRenewal" className="text-xs text-gray-700 cursor-pointer">
+                    {t("dashboardClient_orders_enableAutoRenewal")}
+                  </Label>
+                  <div className="ml-auto bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                    Recommandé
+                  </div>
+                </div>
+              )*/}
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-5 w-[35%] max-lg:w-full sticky top-5">
+          <div className="bg-white p-10 rounded-lg z-50 shadow-sm">
+            <h4 className="text-sm font-bold mb-6">
+              {t("dashboardClient_orders_billingSummary")}
+            </h4>
+            <div className="flex justify-between mb-2">
+              <span className="text-sm font-medium">
+                {t("checkout_price_j")} ({formData.licenses}{" "}
+                {t("checkout_licence")})
+              </span>
+              <span className="font-bold text-sm">
+                {formData.licenses * pricePerDay} €
+              </span>
+            </div>
+
+            <div className="flex justify-between mb-2">
+              <span className="text-sm font-medium">{t("pay_03_num_j")}</span>
+              <span className="font-bold text-sm">
+                {daysUntilExpiration} {t("pay_03_j")}
+              </span>
+            </div>
+
+            <div className="flex justify-between mb-2">
+              <span className="text-sm font-medium">
+                {t("checkout_discount")}
+              </span>
+              <span className="font-bold text-sm text-red-600">
+                -{" "}
+                {discountType === "percent"
+                  ? (discountValue * 100).toFixed(2)
+                  : discountValue.toFixed(2)}{" "}
+                {discountType === "percent" ? "%" : "€"}
+              </span>
+            </div>
+
+            <div className="flex justify-between mb-2 pb-2">
+              <span className="text-sm font-medium">
+                {t("pay_03_discount")}
+              </span>
+              <span className="font-bold text-sm text-red-600">
+                - {(discountSup * 100).toFixed(2)} %
+              </span>
+            </div>
+
+            <div className="flex justify-between mb-2 pt-4 border-t border-gray-300">
+              <span className="text-sm font-medium">
+                {t("checkout_sous_total")}
+              </span>
+              <span className="font-bold text-sm">{totalHT} €</span>
+            </div>
+
+            <div className="flex justify-between mb-2">
+              <span className="text-sm font-medium">
+                {t("checkout_tva")} ({(tva * 100).toFixed(2)} %)
+              </span>
+              <span className="font-bold text-sm">
+                {(totalHT * tva).toFixed(2)} €
+              </span>
+            </div>
+
+            <div className="flex justify-between items-end font-bold text-sm pt-4 border-t border-gray-300 mb-6">
+              <span>{t("checkout_total")}</span>
+              <div className="flex flex-col items-end">
+                {(CouponValue.value > 0 || formData.licenses > 4) && (
+                  <small className="line-through text-red-800">
+                    {basedPrice * (1 + tva)} € TTC
+                  </small>
+                )}
+                <span>{totalPayer} € TTC</span>
+              </div>
+            </div>
+
+            <div className="relative text-[#B2BCCA] w-full mb-7">
+              <label
+                htmlFor="promo"
+                className="absolute top-[-11px] left-2 px-4 bg-white font-medium text-sm"
+              >
+                {t("checkout_code_discount")}
+              </label>
+              <input
+                type="text"
+                id="promo"
+                name="promo"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                placeholder={t("dashboardClient_orders_typeHere")}
+                className="border border-[#B2BCCA] w-full p-3 px-6 rounded-lg text-sm text-stone-800"
+                required
+              />
+              <div className="absolute right-2 top-0 h-full flex items-center">
+                <button
+                  onClick={verifyCoupon}
+                  className="bg-secondary text-xs p-2 px-5 font-bold text-stone-100 rounded-lg transition-all duration-200 hover:bg-stone-700 cursor-pointer"
+                >
+                  {t("checkout_check")}
+                </button>
+              </div>
+            </div>
+
+            <div className="relative text-[#B2BCCA] w-full mb-4">
+              <label
+                htmlFor="manoteil"
+                className="absolute top-[-11px] left-2 px-4 bg-white font-medium text-sm"
+              >
+                {t("checkout_note")}
+              </label>
+              <textarea
+                placeholder={t("dashboardClient_orders_typeHere")}
+                name="message"
+                onChange={handleOtherChange}
+                value={formData.message}
+                className="border border-[#B2BCCA] w-full p-3 px-6 rounded-lg text-sm text-stone-800"
+                rows={3}
+              ></textarea>
+            </div>
+          </div>
+          <div className="bg-white p-10 rounded-lg z-50 shadow-sm">
+            {/* Header Section */}
+            <div className="mb-6">
+              <div className="flex items-center mb-3">
+                <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full">
+                  <FaLock className="text-green-600 text-sm" />
+                  <span className="text-green-700 text-xs font-medium">{t('pay_04_title_secure')}</span>
+                </div>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {t('pay_04_title_new')}
+              </h3>
+              <p className="text-sm text-gray-600">
+                {t('pay_04_subtitle')}
+              </p>
+            </div>
+
+            {/* Payment Form */}
+            <div className="mx-auto space-y-4 mb-6">
+              <div>
+                <Label className="text-gray-900 font-medium mb-2 flex items-center gap-2">
+                  {t("dashboardClient_orders_cardNumber")}
+                  <div className="flex gap-2">
+                    <FaCcVisa className="text-blue-900 text-sm" title="Visa" />
+                    <FaCcMastercard className="text-red-600 text-sm" title="Mastercard" />
+                    <FaCcAmex className="text-blue-600 text-sm" title="American Express" />
+                    <FaCcDiscover className="text-orange-600 text-sm" title="Discover" />
+                    <FaCcDinersClub className="text-green-700 text-sm" title="Diners Club" />
+                  </div>
+                </Label>
+                <div className="flex items-center gap-2 border border-gray-300 rounded-md px-3 py-3 transition-all focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 bg-white shadow-sm">
+                  {getCardIcon(cardType)}
+                  <CardNumberElement
+                    options={ELEMENT_OPTIONS}
+                    onChange={handleCardNumberChange}
+                    className="w-full bg-transparent focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex max-2xl:flex-col max-2xl:space-y-4 space-x-4">
+                {/* Expiration */}
+                <div className="w-1/2 max-2xl:w-full">
+                  <Label className="text-gray-900 font-medium mb-2">
+                    {t("dashboardClient_orders_expiration")}
+                  </Label>
+                  <div className="flex items-center gap-2 border border-gray-300 rounded-md px-3 py-3 transition-all focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 bg-white shadow-sm">
+                    <FaCalendarAlt className="text-gray-500 text-sm" />
+                    <CardExpiryElement
+                      options={ELEMENT_OPTIONS}
+                      className="w-full bg-transparent focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* CVC */}
+                <div className="w-1/2 max-2xl:w-full">
+                  <Label className="text-gray-900 font-medium mb-2 flex items-center gap-2">
+                    {t("dashboardClient_orders_cvc")}
+                    <span className="text-xs text-gray-500">({t('pay_04_ccv_num')})</span>
+                  </Label>
+                  <div className="flex items-center gap-2 border border-gray-300 rounded-md px-3 py-3 transition-all focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500 bg-white shadow-sm">
+                    <FaLock className="text-gray-500 text-sm" />
+                    <CardCvcElement
+                      options={ELEMENT_OPTIONS}
+                      className="w-full bg-transparent focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Security Notice */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
+              <div className="flex items-start gap-2">
+                <FaInfoCircle className="text-blue-500 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-gray-700">
+                  <strong>{t('pay_04_way_store_title')} :</strong> {t('pay_04_way_store_subtitle')}
+                </p>
+              </div>
+            </div>
+
+            {/* Terms Agreement - Improved */}
+            <label className="flex items-start space-x-3 text-xs text-gray-700 mb-6 p-3 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 transition-colors">
+              <input
+                type="checkbox"
+                className="mt-0.5 text-blue-600 focus:ring-blue-500 rounded"
+                name="agree"
+                checked={formData.agree}
+                onChange={handleOtherChange}
+                required
+              />
+              <p
+                className="font-medium text-stone-500"
+                dangerouslySetInnerHTML={{
+                  __html: t("checkout_checkbox_description"),
+                }}
+              />
+            </label>
+
+            {/* Payment Button */}
+            <button
+              className={`w-full bg-blue-900 cursor-pointer transition-all duration-200 hover:bg-blue-800 text-white py-3 rounded-lg font-bold text-sm shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${!formData.agree ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              onClick={handleSubmit}
+              disabled={!formData.agree}
+            >
+              <div className="flex items-center justify-center gap-2">
+                <FaLock className="text-white" />
+                <span>{t("checkout_paiment")} {totalPayer} €</span>
+              </div>
+            </button>
+
+            {/* Enhanced Secure Footer */}
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center justify-center gap-2">
+                <div className="flex items-center gap-1">
+                  <FaLock className="text-green-600" style={{ display: 'none' }} />
+                </div>
+                <p className="text-center font-medium text-xs text-gray-500">
+                  {t("dashboardClient_orders_paymentSecureStripe")}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p className="text-center font-medium text-sm">
+          {t("dashboardClient_orders_problemContact")}{" "}
+          <Link to="/contact" className="underline">
+            {t("dashboardClient_orders_contactUsNow")}
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default NewLicence;
