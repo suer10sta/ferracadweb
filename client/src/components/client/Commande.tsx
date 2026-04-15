@@ -126,7 +126,7 @@ const CommandeClient = () => {
       const expirationDate = c?.nextBillingDate ? new Date(c.nextBillingDate) : (licenses.length > 0 ? new Date(licenses[0]?.expirationDate) : null);
       const now = new Date();
       const isExpired = expirationDate ? expirationDate < now : false;
-      const daysUntilExpiration = expirationDate 
+      const daysUntilExpiration = expirationDate
         ? Math.ceil((expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
         : 0;
 
@@ -138,8 +138,8 @@ const CommandeClient = () => {
         paiements: paiements || { totalPricePay: 0, type: 'none' },
         isExpired,
         daysUntilExpiration,
-        statusDuree: isExpired 
-          ? "expired" 
+        statusDuree: isExpired
+          ? "expired"
           : "active",
       };
     });
@@ -168,10 +168,10 @@ const CommandeClient = () => {
   );
 
   const getStatusBadge = (license: (typeof enrichedCommande)[0]) => {
-    const isActuallyExpired = license.isExpired || 
-                             license.statusDuree === "expired" || 
-                             license.status === "expire" || 
-                             (license.status === "freetrial" && license.isExpired);
+    const isActuallyExpired = license.isExpired ||
+      license.statusDuree === "expired" ||
+      license.status === "expire" ||
+      (license.status === "freetrial" && license.isExpired);
 
     if (isActuallyExpired || license.status === "inactive") {
       return (
@@ -406,8 +406,8 @@ const CommandeClient = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {com.nextBillingDate || com.licenses.length > 0 
-                        ? formatDate(com.nextBillingDate || com.licenses[0]?.expirationDate) 
+                      {com.nextBillingDate || com.licenses.length > 0
+                        ? formatDate(com.nextBillingDate || com.licenses[0]?.expirationDate)
                         : "-"}
                     </TableCell>
                     <TableCell>{getStatusBadge(com)}</TableCell>
@@ -420,8 +420,8 @@ const CommandeClient = () => {
                           com.statusDuree === "active" && "text-green-600"
                         )}
                       >
-                        {com.licenses.length === 0 
-                          ? "-" 
+                        {com.licenses.length === 0
+                          ? "-"
                           : com.isExpired
                             ? `${t(
                               "dashboardClient_orders_left_days"

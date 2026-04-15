@@ -46,11 +46,11 @@ exports.connexion = async (req, res) => {
             return res.status(401).json({ error: "Votre e-mail ou votre mot de passe est incorrect." });
         }
 
-        if(user.status === "inactive") {
+        if (user.status === "inactive") {
             return res.status(401).json({ error: "Ce compte est bloqué par l'administration" });
         }
 
-        if(user.status === "pending" || user.status === "freetrial") {
+        if (user.status === "pending" || user.status === "freetrial") {
             const data = { name: user.name }
             const token = jwt.sign(
                 { id: user._id, type: "verify-acc" },
@@ -58,12 +58,12 @@ exports.connexion = async (req, res) => {
                 { expiresIn: "1d" }
             );
             const url = `${process.env.BACKEND_LIEN}/api/auth/activation/${token}`
-        
+
             await sendEmail({
-              type: "verify-account",
-              email: user.email.trim(),
-              code: url,
-              data,
+                type: "verify-account",
+                email: user.email.trim(),
+                code: url,
+                data,
             });
 
             return res.status(401).json({ error: "Ce compte n’est pas encore activé. Vous pouvez trouver le lien d’activation dans votre boîte mail" });
@@ -74,7 +74,7 @@ exports.connexion = async (req, res) => {
             return res.status(401).json({ error: "Votre e-mail ou votre mot de passe est incorrect." });
         }
 
-        if(user.twoFac) {
+        if (user.twoFac) {
             const code6Digital = await generateCode2Fac();
             const tokenFac = jwt.sign(
                 { id: user._id, code: code6Digital, remembre: remembre },
@@ -97,13 +97,13 @@ exports.connexion = async (req, res) => {
         const token = jwt.sign(
             { id: user._id, role: user.role },
             process.env.JWT_SECRET || "JFEY475YFH29NNCKDAS012328DHFN4",
-            { expiresIn: remembre? "30d" : "7d" }
+            { expiresIn: remembre ? "30d" : "7d" }
         );
 
-        if(!user.ipAdresse) {
+        if (!user.ipAdresse) {
             user.ipAdresse = req.realIp;
         }
-        
+
         user.lastLogin = new Date();
         await user.save();
 
@@ -116,7 +116,7 @@ exports.connexion = async (req, res) => {
             action: "Login",
             actionId: "",
             idAdress: req.realIp,
-            country 
+            country
         });
 
         res.cookie("token", token, {
@@ -144,121 +144,121 @@ exports.connexion = async (req, res) => {
 
 exports.checkCodeValidate = async (req, res) => {
     try {
-      const { token, code, email } = req.body;
+        const { token, code, email } = req.body;
 
-      if (!token || !code || !email) {
-        return res.status(400).json({ message: "Token, code et email sont requis." });
-      }
-  
-      // Vérifier et décoder le token
-      let decoded;
-      try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET || "JFEY475YFH29NNCKDAS012328DHFN4");
-      } catch (error) {
-        return res.status(401).json({ message: "Token invalide ou expiré." });
-      }
-  
-      const userId = decoded.id;
-      const codeFromToken = decoded.code;
-  
-      // Vérifier que le code correspond
-      if (code !== codeFromToken) {
-        return res.status(400).json({ message: "Code de vérification incorrect." });
-      }
-  
-      // Vérifier que l'utilisateur existe et que l'email correspond
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ message: "Utilisateur introuvable." });
-      }
-  
-      if (user.email !== email) {
-        return res.status(400).json({ message: "L'email ne correspond pas à l'utilisateur." });
-      }
+        if (!token || !code || !email) {
+            return res.status(400).json({ message: "Token, code et email sont requis." });
+        }
 
-      // login Process
-      const tokenLog = jwt.sign(
-        { id: user._id, role: user.role },
-        process.env.JWT_SECRET || "JFEY475YFH29NNCKDAS012328DHFN4",
-        { expiresIn: decoded.remembre? "30d" : "7d" }
-      );
-  
-      user.lastLogin = new Date();
-      await user.save();
-  
-      const geo = geoip.lookup(req.realIp);
-      const country = geo?.country || "Auter";
-  
-      await addActivityLog({
-          userId: user._id,
-          userType: user.role,
-          action: "Login",
-          actionId: "",
-          idAdress: req.realIp,
-          country 
-      });
-  
-      res.cookie("token", tokenLog, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "Strict",
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
-  
-      // Si tout est bon, renvoyer une réponse de succès
-      return res.status(200).json({
-        message: "Code vérifié avec succès",
-        userId: user._id,
-      });
-  
+        // Vérifier et décoder le token
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET || "JFEY475YFH29NNCKDAS012328DHFN4");
+        } catch (error) {
+            return res.status(401).json({ message: "Token invalide ou expiré." });
+        }
+
+        const userId = decoded.id;
+        const codeFromToken = decoded.code;
+
+        // Vérifier que le code correspond
+        if (code !== codeFromToken) {
+            return res.status(400).json({ message: "Code de vérification incorrect." });
+        }
+
+        // Vérifier que l'utilisateur existe et que l'email correspond
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "Utilisateur introuvable." });
+        }
+
+        if (user.email !== email) {
+            return res.status(400).json({ message: "L'email ne correspond pas à l'utilisateur." });
+        }
+
+        // login Process
+        const tokenLog = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET || "JFEY475YFH29NNCKDAS012328DHFN4",
+            { expiresIn: decoded.remembre ? "30d" : "7d" }
+        );
+
+        user.lastLogin = new Date();
+        await user.save();
+
+        const geo = geoip.lookup(req.realIp);
+        const country = geo?.country || "Auter";
+
+        await addActivityLog({
+            userId: user._id,
+            userType: user.role,
+            action: "Login",
+            actionId: "",
+            idAdress: req.realIp,
+            country
+        });
+
+        res.cookie("token", tokenLog, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "Strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
+        // Si tout est bon, renvoyer une réponse de succès
+        return res.status(200).json({
+            message: "Code vérifié avec succès",
+            userId: user._id,
+        });
+
     } catch (error) {
-      console.error("Erreur checkCodeValidate:", error);
-      return res.status(500).json({ message: "Erreur serveur." });
+        console.error("Erreur checkCodeValidate:", error);
+        return res.status(500).json({ message: "Erreur serveur." });
     }
 };
 
 exports.resendTwoFactorCode = async (req, res) => {
     try {
-      const { email, token } = req.body;
-  
-      if (!email || !token) {
-        return res.status(400).json({ message: "Email et token sont requis." });
-      }
-  
-      // Verify & decode token
-      let decoded;
-      try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET || "JFEY475YFH29NNCKDAS012328DHFN4");
-      } catch (err) {
-        return res.status(401).json({ message: "Token invalide ou expiré." });
-      }
-  
-      const { id, code } = decoded;
-  
-      // Find the user
-      const user = await User.findById(id);
-      if (!user) {
-        return res.status(404).json({ message: "Utilisateur non trouvé." });
-      }
-  
-      // Check if email matches
-      if (user.email !== email) {
-        return res.status(400).json({ message: "L'email ne correspond pas à l'utilisateur." });
-      }
-  
-      // Resend the same 2FA code
-      await sendEmail({
-        type: "two-factors",
-        email,
-        code,
-        data: {},
-        user,
-      });
-  
-      return res.status(200).json({ message: "Le code a été renvoyé avec succès." });
+        const { email, token } = req.body;
+
+        if (!email || !token) {
+            return res.status(400).json({ message: "Email et token sont requis." });
+        }
+
+        // Verify & decode token
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET || "JFEY475YFH29NNCKDAS012328DHFN4");
+        } catch (err) {
+            return res.status(401).json({ message: "Token invalide ou expiré." });
+        }
+
+        const { id, code } = decoded;
+
+        // Find the user
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({ message: "Utilisateur non trouvé." });
+        }
+
+        // Check if email matches
+        if (user.email !== email) {
+            return res.status(400).json({ message: "L'email ne correspond pas à l'utilisateur." });
+        }
+
+        // Resend the same 2FA code
+        await sendEmail({
+            type: "two-factors",
+            email,
+            code,
+            data: {},
+            user,
+        });
+
+        return res.status(200).json({ message: "Le code a été renvoyé avec succès." });
     } catch (error) {
-      console.error("Erreur lors du renvoi du code 2FA:", error);
-      return res.status(500).json({ message: "Une erreur est survenue." });
+        console.error("Erreur lors du renvoi du code 2FA:", error);
+        return res.status(500).json({ message: "Une erreur est survenue." });
     }
 }
 
@@ -281,15 +281,15 @@ exports.inscription = async (req, res) => {
             platform
         } = req.body;
 
-        if(!name || !prenom || !email || !pwd || !reppwd || !pays || !number || !platform) {
+        if (!name || !prenom || !email || !pwd || !reppwd || !pays || !number || !platform) {
             return res.status(400).json({ error: "Tous les champs sont obligatoires." });
         }
- 
-        if(pwd !== reppwd) {
+
+        if (pwd !== reppwd) {
             return res.status(400).json({ error: "Les mots de passe ne correspondent pas." });
         }
 
-        if(pwd.length < 8) {
+        if (pwd.length < 8) {
             return res.status(400).json({ error: "Le mot de passe doit contenir au moins 8 caractères." });
         }
 
@@ -297,7 +297,7 @@ exports.inscription = async (req, res) => {
         if (!emailRegex.test(email)) {
             return res.status(400).json({ message: "Adresse e-mail invalide." });
         }
-    
+
         const phoneRegex = /^[0-9]+$/;
         if (!phoneRegex.test(number)) {
             return res.status(400).json({ message: "Le numéro de téléphone doit contenir uniquement des chiffres." });
@@ -323,16 +323,16 @@ exports.inscription = async (req, res) => {
             city: ville || "",
             address: adresse || "",
             role: "client",
-            status: isAdmin? "active": "pending",
+            status: isAdmin ? "active" : "pending",
             invitationId,
-            source: isAdmin? "Formulaire de l'admin" : "Formulaire d’inscription",
+            source: isAdmin ? "Formulaire de l'admin" : "Formulaire d’inscription",
             platform: platform,
             ipAdresse: req.realIp,
         });
 
         await newUser.save()
 
-        if(!isAdmin) {
+        if (!isAdmin) {
             const data = { name: name + " " + prenom }
             const token = jwt.sign(
                 { id: newUser._id, type: "verify-acc" },
@@ -369,7 +369,7 @@ exports.logout = (req, res) => {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'Strict'
         });
-        
+
         return res.status(200).json({ message: 'Déconnexion réussie.' });
     } catch (error) {
         console.error('Auth Error:', error);
@@ -383,20 +383,20 @@ exports.changePwd = async (req, res) => {
         const { newPassword, confirmPassword, currentPassword } = req.body;
         const user = await User.findById(id)
 
-        if(!user) {
+        if (!user) {
             return res.status(409).json({ message: "Le compte est pas Exist." });
         }
 
-        if(newPassword !== confirmPassword) {
+        if (newPassword !== confirmPassword) {
             return res.status(400).json({ message: "Les mots de passe ne correspondent pas." })
         }
 
-        if(newPassword.length < 8) {
+        if (newPassword.length < 8) {
             return res.status(400).json({ message: "Le mot de passe doit etre superieur a 8 caractère" })
         }
 
         const isMatch = await bcrypt.compare(currentPassword, user.password);
-        if(!isMatch) {
+        if (!isMatch) {
             return res.status(409).json({ message: "Le mot de passe n'est pas correct" });
         }
 
@@ -417,7 +417,7 @@ exports.changeTwoFac = async (req, res) => {
         const { is2FAEnabled } = req.body;
         const user = await User.findById(id)
 
-        if(!user) {
+        if (!user) {
             return res.status(409).json({ message: "Le compte est pas Exist." });
         }
 
@@ -436,22 +436,31 @@ exports.validate = async (req, res) => {
         const token = req.cookies.token;
 
         if (!token) {
-          return res.status(401).json({ valid: false });
+            return res.status(401).json({ valid: false });
         }
-    
+
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'JFEY475YFH29NNCKDAS012328DHFN4');
         const user = await User.findById(decoded.id);
-    
+
         if (!user || (user.status !== "active" && user.status !== "freetrial")) {
             return res.status(401).json({ valid: false });
         }
-    
+
+        // Mise à jour de la dernière activité (lastLogin)
+        // On ne met à jour que si la dernière date remonte à plus de 15 minutes pour économiser la base de données
+        const now = new Date();
+        const lastActivity = user.lastLogin ? new Date(user.lastLogin) : new Date(0);
+        if (now.getTime() - lastActivity.getTime() > 15 * 60 * 1000) {
+            user.lastLogin = now;
+            await user.save();
+        }
+
         res.status(200).json({
-          valid: true,
-          user: {
-            id: user._id,
-            role: user.role
-          }
+            valid: true,
+            user: {
+                id: user._id,
+                role: user.role
+            }
         });
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
@@ -460,42 +469,42 @@ exports.validate = async (req, res) => {
 
 exports.validateAccount = async (req, res) => {
     try {
-      const { token } = req.params;
-  
-      // 1. Verify JWT token
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "JFEY475YFH29NNCKDAS012328DHFN4"
-      );
-  
-      // 2. Check token content
-      if (!decoded || !decoded.id || decoded.type !== 'verify-acc') {
-        return res.status(400).json({ message: 'Token invalide ou type incorrect.' });
-      }
-  
-      // 3. Find user
-      const user = await User.findById(decoded.id);
-      if (!user) {
-        return res.redirect(`${process.env.FRONTEND_LIEN}/louer/register`);
-      }
-  
-      // 4. Activate account if not already active
-      if (user.status === 'active') {
-        return res.redirect(`${process.env.FRONTEND_LIEN}/connexion`);
-      }
-  
-      user.status = 'active';
-      await user.save();
-  
-      res.redirect(`${process.env.FRONTEND_LIEN}/connexion`);
+        const { token } = req.params;
+
+        // 1. Verify JWT token
+        const decoded = jwt.verify(
+            token,
+            process.env.JWT_SECRET || "JFEY475YFH29NNCKDAS012328DHFN4"
+        );
+
+        // 2. Check token content
+        if (!decoded || !decoded.id || decoded.type !== 'verify-acc') {
+            return res.status(400).json({ message: 'Token invalide ou type incorrect.' });
+        }
+
+        // 3. Find user
+        const user = await User.findById(decoded.id);
+        if (!user) {
+            return res.redirect(`${process.env.FRONTEND_LIEN}/louer/register`);
+        }
+
+        // 4. Activate account if not already active
+        if (user.status === 'active') {
+            return res.redirect(`${process.env.FRONTEND_LIEN}/connexion`);
+        }
+
+        user.status = 'active';
+        await user.save();
+
+        res.redirect(`${process.env.FRONTEND_LIEN}/connexion`);
     } catch (err) {
-      console.error('Erreur d’activation de compte :', err);
-  
-      if (err.name === 'TokenExpiredError') {
-        return res.redirect(`${process.env.FRONTEND_LIEN}/activation-error?token=${token}`);
-      }
-  
-      res.redirect(`${process.env.FRONTEND_LIEN}/activation-error?token=${token}`);
+        console.error('Erreur d’activation de compte :', err);
+
+        if (err.name === 'TokenExpiredError') {
+            return res.redirect(`${process.env.FRONTEND_LIEN}/activation-error?token=${token}`);
+        }
+
+        res.redirect(`${process.env.FRONTEND_LIEN}/activation-error?token=${token}`);
     }
 };
 
@@ -505,7 +514,7 @@ exports.resendActivation = async (req, res) => {
 
         const user = await User.findOne({ email });
         if (!user) {
-          return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' });
         }
 
         if (user.status === 'active') {
@@ -544,7 +553,7 @@ exports.recoverPassword = async (req, res) => {
 
         const user = await User.findOne({ email });
         if (!user) {
-          return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' });
         }
 
         const data = { name: user.name }
@@ -578,10 +587,10 @@ exports.setPassword = async (req, res) => {
         if (!token || !password || !confirmPassword) {
             return res.status(400).json({ message: "Champs manquants." });
         }
-  
+
         // Check passwords match
         if (password !== confirmPassword) {
-          return res.status(400).json({ message: "Les mots de passe ne correspondent pas." });
+            return res.status(400).json({ message: "Les mots de passe ne correspondent pas." });
         }
 
         const decoded = jwt.verify(
@@ -591,18 +600,18 @@ exports.setPassword = async (req, res) => {
 
         // Check token content
         if (!decoded || !decoded.id || decoded.type !== 'password-reset') {
-          return res.status(400).json({ message: 'Token invalide ou type incorrect.' });
+            return res.status(400).json({ message: 'Token invalide ou type incorrect.' });
         }
 
         // Find user
         const user = await User.findById(decoded.id);
         if (!user) {
-          return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+            return res.status(404).json({ message: 'Utilisateur non trouvé.' });
         }
 
         // Hash the new password
         const hashedPassword = await bcrypt.hash(password, 10);
-        
+
         // Update user's password
         user.password = hashedPassword;
         await user.save();
@@ -665,7 +674,7 @@ exports.verifyOTP = async (req, res) => {
             return res.status(400).json({ message: "Email et code sont requis." });
         }
 
-        const user = await User.findOne({ 
+        const user = await User.findOne({
             email: email.trim(),
             verificationCode: code,
             verificationCodeExpires: { $gt: new Date() }
@@ -680,8 +689,8 @@ exports.verifyOTP = async (req, res) => {
         user.verificationCodeExpires = undefined;
         await user.save();
 
-        res.status(200).json({ 
-            success: true, 
+        res.status(200).json({
+            success: true,
             message: "Email vérifié avec succès.",
             userData: {
                 name: user.name || "",
