@@ -67,6 +67,7 @@ const NewLicence = () => {
   const [SettingsData, setSettings] = useState<any>({});
   const [registrationData, setregistrationData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paying, setPaying] = useState(false);
   const location = useLocation();
   const licenses = location.state?.commandData;
   const idRental = location.state?.id;
@@ -302,7 +303,7 @@ const NewLicence = () => {
     }
 
     try {
-      setLoading(true);
+      setPaying(true);
 
       const { error, paymentMethod } = await stripe.createPaymentMethod({
         type: "card",
@@ -315,7 +316,7 @@ const NewLicence = () => {
 
       if (error) {
         toast.error(error.message || t("dashboardClient_orders_paymentError"));
-        setLoading(false);
+        setPaying(false);
         return;
       }
 
@@ -366,7 +367,7 @@ const NewLicence = () => {
     } catch (error: any) {
       toast.error(error.response?.data?.message || t("dashboardClient_orders_payment_decline"));
     } finally {
-      setLoading(false);
+      setPaying(false);
     }
   };
 
@@ -1374,14 +1375,18 @@ const NewLicence = () => {
 
             {/* Payment Button */}
             <button
-              className={`w-full bg-blue-900 cursor-pointer transition-all duration-200 hover:bg-blue-800 text-white py-3 rounded-lg font-bold text-sm shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${!formData.agree ? 'opacity-50 cursor-not-allowed' : ''
+              className={`w-full bg-blue-900 cursor-pointer transition-all duration-200 hover:bg-blue-800 text-white py-3 rounded-lg font-bold text-sm shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${(!formData.agree || paying) ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               onClick={handleSubmit}
-              disabled={!formData.agree}
+              disabled={!formData.agree || paying}
             >
               <div className="flex items-center justify-center gap-2">
-                <FaLock className="text-white" />
-                <span>{t("checkout_paiment")} {totalPayer} €</span>
+                {paying ? (
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                ) : (
+                  <FaLock className="text-white" />
+                )}
+                <span>{paying ? t("checkout_processing") || "Traitement..." : `${t("checkout_paiment")} ${totalPayer} €`}</span>
               </div>
             </button>
 

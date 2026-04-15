@@ -1,5 +1,7 @@
 {
   "title": "Ferracad 23.14 - Software for AutoCAD®, ZWCAD®",
+  "checkout_processing": "Processing...",
+  "dashboardClient_orders_transferred": "Transferred",
   "description": "Ferracad helps you create rebar plans with unmatched precision and speed. Boost your construction workflow with a smart, reliable solution built for engineering professionals.",
   
   "Accueil": "Home",

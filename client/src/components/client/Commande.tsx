@@ -123,23 +123,23 @@ const CommandeClient = () => {
       const licenses = registrationData.filter((e) => e.rentalId === c?._id);
       const paiements = paymentData.find((e) => e._id === c?.payId);
       const getCoupon = couponData?.find((e) => e._id === paiements?.couponId);
-      const expirationDate = new Date(licenses[0]?.expirationDate);
+      const expirationDate = c?.nextBillingDate ? new Date(c.nextBillingDate) : (licenses.length > 0 ? new Date(licenses[0]?.expirationDate) : null);
       const now = new Date();
-      const isExpired = expirationDate < now;
-      const daysUntilExpiration = Math.ceil(
-        (expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-      );
+      const isExpired = expirationDate ? expirationDate < now : false;
+      const daysUntilExpiration = expirationDate 
+        ? Math.ceil((expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+        : 0;
 
       return {
         ...c,
         userData,
         licenses,
         coupon: getCoupon,
-        paiements,
+        paiements: paiements || { totalPricePay: 0, type: 'none' },
         isExpired,
         daysUntilExpiration,
-        statusDuree: isExpired
-          ? "expired"
+        statusDuree: isExpired 
+          ? "expired" 
           : "active",
       };
     });
@@ -168,7 +168,12 @@ const CommandeClient = () => {
   );
 
   const getStatusBadge = (license: (typeof enrichedCommande)[0]) => {
-    if (license.statusDuree.toLocaleLowerCase() === "expired" || license.status.toLocaleLowerCase() === "inactive") {
+    const isActuallyExpired = license.isExpired || 
+                             license.statusDuree === "expired" || 
+                             license.status === "expire" || 
+                             (license.status === "freetrial" && license.isExpired);
+
+    if (isActuallyExpired || license.status === "inactive") {
       return (
         <Badge variant="destructive" className="flex items-center gap-1">
           <AlertTriangle className="h-3 w-3" />
@@ -183,6 +188,12 @@ const CommandeClient = () => {
         >
           <Calendar className="h-3 w-3" />
           {t("dashboardClient_orders_expiring_soon")}
+        </Badge>
+      );
+    } else if (license.statusDuree === "transferred") {
+      return (
+        <Badge variant="outline" className="text-gray-500 border-gray-300">
+          {t("dashboardClient_orders_transferred") || "Transférée"}
         </Badge>
       );
     } else {
@@ -395,7 +406,9 @@ const CommandeClient = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {formatDate(com.licenses[0]?.expirationDate)}
+                      {com.nextBillingDate || com.licenses.length > 0 
+                        ? formatDate(com.nextBillingDate || com.licenses[0]?.expirationDate) 
+                        : "-"}
                     </TableCell>
                     <TableCell>{getStatusBadge(com)}</TableCell>
                     <TableCell>
@@ -407,18 +420,20 @@ const CommandeClient = () => {
                           com.statusDuree === "active" && "text-green-600"
                         )}
                       >
-                        {com.isExpired
-                          ? `${t(
-                            "dashboardClient_orders_left_days"
-                          )} ${Math.abs(com.daysUntilExpiration)} ${t(
-                            "dashboardClient_orders_days_ago"
-                          )}`
-                          : `${com.daysUntilExpiration} ${t("pay_03_j")}`}
+                        {com.licenses.length === 0 
+                          ? "-" 
+                          : com.isExpired
+                            ? `${t(
+                              "dashboardClient_orders_left_days"
+                            )} ${Math.abs(com.daysUntilExpiration)} ${t(
+                              "dashboardClient_orders_days_ago"
+                            )}`
+                            : `${com.daysUntilExpiration} ${t("pay_03_j")}`}
                       </span>
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge className="font-semibold rounded-full bg-green-100 text-green-800">
-                        € {com?.price}
+                        € {com?.price || 0}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right flex items-end justify-end gap-0">

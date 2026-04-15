@@ -1,5 +1,7 @@
 {
  "title": "Ferracad 23.14 - Logiciel pour AutoCAD®, ZWCAD®",
+ "checkout_processing": "Traitement...",
+ "dashboardClient_orders_transferred": "Transférée",
  "description": "Ferracad permet de réaliser des plans de ferraillage avec une précision exceptionnelle et une rapidité accrue. Optimisez vos projets de construction grâce à une solution intelligente, fiable et adaptée aux professionnels du bâtiment.",
 
  "Accueil": "Accueil",

@@ -64,10 +64,15 @@ exports.freeTrialCommande = async (req, res) => {
             { rentalId: { $exists: true } },
           ],
         });
-        
-        if (registration.length > 0) {
+
+        const now = new Date();
+        const activeRegistration = registration.find(reg => 
+          reg.status !== 'expire' && new Date(reg.expirationDate) > now
+        );
+
+        if (activeRegistration) {
           return res.status(409).json({
-            message: 'Un enregistrement avec cette valeur existe déjà.'
+            message: 'Une licence active existe déjà pour cet ordinateur.'
           });
         }
       }
@@ -240,10 +245,15 @@ exports.createPaymentIntent = async (req, res) => {
             { rentalId: { $exists: true } },
           ],
         });
-        
-        if (registration.length > 0) {
+
+        const now = new Date();
+        const activeRegistration = registration.find(reg => 
+          reg.status !== 'expire' && new Date(reg.expirationDate) > now
+        );
+
+        if (activeRegistration) {
           return res.status(409).json({
-            message: 'Un enregistrement avec cette valeur existe déjà.'
+            message: 'Une licence active existe déjà pour cet ordinateur.'
           });
         }
       }
