@@ -162,7 +162,6 @@ app.use('/api/newsletter', newsletter);
 app.use('/api/email-templates', emailTemplates);
 
 
-/*
 
 cron.schedule("0 9 * * *", async () => {
   try {
@@ -177,7 +176,7 @@ cron.schedule("0 9 * * *", async () => {
     for (const daysBefore of reminders) {
       const targetDate = new Date(today);
       targetDate.setDate(today.getDate() + daysBefore);
-      
+
       const startOfDay = new Date(targetDate);
       const endOfDay = new Date(targetDate);
       endOfDay.setHours(23, 59, 59, 999);
@@ -238,7 +237,7 @@ cron.schedule("0 9 * * *", async () => {
     for (const daysBefore of reminders) {
       const targetDate = new Date(today);
       targetDate.setDate(today.getDate() + daysBefore);
-      
+
       const startOfDay = new Date(targetDate);
       const endOfDay = new Date(targetDate);
       endOfDay.setHours(23, 59, 59, 999);
@@ -281,7 +280,7 @@ cron.schedule("0 9 * * *", async () => {
   }
 });
 
-*/
+
 
 // this is for old users, that have account but didn't have password
 /*cron.schedule("* * * * *", async () => {
@@ -341,7 +340,7 @@ cron.schedule("0 0 */7 * *", async () => {
       if (checkRental.length <= 0) {
         sendEmail({
           type: "rappel-order",
-          email: "user12.sta@outlook.com",
+          email: user.email,
           code: "",
           data: user,
         })

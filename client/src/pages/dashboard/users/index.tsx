@@ -282,17 +282,27 @@ const Users: React.FC = () => {
     }
 
     const hasDownloaded = downloads.length > 0;
-    const activeCount = registration.filter(
-      (l) => l.status?.toLowerCase() === "active"
-    ).length;
-    const trialCount = registration.filter(
-      (l) => l.status?.toLowerCase() === "freetrial"
-    ).length;
-    const expiredCount = registration.filter(
-      (l) => l.status?.toLowerCase() === "expire"
-    ).length;
+    const now = new Date();
+    
+    // Compter les licences réellement actives (statut active et date non passée)
+    const activeCount = registration.filter((l) => {
+      const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
+      return l.status?.toLowerCase() === "active" && !isDatePassed;
+    }).length;
 
-    // determine license status
+    // Compter les licences d'essai réellement en cours (statut freetrial et date non passée)
+    const trialCount = registration.filter((l) => {
+      const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
+      return (l.status?.toLowerCase() === "freetrial" || l.status?.toLowerCase() === "période d'essai") && !isDatePassed;
+    }).length;
+
+    // Compter les licences expirées (statut expire/expired OU date passée)
+    const expiredCount = registration.filter((l) => {
+      const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
+      return l.status?.toLowerCase() === "expire" || l.status?.toLowerCase() === "expired" || isDatePassed;
+    }).length;
+
+    // Determine license status for the top badge
     let licenseStatus = "none";
     if (activeCount > 0) {
       licenseStatus = "active";
@@ -642,21 +652,27 @@ const Users: React.FC = () => {
   };
 
   const getStatusBadge = (license: any) => {
-    if (license.status.toLocaleLowerCase() === "période d'essai") {
-      return (
-        <Badge
-          variant="secondary"
-          className="bg-slate-100 text-slate-800 hover:bg-slate-200 flex items-center gap-1"
-        >
-          <FaRegClock className="h-3 w-3" />
-          Période d'essai
-        </Badge>
-      );
-    } else if (license.status.toLocaleLowerCase() === "expired") {
+    const now = new Date();
+    const expirationDate = license.expirationDate ? new Date(license.expirationDate) : null;
+    const isExpired = expirationDate && expirationDate < now;
+
+    if (isExpired || license.status.toLocaleLowerCase() === "expired") {
       return (
         <Badge variant="destructive" className="flex items-center gap-1">
           <AlertTriangle className="h-3 w-3" />
           {t("dashboardClient_orders_expired")}
+        </Badge>
+      );
+    }
+
+    if (license.status.toLocaleLowerCase() === "période d'essai" || license.status.toLocaleLowerCase() === "freetrial") {
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-purple-100 text-purple-800 hover:bg-purple-200 flex items-center gap-1"
+        >
+          <FaRegClock className="h-3 w-3" />
+          {t("dashboardClient_orders_freeTrial")}
         </Badge>
       );
     } else if (license.status.toLocaleLowerCase() === "expiring") {
@@ -686,17 +702,15 @@ const Users: React.FC = () => {
     nameComputer: "",
     codeComputer: "",
     username: "",
+    expirationDate: "",
   });
 
-  const handleShow = (license: {
-    computerName: any;
-    computerCode: any;
-    username: any;
-  }) => {
+  const handleShow = (license: any) => {
     setformDataUpdate({
       nameComputer: license.computerName,
       codeComputer: license.computerCode,
       username: license.username,
+      expirationDate: license.expirationDate ? license.expirationDate.split("T")[0] : "",
     });
   };
 
@@ -1933,30 +1947,40 @@ const Users: React.FC = () => {
                                 {formatDate(user.expirationDate)}
                               </TableCell>
                               <TableCell>
-                                <Badge
-                                  variant={
-                                    user.status === "active" ||
-                                      user.status === "pending"
-                                      ? "default"
-                                      : "destructive"
-                                  }
-                                  className={cn(
-                                    user.status === "active" &&
-                                    "bg-green-100 text-green-800 hover:bg-green-200",
-                                    user.status === "pending" &&
-                                    "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
-                                    user.status === "freetrial" &&
-                                    "bg-purple-100 text-purple-800 hover:bg-purple-200"
-                                  )}
-                                >
-                                  {user.status === "active"
-                                    ? t("dashboardAdmin_users_status_active")
-                                    : user.status === "pending"
-                                      ? "Failed"
-                                      : user.status === "freetrial"
-                                        ? t("dashboardClient_orders_freeTrial")
-                                        : t("dashboardClient_orders_expired")}
-                                </Badge>
+                                {(() => {
+                                  const now = new Date();
+                                  const expirationDate = user.expirationDate ? new Date(user.expirationDate) : null;
+                                  const isExpired = expirationDate && expirationDate < now;
+                                  const status = isExpired ? "expired" : user.status;
+
+                                  return (
+                                    <Badge
+                                      variant={
+                                        status === "active" || status === "pending"
+                                          ? "default"
+                                          : "destructive"
+                                      }
+                                      className={cn(
+                                        status === "active" &&
+                                        "bg-green-100 text-green-800 hover:bg-green-200",
+                                        status === "pending" &&
+                                        "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+                                        status === "freetrial" &&
+                                        "bg-purple-100 text-purple-800 hover:bg-purple-200",
+                                        status === "expired" &&
+                                        "bg-red-100 text-red-800 hover:bg-red-200"
+                                      )}
+                                    >
+                                      {status === "active"
+                                        ? t("dashboardAdmin_users_status_active")
+                                        : status === "pending"
+                                          ? "Failed"
+                                          : status === "freetrial"
+                                            ? t("dashboardClient_orders_freeTrial")
+                                            : t("dashboardClient_orders_expired")}
+                                    </Badge>
+                                  );
+                                })()}
                               </TableCell>
                               <TableCell>
                                 <span
@@ -2167,23 +2191,11 @@ const Users: React.FC = () => {
                                               {t("dashboard_rent_expirationDate")}
                                             </Label>
                                             <Input
-                                              id="date"
+                                              id="expirationDate"
                                               type="date"
-                                              name="date"
-                                              min={
-                                                user.status.toLocaleLowerCase() ===
-                                                  "active" ||
-                                                  user.status.toLocaleLowerCase() ===
-                                                  "expiring"
-                                                  ? user.expirationDate.split(
-                                                    "T"
-                                                  )[0]
-                                                  : minDate
-                                              }
-                                              defaultValue={
-                                                user.expirationDate.split("T")[0]
-                                              }
-                                              readOnly
+                                              name="expirationDate"
+                                              value={formDataUpdate.expirationDate}
+                                              onChange={handleChangeUpdateLicense}
                                             />
                                           </div>
                                         </form>

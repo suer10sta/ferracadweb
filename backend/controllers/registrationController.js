@@ -91,17 +91,19 @@ exports.updateRegistration = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(req.params.id))
       return res.status(400).json({ message: 'Invalid ID' });
 
-    const { nameComputer, codeComputer, username } = req.body;
+    const { nameComputer, codeComputer, username, expirationDate, status } = req.body;
     if(!nameComputer || !codeComputer) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
     const registration = await Registration.findById(id)
+    if (!registration) return res.status(404).json({ message: 'Registration not found' });
+
     let authCode;
 
     if(registration.computerCode !== codeComputer) {
       // regenerate auth code and send email
-      const dateExp = registration.expirationDate;
+      const dateExp = expirationDate ? new Date(expirationDate) : registration.expirationDate;
       authCode = await createAuthCode(codeComputer, dateExp);
       registration.authCode = authCode.data.code;
 
@@ -127,6 +129,9 @@ exports.updateRegistration = async (req, res) => {
         description: `Les informations de votre licence (${registration.computerName}) Ferracad ont été mises à jour avec succès par l'admin.`,
         link: "/tableau-de-board/locations"
       });
+      
+      if (expirationDate) registration.expirationDate = new Date(expirationDate);
+      if (status) registration.status = status;
     }
 
     registration.username = username;
@@ -134,7 +139,7 @@ exports.updateRegistration = async (req, res) => {
     registration.computerCode = codeComputer;
     await registration.save();
 
-    res.status(200).json({ valid: true });
+    res.status(200).json({ valid: true, registration });
   } catch (err) {
     if (err.code === 11000) {
       return res.status(400).json({ message: 'Duplicate field value error', detail: err.keyValue });
