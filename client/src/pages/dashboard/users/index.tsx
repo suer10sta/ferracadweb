@@ -151,6 +151,11 @@ const Users: React.FC = () => {
   const [licenseStatusFilter, setLicenseStatusFilter] = useState("all");
   const [accountStatusFilter, setAccountStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+
+  const [currentLicensePage, setCurrentLicensePage] = useState(1);
+  const licensesPerPage = 10;
 
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [emailUser, setEmailUser] = useState<any>(null);
@@ -435,6 +440,21 @@ const Users: React.FC = () => {
       if (platform) return e.platform === platform;
       return true;
     });
+
+  // reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, typeSelected, companySelected, date, licenseStatusFilter, accountStatusFilter, sourceFilter, platform, filterUser]);
+
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentLicensePage(1);
+  }, [companySelected]);
 
   const [QuickAnalytic, setQuickAnalytic] = useState<any[]>([]);
 
@@ -995,7 +1015,7 @@ const Users: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map((user: any) => (
+                {paginatedUsers.map((user: any) => (
                   <TableRow key={user._id}>
                     <TableCell>
                       <div>
@@ -1058,8 +1078,8 @@ const Users: React.FC = () => {
                         </TooltipTrigger>
                         <TooltipContent className="max-w-xs">
                           <p className="text-xs">
-                            {user.status === "active" 
-                              ? "L'utilisateur a demandé son essai gratuit ou a acheté une licence. Son compte est pleinement fonctionnel." 
+                            {user.status === "active"
+                              ? "L'utilisateur a demandé son essai gratuit ou a acheté une licence. Son compte est pleinement fonctionnel."
                               : user.status === "pending"
                                 ? "L'utilisateur a rempli le formulaire de téléchargement mais n'a pas encore de licence activée."
                                 : "Le compte est bloqué par l'admin."}
@@ -1079,24 +1099,24 @@ const Users: React.FC = () => {
                               user.licenseStatus === "none" && "bg-gray-100 text-gray-500"
                             )}
                           >
-                            {user.licenseStatus === "active" 
-                              ? "Payante" 
-                              : user.licenseStatus === "trial" 
-                                ? "Essai" 
-                                : user.licenseStatus === "expired" 
-                                  ? "Expirée" 
+                            {user.licenseStatus === "active"
+                              ? "Payante"
+                              : user.licenseStatus === "trial"
+                                ? "Essai"
+                                : user.licenseStatus === "expired"
+                                  ? "Expirée"
                                   : "Aucune"}
                             <BsInfoCircle className="ml-1 cursor-help h-3 w-3" />
                           </Badge>
                         </TooltipTrigger>
                         <TooltipContent className="max-w-xs">
                           <p className="text-xs">
-                            {user.licenseStatus === "active" 
-                              ? "Possède une licence payante valide." 
-                              : user.licenseStatus === "trial" 
-                                ? "Possède une licence d'essai en cours." 
-                                : user.licenseStatus === "expired" 
-                                  ? "La licence est arrivée à son terme." 
+                            {user.licenseStatus === "active"
+                              ? "Possède une licence payante valide."
+                              : user.licenseStatus === "trial"
+                                ? "Possède une licence d'essai en cours."
+                                : user.licenseStatus === "expired"
+                                  ? "La licence est arrivée à son terme."
                                   : "Pas de licence trouvée."}
                           </p>
                         </TooltipContent>
@@ -1401,7 +1421,7 @@ const Users: React.FC = () => {
                                                   <PopoverContent className="w-80 p-4">
                                                     <div className="space-y-2">
                                                       <p className="text-xs font-bold border-b pb-1">Contenu de l'e-mail</p>
-                                                      <div 
+                                                      <div
                                                         className="text-[11px] text-stone-600 max-h-[300px] overflow-y-auto whitespace-pre-wrap"
                                                         dangerouslySetInnerHTML={{ __html: log.body.replace(/\n/g, '<br/>') }}
                                                       />
@@ -1737,9 +1757,65 @@ const Users: React.FC = () => {
               </TableBody>
             </Table>
 
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-4 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, filteredUsers.length)} sur {filteredUsers.length} utilisateurs
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Précédent
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {[...Array(totalPages)].map((_, i) => {
+                      const pageNum = i + 1;
+                      // Logic to show limited page numbers if there are too many
+                      if (
+                        pageNum === 1 ||
+                        pageNum === totalPages ||
+                        (pageNum >= currentPage - 2 && pageNum <= currentPage + 2)
+                      ) {
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => setCurrentPage(pageNum)}
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      } else if (
+                        pageNum === currentPage - 3 ||
+                        pageNum === currentPage + 3
+                      ) {
+                        return <span key={pageNum} className="px-1 text-muted-foreground">...</span>;
+                      }
+                      return null;
+                    })}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Suivant
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {companySelected && filteredUsers.length > 0 && (
               <div className="p-5 flex flex-col gap-2">
-                <div className="">
+                <div>
                   <p className="font-semibold">Liste des licences</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-5">
@@ -1777,640 +1853,743 @@ const Users: React.FC = () => {
               </div>
             )}
             {companySelected && filteredUsers.length > 0 && (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Utilisateur</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Platform</TableHead>
-                    <TableHead>Nom Ordinateur</TableHead>
-                    <TableHead>Date d'expiration</TableHead>
-                    <TableHead>Statut de licence</TableHead>
-                    <TableHead>Jours restants</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {companySelected &&
-                    filteredUsers.length > 0 &&
-                    enrichedUser
-                      .find(
-                        (e) =>
-                          e.company?.toLowerCase() ===
-                          companySelected?.toLowerCase() ||
-                          e.name?.toLowerCase() ===
-                          companySelected?.toLowerCase()
-                      )
-                      ?.registration.map((user: any, i: number) => {
-                        const now = new Date();
-                        const expirationDate = user?.expirationDate
-                          ? new Date(user?.expirationDate)
-                          : 0;
-                        const daysUntilExpiration =
-                          expirationDate !== 0
-                            ? Math.ceil(
-                              (expirationDate.getTime() - now.getTime()) /
-                              (1000 * 60 * 60 * 24)
-                            )
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Utilisateur</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Platform</TableHead>
+                      <TableHead>Nom Ordinateur</TableHead>
+                      <TableHead>Date d'expiration</TableHead>
+                      <TableHead>Statut de licence</TableHead>
+                      <TableHead>Jours restants</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {companySelected &&
+                      filteredUsers.length > 0 &&
+                      (() => {
+                        const userReg = enrichedUser.find(
+                          (e) =>
+                            e.company?.toLowerCase() ===
+                            companySelected?.toLowerCase() ||
+                            e.name?.toLowerCase() ===
+                            companySelected?.toLowerCase()
+                        );
+
+                        const licensesToPaginate = userReg?.registration || [];
+                        const totalLicensePages = Math.ceil(licensesToPaginate.length / licensesPerPage);
+                        const paginatedLicenses = licensesToPaginate.slice(
+                          (currentLicensePage - 1) * licensesPerPage,
+                          currentLicensePage * licensesPerPage
+                        );
+
+                        return paginatedLicenses.map((user: any, i: number) => {
+                          const now = new Date();
+                          const expirationDate = user?.expirationDate
+                            ? new Date(user?.expirationDate)
                             : 0;
-                        return (
-                          <TableRow key={i}>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">{user.username}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <p className="text-sm">{user.email || "N/A"}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <p className="text-sm font-medium">
-                                  {enrichedUser.find(
-                                    (e) => e.registration._id === user._id
-                                  )?.platform || "-"}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium text-sm">
-                                  {user.computerName}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {user.computerCode}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {formatDate(user.expirationDate)}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant={
-                                  user.status === "active" ||
-                                    user.status === "pending"
-                                    ? "default"
-                                    : "destructive"
-                                }
-                                className={cn(
-                                  user.status === "active" &&
-                                  "bg-green-100 text-green-800 hover:bg-green-200",
-                                  user.status === "pending" &&
-                                  "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
-                                  user.status === "freetrial" &&
-                                  "bg-purple-100 text-purple-800 hover:bg-purple-200"
-                                )}
-                              >
-                                {user.status === "active"
-                                  ? t("dashboardAdmin_users_status_active")
-                                  : user.status === "pending"
-                                    ? "Failed"
-                                    : user.status === "freetrial"
-                                      ? t("dashboardClient_orders_freeTrial")
-                                      : t("dashboardClient_orders_expired")}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <span
-                                className={cn(
-                                  "text-sm",
-                                  user.status === "expire" && "text-red-600",
-                                  user.status === "freetrial" &&
-                                  "text-yellow-600",
-                                  user.status === "active" && "text-green-600"
-                                )}
-                              >
-                                {user.status === "expire"
-                                  ? `${t(
-                                    "dashboardClient_orders_left_days"
-                                  )} ${Math.abs(daysUntilExpiration)} ${t(
-                                    "dashboardClient_orders_days_ago"
-                                  )}`
-                                  : `${daysUntilExpiration} ${t("pay_03_j")}`}
-                              </span>
-                            </TableCell>
-                            <TableCell className="">
-                              <div className="flex items-center space-x-1">
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 cursor-pointer"
-                                    >
-                                      <RiExchangeLine className="h-3 w-3" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden gap-3">
-                                    <DialogHeader>
-                                      <DialogTitle>
-                                        Transférer une licence vers un autre
-                                        utilisateur
-                                      </DialogTitle>
-                                      <DialogDescription>
-                                        Sélectionnez un nouvel utilisateur pour
-                                        transférer la licence actuelle. <br />
-                                        L'utilisateur actuel perdra l'accès
-                                        immédiatement après le transfert.
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="grid gap-4">
-                                      <div className="grid gap-1">
-                                        <Label
-                                          htmlFor="company"
-                                          className="text-sm font-semibold text-gray-700"
-                                        >
-                                          De
-                                        </Label>
-                                        <div className="flex flex-col items-start bg-gray-100 py-4 px-4 rounded-lg">
-                                          <span className="text-sm font-medium text-gray-900">
-                                            {
-                                              enrichedUser.find(
-                                                (e) =>
-                                                  e.company?.toLowerCase() ===
-                                                  companySelected?.toLowerCase() ||
-                                                  e.name?.toLowerCase() ===
-                                                  companySelected?.toLowerCase()
-                                              )?.name
-                                            }
-                                          </span>
-                                          <span className="text-gray-500 text-xs">
-                                            {user.company}
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div className="grid gap-2">
-                                        <div className="flex justify-between items-center">
+                          const daysUntilExpiration =
+                            expirationDate !== 0
+                              ? Math.ceil(
+                                (expirationDate.getTime() - now.getTime()) /
+                                (1000 * 60 * 60 * 24)
+                              )
+                              : 0;
+                          return (
+                            <TableRow key={i}>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{user.username}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p className="text-sm">{user.email || "N/A"}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p className="text-sm font-medium">
+                                    {enrichedUser.find(
+                                      (e) => e.registration._id === user._id
+                                    )?.platform || "-"}
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium text-sm">
+                                    {user.computerName}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {user.computerCode}
+                                  </p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {formatDate(user.expirationDate)}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant={
+                                    user.status === "active" ||
+                                      user.status === "pending"
+                                      ? "default"
+                                      : "destructive"
+                                  }
+                                  className={cn(
+                                    user.status === "active" &&
+                                    "bg-green-100 text-green-800 hover:bg-green-200",
+                                    user.status === "pending" &&
+                                    "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+                                    user.status === "freetrial" &&
+                                    "bg-purple-100 text-purple-800 hover:bg-purple-200"
+                                  )}
+                                >
+                                  {user.status === "active"
+                                    ? t("dashboardAdmin_users_status_active")
+                                    : user.status === "pending"
+                                      ? "Failed"
+                                      : user.status === "freetrial"
+                                        ? t("dashboardClient_orders_freeTrial")
+                                        : t("dashboardClient_orders_expired")}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <span
+                                  className={cn(
+                                    "text-sm",
+                                    user.status === "expire" && "text-red-600",
+                                    user.status === "freetrial" &&
+                                    "text-yellow-600",
+                                    user.status === "active" && "text-green-600"
+                                  )}
+                                >
+                                  {user.status === "expire"
+                                    ? `${t(
+                                      "dashboardClient_orders_left_days"
+                                    )} ${Math.abs(daysUntilExpiration)} ${t(
+                                      "dashboardClient_orders_days_ago"
+                                    )}`
+                                    : `${daysUntilExpiration} ${t("pay_03_j")}`}
+                                </span>
+                              </TableCell>
+                              <TableCell className="">
+                                <div className="flex items-center space-x-1">
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 cursor-pointer"
+                                      >
+                                        <RiExchangeLine className="h-3 w-3" />
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden gap-3">
+                                      <DialogHeader>
+                                        <DialogTitle>
+                                          Transférer une licence vers un autre
+                                          utilisateur
+                                        </DialogTitle>
+                                        <DialogDescription>
+                                          Sélectionnez un nouvel utilisateur pour
+                                          transférer la licence actuelle. <br />
+                                          L'utilisateur actuel perdra l'accès
+                                          immédiatement après le transfert.
+                                        </DialogDescription>
+                                      </DialogHeader>
+                                      <div className="grid gap-4">
+                                        <div className="grid gap-1">
                                           <Label
                                             htmlFor="company"
                                             className="text-sm font-semibold text-gray-700"
                                           >
-                                            À
+                                            De
                                           </Label>
-                                          <NewUser type="icon" />
-                                        </div>
-                                        <Select
-                                          value={selectedUserId}
-                                          onValueChange={setSelectedUserId}
-                                        >
-                                          <SelectTrigger className="w-full py-6 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-colors">
-                                            <SelectValue
-                                              placeholder={t(
-                                                "dashboardClient_orders_selectUserLabel"
-                                              )}
-                                            />
-                                          </SelectTrigger>
-
-                                          <SelectContent className="border-gray-200 shadow-lg">
-                                            {usersData
-                                              .filter(
-                                                (e) => e._id !== user.userId
-                                              )
-                                              .map((user: any, i: number) => (
-                                                <SelectItem
-                                                  key={i}
-                                                  value={user._id}
-                                                  className="text-sm hover:bg-gray-50 cursor-pointer"
-                                                >
-                                                  <div className="flex flex-col items-start">
-                                                    <span className="font-medium text-gray-900">
-                                                      {user.name}
-                                                    </span>
-                                                    <span className="text-gray-500 text-xs">
-                                                      {user.company}
-                                                    </span>
-                                                  </div>
-                                                </SelectItem>
-                                              ))}
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                      <button
-                                        onClick={() => handleTransfer(user._id)}
-                                        className="w-full py-3 text-sm rounded-md bg-stone-600 transition-all duration-200 text-white cursor-pointer font-semibold hover:bg-stone-800"
-                                      >
-                                        Transfére
-                                      </button>
-                                    </div>
-                                  </DialogContent>
-                                </Dialog>
-
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 cursor-pointer"
-                                      onClick={() => handleShow(user)}
-                                    >
-                                      <Edit2 className="h-3 w-3" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden gap-3">
-                                    <DialogHeader>
-                                      <DialogTitle>
-                                        {t("dashboard_rent_editLicenseInfo")}
-                                      </DialogTitle>
-                                      <DialogDescription>
-                                        {t("dashboard_rent_updateLicenseInfo")}
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <div>
-                                      <form className="grid gap-5 mt-2">
-                                        <div className="flex items-center justify-between">
-                                          <div>
-                                            <h3 className="font-medium text-stone-800">
-                                              {user.username}
-                                            </h3>
-                                            <p className="text-xs text-black/40 font-medium">
-                                              {user?.company}
-                                            </p>
+                                          <div className="flex flex-col items-start bg-gray-100 py-4 px-4 rounded-lg">
+                                            <span className="text-sm font-medium text-gray-900">
+                                              {
+                                                enrichedUser.find(
+                                                  (e) =>
+                                                    e.company?.toLowerCase() ===
+                                                    companySelected?.toLowerCase() ||
+                                                    e.name?.toLowerCase() ===
+                                                    companySelected?.toLowerCase()
+                                                )?.name
+                                              }
+                                            </span>
+                                            <span className="text-gray-500 text-xs">
+                                              {user.company}
+                                            </span>
                                           </div>
                                         </div>
+                                        <div className="grid gap-2">
+                                          <div className="flex justify-between items-center">
+                                            <Label
+                                              htmlFor="company"
+                                              className="text-sm font-semibold text-gray-700"
+                                            >
+                                              À
+                                            </Label>
+                                            <NewUser type="icon" />
+                                          </div>
+                                          <Select
+                                            value={selectedUserId}
+                                            onValueChange={setSelectedUserId}
+                                          >
+                                            <SelectTrigger className="w-full py-6 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-colors">
+                                              <SelectValue
+                                                placeholder={t(
+                                                  "dashboardClient_orders_selectUserLabel"
+                                                )}
+                                              />
+                                            </SelectTrigger>
 
-                                        <div className="grid gap-3">
-                                          <Label htmlFor="name">
-                                            {t("dashboard_rent_userName")}
-                                          </Label>
-                                          <Input
-                                            id="username"
-                                            name="username"
-                                            placeholder={t(
-                                              "dashboard_rent_userName"
-                                            )}
-                                            value={formDataUpdate.username}
-                                            onChange={handleChangeUpdateLicense}
-                                          />
+                                            <SelectContent className="border-gray-200 shadow-lg">
+                                              {usersData
+                                                .filter(
+                                                  (e) => e._id !== user.userId
+                                                )
+                                                .map((user: any, i: number) => (
+                                                  <SelectItem
+                                                    key={i}
+                                                    value={user._id}
+                                                    className="text-sm hover:bg-gray-50 cursor-pointer"
+                                                  >
+                                                    <div className="flex flex-col items-start">
+                                                      <span className="font-medium text-gray-900">
+                                                        {user.name}
+                                                      </span>
+                                                      <span className="text-gray-500 text-xs">
+                                                        {user.company}
+                                                      </span>
+                                                    </div>
+                                                  </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                          </Select>
                                         </div>
-                                        <div className="grid gap-3">
-                                          <Label htmlFor="nameComputer">
-                                            {t(
-                                              "dashboard_rent_computerNameLabel"
-                                            )}
-                                          </Label>
-                                          <Input
-                                            id="nameComputer"
-                                            name="nameComputer"
-                                            placeholder={t(
-                                              "dashboard_rent_computerNameLabel"
-                                            )}
-                                            value={formDataUpdate.nameComputer}
-                                            onChange={handleChangeUpdateLicense}
-                                          />
-                                        </div>
-                                        <div className="grid gap-3">
-                                          <Label htmlFor="codeComputer">
-                                            {t(
-                                              "dashboard_rent_identificationCodeLabel"
-                                            )}
-                                          </Label>
-                                          <Input
-                                            id="codeComputer"
-                                            name="codeComputer"
-                                            placeholder={t(
-                                              "dashboard_rent_identificationCodeLabel"
-                                            )}
-                                            value={formDataUpdate.codeComputer}
-                                            onChange={handleChangeUpdateLicense}
-                                          />
-                                        </div>
-                                        <div className="grid gap-3">
-                                          <Label htmlFor="date">
-                                            {t("dashboard_rent_expirationDate")}
-                                          </Label>
-                                          <Input
-                                            id="date"
-                                            type="date"
-                                            name="date"
-                                            min={
-                                              user.status.toLocaleLowerCase() ===
-                                                "active" ||
+                                        <button
+                                          onClick={() => handleTransfer(user._id)}
+                                          className="w-full py-3 text-sm rounded-md bg-stone-600 transition-all duration-200 text-white cursor-pointer font-semibold hover:bg-stone-800"
+                                        >
+                                          Transfére
+                                        </button>
+                                      </div>
+                                    </DialogContent>
+                                  </Dialog>
+
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 cursor-pointer"
+                                        onClick={() => handleShow(user)}
+                                      >
+                                        <Edit2 className="h-3 w-3" />
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden gap-3">
+                                      <DialogHeader>
+                                        <DialogTitle>
+                                          {t("dashboard_rent_editLicenseInfo")}
+                                        </DialogTitle>
+                                        <DialogDescription>
+                                          {t("dashboard_rent_updateLicenseInfo")}
+                                        </DialogDescription>
+                                      </DialogHeader>
+                                      <div>
+                                        <form className="grid gap-5 mt-2">
+                                          <div className="flex items-center justify-between">
+                                            <div>
+                                              <h3 className="font-medium text-stone-800">
+                                                {user.username}
+                                              </h3>
+                                              <p className="text-xs text-black/40 font-medium">
+                                                {user?.company}
+                                              </p>
+                                            </div>
+                                          </div>
+
+                                          <div className="grid gap-3">
+                                            <Label htmlFor="name">
+                                              {t("dashboard_rent_userName")}
+                                            </Label>
+                                            <Input
+                                              id="username"
+                                              name="username"
+                                              placeholder={t(
+                                                "dashboard_rent_userName"
+                                              )}
+                                              value={formDataUpdate.username}
+                                              onChange={handleChangeUpdateLicense}
+                                            />
+                                          </div>
+                                          <div className="grid gap-3">
+                                            <Label htmlFor="nameComputer">
+                                              {t(
+                                                "dashboard_rent_computerNameLabel"
+                                              )}
+                                            </Label>
+                                            <Input
+                                              id="nameComputer"
+                                              name="nameComputer"
+                                              placeholder={t(
+                                                "dashboard_rent_computerNameLabel"
+                                              )}
+                                              value={formDataUpdate.nameComputer}
+                                              onChange={handleChangeUpdateLicense}
+                                            />
+                                          </div>
+                                          <div className="grid gap-3">
+                                            <Label htmlFor="codeComputer">
+                                              {t(
+                                                "dashboard_rent_identificationCodeLabel"
+                                              )}
+                                            </Label>
+                                            <Input
+                                              id="codeComputer"
+                                              name="codeComputer"
+                                              placeholder={t(
+                                                "dashboard_rent_identificationCodeLabel"
+                                              )}
+                                              value={formDataUpdate.codeComputer}
+                                              onChange={handleChangeUpdateLicense}
+                                            />
+                                          </div>
+                                          <div className="grid gap-3">
+                                            <Label htmlFor="date">
+                                              {t("dashboard_rent_expirationDate")}
+                                            </Label>
+                                            <Input
+                                              id="date"
+                                              type="date"
+                                              name="date"
+                                              min={
                                                 user.status.toLocaleLowerCase() ===
-                                                "expiring"
-                                                ? user.expirationDate.split(
-                                                  "T"
-                                                )[0]
-                                                : minDate
+                                                  "active" ||
+                                                  user.status.toLocaleLowerCase() ===
+                                                  "expiring"
+                                                  ? user.expirationDate.split(
+                                                    "T"
+                                                  )[0]
+                                                  : minDate
+                                              }
+                                              defaultValue={
+                                                user.expirationDate.split("T")[0]
+                                              }
+                                              readOnly
+                                            />
+                                          </div>
+                                        </form>
+                                      </div>
+                                      <DialogFooter>
+                                        {user.status.toLocaleLowerCase() !==
+                                          "active" &&
+                                          user.status.toLocaleLowerCase() !==
+                                          "expiring" && (
+                                            <Button variant="outline">
+                                              <MdDeleteOutline />
+                                            </Button>
+                                          )}
+                                        <DialogClose asChild>
+                                          <Button variant="outline">
+                                            {t("dashboardAdmin_users_cancel")}
+                                          </Button>
+                                        </DialogClose>
+                                        <DialogClose asChild>
+                                          <Button
+                                            onClick={() =>
+                                              handleUpdateRegistration(user._id)
                                             }
-                                            defaultValue={
-                                              user.expirationDate.split("T")[0]
-                                            }
-                                            readOnly
+                                          >
+                                            {t("dashboardAdmin_users_save")}
+                                          </Button>
+                                        </DialogClose>
+                                      </DialogFooter>
+                                    </DialogContent>
+                                  </Dialog>
+
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 cursor-pointer"
+                                    onClick={() =>
+                                      handleUpgradeCom([user], user.rentalId)
+                                    }
+                                  >
+                                    <TbReload className="h-3 w-3" />
+                                  </Button>
+
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 cursor-pointer"
+                                      >
+                                        <Eye className="h-4 w-4" />
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden gap-3">
+                                      <DialogHeader>
+                                        <DialogTitle>
+                                          {t("dashboard_rent_licenseDetails")}
+                                        </DialogTitle>
+                                        <DialogDescription>
+                                          {t(
+                                            "dashboard_rent_licenseDetailsDescription"
+                                          )}
+                                        </DialogDescription>
+                                      </DialogHeader>
+                                      <div className="grid gap-4">
+                                        <div className="grid grid-cols-2 max-md:grid-cols-1 gap-3">
+                                          <CardDetails
+                                            analytic={{
+                                              title: t(
+                                                "dashboard_rent_totalDaysUsed"
+                                              ),
+                                              icon: MdKey,
+                                              value: `${calculateTotalDays(
+                                                historyData.filter(
+                                                  (e) => e.registerId === user._id
+                                                )
+                                              )} Jours`,
+                                              isGrowth: true,
+                                              isCurrency: false,
+                                              valueGrowth: 2,
+                                              isDark: true,
+                                              isPercent: false,
+                                              parag: t(
+                                                "dashboard_rent_totalUsageDays"
+                                              ),
+                                            }}
+                                          />
+                                          <CardDetails
+                                            analytic={{
+                                              title: t(
+                                                "dashboard_rent_totalReceived"
+                                              ),
+                                              icon: AiFillEuroCircle,
+                                              value: totalPriceSpendLicense(user),
+                                              isGrowth: true,
+                                              isCurrency: true,
+                                              valueGrowth: 2,
+                                              isDark: false,
+                                              isPercent: false,
+                                              parag: t(
+                                                "dashboard_rent_totalAmountReceived"
+                                              ),
+                                            }}
                                           />
                                         </div>
-                                      </form>
-                                    </div>
-                                    <DialogFooter>
-                                      {user.status.toLocaleLowerCase() !==
-                                        "active" &&
-                                        user.status.toLocaleLowerCase() !==
-                                        "expiring" && (
-                                          <Button variant="outline">
-                                            <MdDeleteOutline />
-                                          </Button>
-                                        )}
-                                      <DialogClose asChild>
-                                        <Button variant="outline">
-                                          {t("dashboardAdmin_users_cancel")}
-                                        </Button>
-                                      </DialogClose>
-                                      <DialogClose asChild>
-                                        <Button
+                                        <div>
+                                          <h3 className="font-medium text-stone-800">
+                                            {user.username}{" "}
+                                            <small>
+                                              (€ {totalPriceSpendLicense(user)})
+                                            </small>
+                                          </h3>
+                                          <p className="text-xs text-black/40 font-medium">
+                                            {user.company}
+                                          </p>
+                                          <div className="mt-3 flex flex-col gap-2">
+                                            <div className="flex items-center justify-between">
+                                              <p className="text-sm text-black/50 font-medium">
+                                                {t(
+                                                  "dashboard_rent_licenseStatus"
+                                                )}{" "}
+                                              </p>
+                                              {getStatusBadge(user)}
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                              <p className="text-sm text-black/50 font-medium">
+                                                {t("dashboard_rent_autoPayment")}{" "}
+                                              </p>
+                                              {rentalData.find(
+                                                (r) => r._id === user.rentalId
+                                              )?.deductionAuto ? (
+                                                <Badge
+                                                  variant="default"
+                                                  className="bg-green-100 text-green-800 hover:bg-green-200 flex items-center gap-1"
+                                                >
+                                                  <CheckCircle className="h-3 w-3" />
+                                                  {t("dashboard_rent_enable")}
+                                                </Badge>
+                                              ) : (
+                                                <Badge
+                                                  variant="destructive"
+                                                  className="flex items-center gap-1"
+                                                >
+                                                  <AlertTriangle className="h-3 w-3" />
+                                                  {t("dashboard_rent_disable")}
+                                                </Badge>
+                                              )}
+                                            </div>
+                                            <p className="text-sm text-black/50 font-medium">
+                                              {t("dashboard_rent_username")}{" "}
+                                              <span className="text-black/80">
+                                                {user.username}
+                                              </span>
+                                            </p>
+                                            <p className="text-sm text-black/50 font-medium">
+                                              {t("dashboard_rent_computerName")}{" "}
+                                              <span className="text-black/80">
+                                                {user.computerName}
+                                              </span>
+                                            </p>
+                                            <div className="flex items-center justify-between">
+                                              <p className="text-sm text-black/50 font-medium">
+                                                {t(
+                                                  "dashboard_rent_identificationCode"
+                                                )}{" "}
+                                                <span className="text-black/80">
+                                                  {user.computerCode}
+                                                </span>
+                                              </p>
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <button
+                                                    onClick={() =>
+                                                      copyToClipboard(
+                                                        user.computerCode
+                                                      )
+                                                    }
+                                                    className="cursor-pointer"
+                                                  >
+                                                    <IoCopyOutline />
+                                                  </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  <p>
+                                                    {t("dashboard_rent_copy")}
+                                                  </p>
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                              <p className="text-sm text-black/50 font-medium">
+                                                {t(
+                                                  "dashboard_rent_authenticationCode"
+                                                )}{" "}
+                                                <span className="text-black/80">
+                                                  {user.authCode}
+                                                </span>
+                                              </p>
+                                              <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                  <button
+                                                    onClick={() =>
+                                                      copyToClipboard(
+                                                        user.authCode
+                                                      )
+                                                    }
+                                                    className="cursor-pointer"
+                                                  >
+                                                    <IoCopyOutline />
+                                                  </button>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  <p>
+                                                    {t("dashboard_rent_copy")}
+                                                  </p>
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            </div>
+                                            <Table>
+                                              <TableHeader>
+                                                <TableRow>
+                                                  <TableHead>
+                                                    {t(
+                                                      "dashboard_rent_startDate"
+                                                    )}
+                                                  </TableHead>
+                                                  <TableHead>
+                                                    {t("dashboard_rent_endDate")}
+                                                  </TableHead>
+                                                  <TableHead>
+                                                    {t(
+                                                      "dashboard_rent_totalDays"
+                                                    )}
+                                                  </TableHead>
+                                                </TableRow>
+                                              </TableHeader>
+                                              <TableBody>
+                                                {historyData
+                                                  .filter(
+                                                    (e) =>
+                                                      e.registerId === user._id
+                                                  )
+                                                  .map((l: any, i: any) => (
+                                                    <TableRow key={i}>
+                                                      <TableCell>
+                                                        {formatDate(l.startAt)}
+                                                      </TableCell>
+                                                      <TableCell>
+                                                        {formatDate(
+                                                          l.expirationDate
+                                                        )}
+                                                      </TableCell>
+                                                      <TableCell>
+                                                        {getTotalLicenseDays(
+                                                          l.startAt,
+                                                          l.expirationDate
+                                                        )}{" "}
+                                                        {t("pay_03_j")}
+                                                      </TableCell>
+                                                    </TableRow>
+                                                  ))}
+                                              </TableBody>
+                                            </Table>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </DialogContent>
+                                  </Dialog>
+
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 cursor-pointer text-destructive"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                          Supprimer la licence
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Cette action est irréversible. Êtes-vous
+                                          sûr de vouloir supprimer cette licence ?
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>
+                                          Annuler
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
+                                          className="bg-destructive text-white hover:bg-destructive/90"
                                           onClick={() =>
-                                            handleUpdateRegistration(user._id)
+                                            handleDeleteLicence(user._id)
                                           }
                                         >
-                                          {t("dashboardAdmin_users_save")}
-                                        </Button>
-                                      </DialogClose>
-                                    </DialogFooter>
-                                  </DialogContent>
-                                </Dialog>
+                                          Supprimer
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        });
+                      })()}
+                  </TableBody>
+                </Table>
 
+                {/* Pagination for Licenses list */}
+                {(() => {
+                  const userReg = enrichedUser.find(
+                    (e) =>
+                      e.company?.toLowerCase() === companySelected?.toLowerCase() ||
+                      e.name?.toLowerCase() === companySelected?.toLowerCase()
+                  );
+
+                  const totalLicenses = userReg?.registration?.length || 0;
+                  const totalLicensePages = Math.ceil(totalLicenses / licensesPerPage);
+
+                  if (totalLicensePages <= 1) return null;
+
+                  return (
+                    <div className="flex items-center justify-between px-4 py-4 border-t">
+                      <div className="text-sm text-muted-foreground">
+                        Affichage de {(currentLicensePage - 1) * licensesPerPage + 1} à{" "}
+                        {Math.min(currentLicensePage * licensesPerPage, totalLicenses)} sur{" "}
+                        {totalLicenses} licences
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        {/* Bouton précédent */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setCurrentLicensePage((prev) => Math.max(prev - 1, 1))
+                          }
+                          disabled={currentLicensePage === 1}
+                        >
+                          Précédent
+                        </Button>
+
+                        {/* Pages */}
+                        <div className="flex items-center gap-1">
+                          {[...Array(totalLicensePages)].map((_, i) => {
+                            const pageNum = i + 1;
+
+                            if (
+                              totalLicensePages <= 7 ||
+                              pageNum === 1 ||
+                              pageNum === totalLicensePages ||
+                              (pageNum >= currentLicensePage - 1 &&
+                                pageNum <= currentLicensePage + 1)
+                            ) {
+                              return (
                                 <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 cursor-pointer"
-                                  onClick={() =>
-                                    handleUpgradeCom([user], user.rentalId)
+                                  key={pageNum}
+                                  variant={
+                                    currentLicensePage === pageNum ? "default" : "outline"
                                   }
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                  onClick={() => setCurrentLicensePage(pageNum)}
                                 >
-                                  <TbReload className="h-3 w-3" />
+                                  {pageNum}
                                 </Button>
+                              );
+                            } else if (
+                              pageNum === currentLicensePage - 2 ||
+                              pageNum === currentLicensePage + 2
+                            ) {
+                              return (
+                                <span key={pageNum} className="px-1 text-muted-foreground">
+                                  ...
+                                </span>
+                              );
+                            }
 
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 cursor-pointer"
-                                    >
-                                      <Eye className="h-4 w-4" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden gap-3">
-                                    <DialogHeader>
-                                      <DialogTitle>
-                                        {t("dashboard_rent_licenseDetails")}
-                                      </DialogTitle>
-                                      <DialogDescription>
-                                        {t(
-                                          "dashboard_rent_licenseDetailsDescription"
-                                        )}
-                                      </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="grid gap-4">
-                                      <div className="grid grid-cols-2 max-md:grid-cols-1 gap-3">
-                                        <CardDetails
-                                          analytic={{
-                                            title: t(
-                                              "dashboard_rent_totalDaysUsed"
-                                            ),
-                                            icon: MdKey,
-                                            value: `${calculateTotalDays(
-                                              historyData.filter(
-                                                (e) => e.registerId === user._id
-                                              )
-                                            )} Jours`,
-                                            isGrowth: true,
-                                            isCurrency: false,
-                                            valueGrowth: 2,
-                                            isDark: true,
-                                            isPercent: false,
-                                            parag: t(
-                                              "dashboard_rent_totalUsageDays"
-                                            ),
-                                          }}
-                                        />
-                                        <CardDetails
-                                          analytic={{
-                                            title: t(
-                                              "dashboard_rent_totalReceived"
-                                            ),
-                                            icon: AiFillEuroCircle,
-                                            value: totalPriceSpendLicense(user),
-                                            isGrowth: true,
-                                            isCurrency: true,
-                                            valueGrowth: 2,
-                                            isDark: false,
-                                            isPercent: false,
-                                            parag: t(
-                                              "dashboard_rent_totalAmountReceived"
-                                            ),
-                                          }}
-                                        />
-                                      </div>
-                                      <div>
-                                        <h3 className="font-medium text-stone-800">
-                                          {user.username}{" "}
-                                          <small>
-                                            (€ {totalPriceSpendLicense(user)})
-                                          </small>
-                                        </h3>
-                                        <p className="text-xs text-black/40 font-medium">
-                                          {user.company}
-                                        </p>
-                                        <div className="mt-3 flex flex-col gap-2">
-                                          <div className="flex items-center justify-between">
-                                            <p className="text-sm text-black/50 font-medium">
-                                              {t(
-                                                "dashboard_rent_licenseStatus"
-                                              )}{" "}
-                                            </p>
-                                            {getStatusBadge(user)}
-                                          </div>
-                                          <div className="flex items-center justify-between">
-                                            <p className="text-sm text-black/50 font-medium">
-                                              {t("dashboard_rent_autoPayment")}{" "}
-                                            </p>
-                                            {rentalData.find(
-                                              (r) => r._id === user.rentalId
-                                            )?.deductionAuto ? (
-                                              <Badge
-                                                variant="default"
-                                                className="bg-green-100 text-green-800 hover:bg-green-200 flex items-center gap-1"
-                                              >
-                                                <CheckCircle className="h-3 w-3" />
-                                                {t("dashboard_rent_enable")}
-                                              </Badge>
-                                            ) : (
-                                              <Badge
-                                                variant="destructive"
-                                                className="flex items-center gap-1"
-                                              >
-                                                <AlertTriangle className="h-3 w-3" />
-                                                {t("dashboard_rent_disable")}
-                                              </Badge>
-                                            )}
-                                          </div>
-                                          <p className="text-sm text-black/50 font-medium">
-                                            {t("dashboard_rent_username")}{" "}
-                                            <span className="text-black/80">
-                                              {user.username}
-                                            </span>
-                                          </p>
-                                          <p className="text-sm text-black/50 font-medium">
-                                            {t("dashboard_rent_computerName")}{" "}
-                                            <span className="text-black/80">
-                                              {user.computerName}
-                                            </span>
-                                          </p>
-                                          <div className="flex items-center justify-between">
-                                            <p className="text-sm text-black/50 font-medium">
-                                              {t(
-                                                "dashboard_rent_identificationCode"
-                                              )}{" "}
-                                              <span className="text-black/80">
-                                                {user.computerCode}
-                                              </span>
-                                            </p>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <button
-                                                  onClick={() =>
-                                                    copyToClipboard(
-                                                      user.computerCode
-                                                    )
-                                                  }
-                                                  className="cursor-pointer"
-                                                >
-                                                  <IoCopyOutline />
-                                                </button>
-                                              </TooltipTrigger>
-                                              <TooltipContent>
-                                                <p>
-                                                  {t("dashboard_rent_copy")}
-                                                </p>
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          </div>
-                                          <div className="flex items-center justify-between">
-                                            <p className="text-sm text-black/50 font-medium">
-                                              {t(
-                                                "dashboard_rent_authenticationCode"
-                                              )}{" "}
-                                              <span className="text-black/80">
-                                                {user.authCode}
-                                              </span>
-                                            </p>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <button
-                                                  onClick={() =>
-                                                    copyToClipboard(
-                                                      user.authCode
-                                                    )
-                                                  }
-                                                  className="cursor-pointer"
-                                                >
-                                                  <IoCopyOutline />
-                                                </button>
-                                              </TooltipTrigger>
-                                              <TooltipContent>
-                                                <p>
-                                                  {t("dashboard_rent_copy")}
-                                                </p>
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          </div>
-                                          <Table>
-                                            <TableHeader>
-                                              <TableRow>
-                                                <TableHead>
-                                                  {t(
-                                                    "dashboard_rent_startDate"
-                                                  )}
-                                                </TableHead>
-                                                <TableHead>
-                                                  {t("dashboard_rent_endDate")}
-                                                </TableHead>
-                                                <TableHead>
-                                                  {t(
-                                                    "dashboard_rent_totalDays"
-                                                  )}
-                                                </TableHead>
-                                              </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                              {historyData
-                                                .filter(
-                                                  (e) =>
-                                                    e.registerId === user._id
-                                                )
-                                                .map((l: any, i: any) => (
-                                                  <TableRow key={i}>
-                                                    <TableCell>
-                                                      {formatDate(l.startAt)}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                      {formatDate(
-                                                        l.expirationDate
-                                                      )}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                      {getTotalLicenseDays(
-                                                        l.startAt,
-                                                        l.expirationDate
-                                                      )}{" "}
-                                                      {t("pay_03_j")}
-                                                    </TableCell>
-                                                  </TableRow>
-                                                ))}
-                                            </TableBody>
-                                          </Table>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </DialogContent>
-                                </Dialog>
+                            return null;
+                          })}
+                        </div>
 
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="h-8 w-8 cursor-pointer text-destructive"
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>
-                                        Supprimer la licence
-                                      </AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Cette action est irréversible. Êtes-vous
-                                        sûr de vouloir supprimer cette licence ?
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>
-                                        Annuler
-                                      </AlertDialogCancel>
-                                      <AlertDialogAction
-                                        className="bg-destructive text-white hover:bg-destructive/90"
-                                        onClick={() =>
-                                          handleDeleteLicence(user._id)
-                                        }
-                                      >
-                                        Supprimer
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                </TableBody>
-              </Table>
+                        {/* Bouton suivant */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            setCurrentLicensePage((prev) =>
+                              Math.min(prev + 1, totalLicensePages)
+                            )
+                          }
+                          disabled={currentLicensePage === totalLicensePages}
+                        >
+                          Suivant
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </>
             )}
           </div>
         </CardContent>
