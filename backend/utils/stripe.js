@@ -1,14 +1,14 @@
 const Stripe = require("stripe");
 
 // Load from environment variables in real projects
-// const stripe = Stripe(
-//   process.env.STRIPE_SECRET_KEY_TEST ||
-//     "sk_test_51SI4slB4LVww0NzzB0Ok33mLnJu3BEFBl8urO3e82If6hrGAsdqd2fHNtfVCLRazjlELcdGivZYjEyOeXqsS76vT00tolSUdNi"
-// );
 const stripe = Stripe(
-  process.env.STRIPE_SECRET_KEY ||
-  "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"
+  process.env.STRIPE_SECRET_KEY_TEST ||
+    "sk_test_51SI4slB4LVww0NzzB0Ok33mLnJu3BEFBl8urO3e82If6hrGAsdqd2fHNtfVCLRazjlELcdGivZYjEyOeXqsS76vT00tolSUdNi"
 );
+// const stripe = Stripe(
+//   process.env.STRIPE_SECRET_KEY ||
+//   "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"
+// );
 
 /**
  * Create one-time payment (PaymentIntent)

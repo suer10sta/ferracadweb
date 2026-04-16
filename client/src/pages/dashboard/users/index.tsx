@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogClose,
@@ -272,7 +273,7 @@ const Users: React.FC = () => {
     return paymentId?.totalPricePay || 0;
   };
 
-  const enrichedUser = usersData?.map((user: any) => {
+  const rawEnrichedUsers = usersData?.map((user: any) => {
     const registration = registrationData.filter((e) => e.userId === user._id);
     const rental = rentalData.filter((e) => e.userId === user._id);
     const payment = paymentData.filter((e) => e.userId === user._id);
@@ -284,25 +285,21 @@ const Users: React.FC = () => {
     const hasDownloaded = downloads.length > 0;
     const now = new Date();
 
-    // Compter les licences réellement actives (statut active et date non passée)
     const activeCount = registration.filter((l) => {
       const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
       return l.status?.toLowerCase() === "active" && !isDatePassed;
     }).length;
 
-    // Compter les licences d'essai réellement en cours (statut freetrial et date non passée)
     const trialCount = registration.filter((l) => {
       const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
       return (l.status?.toLowerCase() === "freetrial" || l.status?.toLowerCase() === "période d'essai") && !isDatePassed;
     }).length;
 
-    // Compter les licences expirées (statut expire/expired OU date passée)
     const expiredCount = registration.filter((l) => {
       const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
       return l.status?.toLowerCase() === "expire" || l.status?.toLowerCase() === "expired" || isDatePassed;
     }).length;
 
-    // Determine license status for the top badge
     let licenseStatus = "none";
     if (activeCount > 0) {
       licenseStatus = "active";
@@ -327,6 +324,23 @@ const Users: React.FC = () => {
         total: registration.length,
       },
     };
+  });
+
+  // Aplatissement des données : une ligne par licence
+  const flattenedUsers = rawEnrichedUsers?.flatMap((user: any) => {
+    if (user.registration.length === 0) {
+      return [{ ...user, currentRegistration: null }];
+    }
+    return user.registration.map((reg: any) => ({
+      ...user,
+      currentRegistration: reg,
+      // On surcharge l'état de la licence pour cette ligne spécifique
+      licenseStatus: (reg.status?.toLowerCase() === "active" && (!reg.expirationDate || new Date(reg.expirationDate) > new Date())) 
+        ? "active" 
+        : (reg.status?.toLowerCase() === "freetrial" || reg.status?.toLowerCase() === "période d'essai")
+        ? "trial"
+        : "expired"
+    }));
   });
 
   // filter users
@@ -358,7 +372,7 @@ const Users: React.FC = () => {
     },
   ];
 
-  const filteredUsers = enrichedUser
+  const filteredUsers = (flattenedUsers || [])
     .filter((user) => {
       // Search filter
       const matchesSearchTerm =
@@ -895,7 +909,7 @@ const Users: React.FC = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Toutes les sources</SelectItem>
-                        {[...new Set(enrichedUser.map(u => u.source).filter(Boolean))].map((source: any, i) => (
+                        {[...new Set((rawEnrichedUsers || []).map(u => u.source).filter(Boolean))].map((source: any, i) => (
                           <SelectItem key={i} value={source}>{source}</SelectItem>
                         ))}
                         <SelectItem value="none">Non renseignée</SelectItem>
@@ -1016,60 +1030,71 @@ const Users: React.FC = () => {
                 <TableRow>
                   <TableHead>{t("dashboardAdmin_users_user")}</TableHead>
                   <TableHead>{t("dashboardAdmin_users_contact")}</TableHead>
-                  <TableHead>Platform</TableHead>
-                  <TableHead>Prix de Base</TableHead>
+                  <TableHead>Détails Licence</TableHead>
+                  <TableHead>Code Machine / Auth</TableHead>
                   <TableHead>{t("dashboardAdmin_users_role")}</TableHead>
-                  <TableHead>Compte</TableHead>
-                  <TableHead>Licence</TableHead>
-                  <TableHead>Date de création</TableHead>
-                  <TableHead>
-                    {t("dashboardAdmin_users_lastConnection")}
-                  </TableHead>
+                  <TableHead>Status Compte</TableHead>
+                  <TableHead>Type Licence</TableHead>
+                  <TableHead>Expiration</TableHead>
+                  <TableHead>Création / Connexion</TableHead>
                   <TableHead>{t("dashboardAdmin_users_actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedUsers.map((user: any) => (
-                  <TableRow key={user._id}>
+                {paginatedUsers.map((user: any, index: number) => (
+                  <TableRow key={`${user._id}-${user.currentRegistration?._id || index}`}>
                     <TableCell>
                       <div>
                         <p className="font-medium">{user.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {user.company} {user.company && "•"}{" "}
-                          {user?.registration?.length || 0} Licence
-                          {user?.registration?.length !== 1 ? "s" : ""}
+                          {user.company || "Individuel"}
                         </p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <p className="text-sm">{user.email}</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm font-medium">{user.email}</p>
+                        <p className="text-xs text-muted-foreground">
                           {user.phone}
                         </p>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <p className="text-xs font-medium">
-                          {user.platform?.toUpperCase() || "N/A"}
-                        </p>
-                      </div>
+                      {user.currentRegistration ? (
+                        <div>
+                          <p className="text-xs font-bold uppercase text-primary">
+                            {user.currentRegistration.platform || user.platform}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground truncate w-32">
+                            {user.currentRegistration.username}
+                          </p>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">Pas de licence</span>
+                      )}
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <p className="text-sm font-medium">
-                          € {user.basedPrice || 5}
-                        </p>
-                      </div>
+                      {user.currentRegistration ? (
+                        <div className="flex flex-col gap-1">
+                          <Badge variant="outline" className="text-[9px] py-0 h-4 w-fit font-mono">
+                            M: {user.currentRegistration.computerCode || "N/A"}
+                          </Badge>
+                          <Badge variant="outline" className="text-[9px] py-0 h-4 w-fit font-mono border-dashed">
+                            A: {user.currentRegistration.authCode || "N/A"}
+                          </Badge>
+                        </div>
+                      ) : (
+                        "-"
+                      )}
                     </TableCell>
                     <TableCell>
                       <Badge
-                        className={
+                        className={cn(
+                          "text-[10px] py-0 h-5",
                           user.role === "admin"
                             ? "bg-green-100 text-green-800"
                             : "bg-stone-100 text-stone-900"
-                        }
+                        )}
                       >
                         {user.role === "admin"
                           ? t("dashboardAdmin_users_status_admin")
@@ -1077,395 +1102,162 @@ const Users: React.FC = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge
-                            className={cn(
-                              "border-transparent cursor-help",
-                              user.status === "active" && "bg-green-100 text-green-800",
-                              user.status === "pending" && "bg-slate-100 text-slate-800",
-                              user.status === "inactive" && "bg-red-100 text-red-800"
-                            )}
-                          >
-                            {user.status === "active" ? "Actif" : user.status === "pending" ? "Pending" : "Suspendu"}
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p className="text-xs">
-                            {user.status === "active"
-                              ? "L'utilisateur a demandé son essai gratuit ou a acheté une licence. Son compte est pleinement fonctionnel."
-                              : user.status === "pending"
-                                ? "L'utilisateur a rempli le formulaire de téléchargement mais n'a pas encore de licence activée."
-                                : "Le compte est bloqué par l'admin."}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <Badge
+                        className={cn(
+                          "text-[10px] py-0 h-5 border-transparent",
+                          user.status === "active" && "bg-green-100 text-green-800",
+                          user.status === "pending" && "bg-slate-100 text-slate-800",
+                          user.status === "inactive" && "bg-red-100 text-red-800"
+                        )}
+                      >
+                        {user.status === "active" ? "Actif" : user.status === "pending" ? "Pending" : "Suspendu"}
+                      </Badge>
                     </TableCell>
                     <TableCell>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge
-                            className={cn(
-                              "border-transparent",
-                              user.licenseStatus === "active" && "bg-purple-100 text-purple-800",
-                              user.licenseStatus === "trial" && "bg-blue-100 text-blue-800",
-                              user.licenseStatus === "expired" && "bg-orange-100 text-orange-800",
-                              user.licenseStatus === "none" && "bg-gray-100 text-gray-500"
-                            )}
-                          >
-                            {user.licenseStatus === "active"
-                              ? "Payante"
-                              : user.licenseStatus === "trial"
-                                ? "Essai"
-                                : user.licenseStatus === "expired"
-                                  ? "Expirée"
-                                  : "Aucune"}
-                            <BsInfoCircle className="ml-1 cursor-help h-3 w-3" />
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p className="text-xs">
-                            {user.licenseStatus === "active"
-                              ? "Possède une licence payante valide."
-                              : user.licenseStatus === "trial"
-                                ? "Possède une licence d'essai en cours."
-                                : user.licenseStatus === "expired"
-                                  ? "La licence est arrivée à son terme."
-                                  : "Pas de licence trouvée."}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
+                      <Badge
+                        className={cn(
+                          "text-[10px] py-0 h-5 border-transparent",
+                          user.licenseStatus === "active" && "bg-purple-100 text-purple-800",
+                          user.licenseStatus === "trial" && "bg-blue-100 text-blue-800",
+                          user.licenseStatus === "expired" && "bg-orange-100 text-orange-800",
+                          user.licenseStatus === "none" && "bg-gray-100 text-gray-500"
+                        )}
+                      >
+                        {user.licenseStatus === "active"
+                          ? "Payante"
+                          : user.licenseStatus === "trial"
+                            ? "Essai"
+                            : user.licenseStatus === "expired"
+                              ? "Expirée"
+                              : "Aucune"}
+                      </Badge>
                     </TableCell>
-                    <TableCell className="text-sm">
-                      {formatDate(user.createdAt)}
+                    <TableCell className="text-[11px] font-medium">
+                      {user.currentRegistration?.expirationDate 
+                        ? formatDate(user.currentRegistration.expirationDate)
+                        : "-"}
                     </TableCell>
-                    <TableCell className="text-sm">
-                      {user.lastLogin
-                        ? formatDate(user.lastLogin)
-                        : "Aucune connexion"}
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatDate(user.createdAt)}
+                        </span>
+                        <span className="text-[10px] font-medium">
+                          {user.lastLogin ? formatDate(user.lastLogin) : "Jamais"}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 cursor-pointer"
-                          onClick={() => {
-                            if (user?.nTva) {
-                              setCompanySelected(user.company);
-                              setTypeSelected("Société");
-                            } else {
-                              setCompanySelected(user.company || user.name);
-                              setTypeSelected("Individual");
-                            }
-                          }}
-                        >
-                          <BiSolidMessageSquareDetail className="h-4 w-4" />
-                        </Button>
-
-                        {/* preview user */}
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 cursor-pointer"
-                              onClick={() => fetchEmailLogs(user._id)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="w-1/2 max-md:w-[90%] max-h-[90vh] overflow-auto">
-                            <DialogHeader>
-                              <DialogTitle>
-                                {t("dashboardAdmin_users_userOverview")}
-                              </DialogTitle>
-                              <DialogDescription>
-                                {t("dashboardAdmin_users_userDetails")}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4">
-                              <div className="grid grid-cols-2 max-md:grid-cols-1 gap-3">
-                                <CardDetails
-                                  analytic={{
-                                    title: t(
-                                      "dashboardAdmin_users_totalLicenses"
-                                    ),
-                                    icon: MdKey,
-                                    value: user.registration.length,
-                                    isGrowth: true,
-                                    isCurrency: false,
-                                    valueGrowth: 2,
-                                    isDark: true,
-                                    isPercent: false,
-                                    parag: t(
-                                      "dashboardAdmin_users_totalLicensesDescription"
-                                    ),
-                                  }}
-                                />
-                                <CardDetails
-                                  analytic={{
-                                    title: t(
-                                      "dashboardAdmin_users_totalReceived"
-                                    ),
-                                    icon: AiFillEuroCircle,
-                                    value: user.payment.reduce(
-                                      (
-                                        curr: any,
-                                        arr: { totalPricePay: any }
-                                      ) => curr + arr.totalPricePay,
-                                      0
-                                    ),
-                                    isGrowth: true,
-                                    isCurrency: true,
-                                    valueGrowth: 2,
-                                    isDark: false,
-                                    isPercent: false,
-                                    parag: t(
-                                      "dashboardAdmin_users_totalReceivedDescription"
-                                    ),
-                                  }}
-                                />
-                              </div>
-                              <div>
-                                <h3 className="font-bold">{user.name}</h3>
-                                <p className="text-xs font-medium text-black/40">
-                                  {user.company}
-                                </p>
-                              </div>
-                              <div className="flex flex-col gap-1">
-                                <div className="flex items-center justify-between">
-                                  <p className="text-sm font-medium text-black/80">
-                                    Source d’inscription :{" "}
-                                    <span className="text-black/40">
-                                      {user.source || "Non renseignée"}
-                                    </span>
-                                  </p>
-                                  {user.source && (
-                                    <Link
-                                      to={`${user.source ===
-                                        "Formulaire d’inscription"
-                                        ? "/louer/register"
-                                        : user.source ===
-                                          "Formulaire d’enregistrement"
-                                          ? "/enregistrement-du-logiciel"
-                                          : "#"
-                                        }`}
-                                      target="_blanck"
-                                    >
-                                      <FaExternalLinkAlt className="text-sm" />
-                                    </Link>
-                                  )}
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <p className="text-sm font-medium text-black/80">
-                                    {t("dashboardAdmin_users_email")} :{" "}
-                                    <span className="text-black/40">
-                                      {user.email}
-                                    </span>
-                                  </p>
-                                  <button onClick={() => {
-                                    setEmailUser(user);
-                                    setEmailModalOpen(true);
-                                  }}>
-                                    <IoIosMail />
-                                  </button>
-
-                                </div>
-                                <p className="text-sm font-medium text-black/80">
-                                  Invitation ID :{" "}
-                                  <span className="text-black/40">
-                                    {user.invitationId}
-                                  </span>
-                                </p>
-                                <p className="text-sm font-medium text-black/80">
-                                  {t("pay_01_country")} :{" "}
-                                  <span className="text-black/40">
-                                    {
-                                      countries.find(
-                                        (e) => e.code === user.country
-                                      )?.name
-                                    }
-                                  </span>
-                                </p>
-                                <p className="text-sm font-medium text-black/80">
-                                  {t("pay_01_phone")} :{" "}
-                                  <span className="text-black/40">
-                                    {user.phone}
-                                  </span>
-                                </p>
-                                {user.role === "client" && (
-                                  <p className="text-sm font-medium text-black/80">
-                                    {t("checkout_tva")} :{" "}
-                                    <span className="text-black/40">
-                                      {user.nTva}
-                                    </span>
-                                  </p>
-                                )}
-                                <p className="text-sm font-medium text-black/80">
-                                  {t("dashboardAdmin_users_postalCode")} :{" "}
-                                  <span className="text-black/40">
-                                    {user.postal}
-                                  </span>
-                                </p>
-                                <p className="text-sm font-medium text-black/80">
-                                  {t("dashboardAdmin_users_city")} :{" "}
-                                  <span className="text-black/40">
-                                    {user.city}
-                                  </span>
-                                </p>
-                                <p className="text-sm font-medium text-black/80">
-                                  {t("dashboardAdmin_users_address")} :{" "}
-                                  <span className="text-black/40">
-                                    {user.address}
-                                  </span>
-                                </p>
-                                <p className="text-sm font-medium text-black/80">
-                                  {t("dashboardAdmin_users_lastConnection")} :{" "}
-                                  <span className="text-black/40">
-                                    {formatDate(user.lastLogin)}
-                                  </span>
-                                </p>
-                                <p className="text-sm font-medium text-black/80">
-                                  Compte activé :{" "}
-                                  <span
-                                    className={cn(
-                                      "font-semibold",
-                                      user.status !== "pending"
-                                        ? "text-green-600"
-                                        : "text-red-500"
-                                    )}
-                                  >
-                                    {user.status !== "pending" ? "Oui" : "Non"}
-                                  </span>
-                                </p>
-                                <hr className="my-1 border-t border-black/5" />
-                                <p className="text-sm font-medium text-black/80">
-                                  Téléchargement Ferracad :{" "}
-                                  <span
-                                    className={cn(
-                                      "font-semibold",
-                                      user.hasDownloaded
-                                        ? "text-green-600"
-                                        : "text-red-500"
-                                    )}
-                                  >
-                                    {user.hasDownloaded ? "Oui" : "Non"}
-                                  </span>
-                                </p>
-                                <p className="text-sm font-medium text-black/80">
-                                  Licences :{" "}
-                                  <span className="text-black/40">
-                                    {user.licenseStats.total} (
-                                    {user.licenseStats.active} Actives,{" "}
-                                    {user.licenseStats.trial} Essai,{" "}
-                                    {user.licenseStats.expired} Expirées)
-                                  </span>
-                                </p>
-                                <div className="flex flex-wrap gap-2 items-center">
-                                  <p className="text-sm font-medium text-black/80">
-                                    Compte :
-                                  </p>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Badge
-                                        className={cn(
-                                          "px-2 py-0 h-5 text-[10px] uppercase font-bold border-transparent cursor-help",
-                                          user.status === "active" && "bg-green-100 text-green-800",
-                                          user.status === "pending" && "bg-slate-100 text-slate-800",
-                                          user.status === "inactive" && "bg-red-100 text-red-800"
-                                        )}
-                                      >
-                                        {user.status === "active" ? "Actif" : user.status === "pending" ? "Pending" : "Suspendu"}
-                                      </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-xs">
-                                      <p className="text-[10px]">
-                                        {user.status === "active" ? "Compte pleinement fonctionnel." : user.status === "pending" ? "En attente d'enregistrement." : "Compte bloqué."}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-
-                                  <p className="text-sm font-medium text-black/80 ml-2">
-                                    Licence :
-                                  </p>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Badge
-                                        className={cn(
-                                          "px-2 py-0 h-5 text-[10px] uppercase font-bold border-transparent cursor-help",
-                                          user.licenseStatus === "active" && "bg-purple-100 text-purple-800",
-                                          user.licenseStatus === "trial" && "bg-blue-100 text-blue-800",
-                                          user.licenseStatus === "expired" && "bg-orange-100 text-orange-800",
-                                          user.licenseStatus === "none" && "bg-gray-100 text-gray-500"
-                                        )}
-                                      >
-                                        {user.licenseStatus === "active" ? "Payante" : user.licenseStatus === "trial" ? "Essai" : user.licenseStatus === "expired" ? "Expirée" : "Aucune"}
-                                      </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-xs">
-                                      <p className="text-[10px]">
-                                        {user.licenseStatus === "active" ? "Licence payante valide." : user.licenseStatus === "trial" ? "Essai en cours." : user.licenseStatus === "expired" ? "Licence expirée." : "Pas de licence."}
-                                      </p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </div>
-                                <hr className="my-2 border-stone-100" />
-                                <div>
-                                  <p className="text-sm font-semibold text-stone-800 mb-2">Historique des e-mails envoyés</p>
-                                  <div className="space-y-2">
-                                    {loadingLogs ? (
-                                      <p className="text-xs text-muted-foreground">Chargement des logs...</p>
-                                    ) : emailLogs.length === 0 ? (
-                                      <p className="text-xs text-muted-foreground">Aucun e-mail envoyé à ce jour.</p>
-                                    ) : (
-                                      emailLogs.map((log) => (
-                                        <div key={log._id} className="flex items-center justify-between p-2 border rounded-md bg-stone-50/50">
-                                          <div className="flex-1">
-                                            <p className="text-xs font-medium text-stone-700 truncate max-w-[250px]">{log.subject}</p>
-                                            <p className="text-[10px] text-stone-400">{formatDate(log.createdAt)}</p>
-                                          </div>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <button className="p-1 hover:bg-stone-100 rounded transition-colors">
-                                                <Popover>
-                                                  <PopoverTrigger asChild>
-                                                    <Eye className="h-3 w-3 text-stone-500 cursor-pointer" />
-                                                  </PopoverTrigger>
-                                                  <PopoverContent className="w-80 p-4">
-                                                    <div className="space-y-2">
-                                                      <p className="text-xs font-bold border-b pb-1">Contenu de l'e-mail</p>
-                                                      <div
-                                                        className="text-[11px] text-stone-600 max-h-[300px] overflow-y-auto whitespace-pre-wrap"
-                                                        dangerouslySetInnerHTML={{ __html: log.body.replace(/\n/g, '<br/>') }}
-                                                      />
-                                                    </div>
-                                                  </PopoverContent>
-                                                </Popover>
-                                              </button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>Voir le contenu</p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </div>
-                                      ))
-                                    )}
+                        {/* License actions - only show when row has a license */}
+                        {user.currentRegistration && (
+                          <>
+                            {/* Transfer license */}
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer">
+                                  <RiExchangeLine className="h-3 w-3" />
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden gap-3">
+                                <DialogHeader>
+                                  <DialogTitle>Transférer une licence vers un autre utilisateur</DialogTitle>
+                                  <DialogDescription>
+                                    Sélectionnez un nouvel utilisateur pour transférer la licence actuelle.<br />
+                                    L'utilisateur actuel perdra l'accès immédiatement après le transfert.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="grid gap-4">
+                                  <div className="grid gap-1">
+                                    <Label htmlFor="company" className="text-sm font-semibold text-gray-700">De</Label>
+                                    <div className="flex flex-col items-start bg-gray-100 py-4 px-4 rounded-lg">
+                                      <span className="text-sm font-medium text-gray-900">{user.name}</span>
+                                      <span className="text-gray-500 text-xs">{user.company}</span>
+                                    </div>
                                   </div>
+                                  <div className="grid gap-2">
+                                    <div className="flex justify-between items-center">
+                                      <Label htmlFor="company" className="text-sm font-semibold text-gray-700">À</Label>
+                                      <NewUser type="icon" />
+                                    </div>
+                                    <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                                      <SelectTrigger className="w-full py-6 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-colors">
+                                        <SelectValue placeholder={t("dashboardClient_orders_selectUserLabel")} />
+                                      </SelectTrigger>
+                                      <SelectContent className="border-gray-200 shadow-lg">
+                                        {usersData
+                                          .filter((e) => e._id !== user._id)
+                                          .map((u: any, i: number) => (
+                                            <SelectItem key={i} value={u._id} className="text-sm hover:bg-gray-50 cursor-pointer">
+                                              <div className="flex flex-col items-start">
+                                                <span className="font-medium text-gray-900">{u.name}</span>
+                                                <span className="text-gray-500 text-xs">{u.company}</span>
+                                              </div>
+                                            </SelectItem>
+                                          ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <button
+                                    onClick={() => handleTransfer(user.currentRegistration._id)}
+                                    className="w-full py-3 text-sm rounded-md bg-stone-600 transition-all duration-200 text-white cursor-pointer font-semibold hover:bg-stone-800"
+                                  >
+                                    Transfére
+                                  </button>
                                 </div>
-                              </div>
+                              </DialogContent>
+                            </Dialog>
 
-                            </div>
-                          </DialogContent>
-                        </Dialog>
 
-                        {/* modify user */}
+
+                            {/* Renew license */}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 cursor-pointer"
+                              onClick={() => handleUpgradeCom([user.currentRegistration], user.currentRegistration.rentalId)}
+                            >
+                              <TbReload className="h-3 w-3" />
+                            </Button>
+
+
+
+                            {/* Delete license */}
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer text-destructive">
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Supprimer la licence</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Cette action est irréversible. Êtes-vous sûr de vouloir supprimer cette licence ?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive text-white hover:bg-destructive/90"
+                                    onClick={() => handleDeleteLicence(user.currentRegistration._id)}
+                                  >
+                                    Supprimer
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </>
+                        )}
+
+
+                        {/* Edit Button + Dialog */}
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 cursor-pointer"
+                              className="h-7 w-7 cursor-pointer"
                               onClick={() => {
                                 setNewFormData({
                                   name: user.name,
@@ -1482,251 +1274,350 @@ const Users: React.FC = () => {
                                   role: user.role,
                                   platform: user.platform,
                                 });
+                                if (user.currentRegistration) {
+                                  handleShow(user.currentRegistration);
+                                }
                               }}
                             >
-                              <Edit2 className="h-4 w-4" />
+                              <Edit2 className="h-3.5 w-3.5" />
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="w-1/2 max-md:w-[90%] max-h-[90vh] overflow-auto">
                             <DialogHeader>
                               <DialogTitle>
-                                {t("dashboardAdmin_users_editUser")}
+                                {t("dashboard_rent_edit")} — {user.name}
                               </DialogTitle>
                               <DialogDescription>
-                                {t("dashboardAdmin_users_updateInfo")}
+                                {t("dashboardAdmin_users_searchManage")}
                               </DialogDescription>
                             </DialogHeader>
-                            <div className="grid gap-4">
-                              {/* Name */}
-                              <div className="grid gap-3">
-                                <Label htmlFor="name">
-                                  {t("dashboardAdmin_users_name")}
-                                </Label>
-                                <Input
-                                  id="name"
-                                  name="name"
-                                  onChange={handleChangeUpdate}
-                                  value={newFormData.name}
-                                />
-                              </div>
 
-                              {newFormData.role === "client" && (
-                                <>
-                                  {/* based pric */}
+                            <Tabs defaultValue="user_edit" className="w-full">
+                              <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="user_edit">👤 {t("dashboardAdmin_users_status_client")}</TabsTrigger>
+                                <TabsTrigger value="license_edit" disabled={!user.currentRegistration}>🔑 {t("dashboard_rent_license")}</TabsTrigger>
+                              </TabsList>
+
+                              <TabsContent value="user_edit" className="space-y-4 mt-4">
+                                <div className="border rounded-lg p-4">
+                                  <p className="text-sm font-semibold mb-3">{t("dashboardAdmin_users_updateSuccess").replace("réussie", "")}</p>
                                   <div className="grid gap-3">
-                                    <Label htmlFor="basedPrice">
-                                      Prix ​​de base (EUR) *
-                                    </Label>
-                                    <Input
-                                      id="basedPrice"
-                                      name="basedPrice"
-                                      min={1}
-                                      onChange={handleChangeUpdate}
-                                      value={newFormData.basedPrice}
+                                    <div className="grid gap-2">
+                                      <Label htmlFor="name">{t("dashboardAdmin_users_name")}</Label>
+                                      <Input id="name" name="name" onChange={handleChangeUpdate} value={newFormData.name} />
+                                    </div>
+                                    {newFormData.role === "client" && (
+                                      <>
+                                        <div className="grid gap-2">
+                                          <Label htmlFor="basedPrice">Prix de base (EUR) *</Label>
+                                          <Input id="basedPrice" name="basedPrice" min={1} onChange={handleChangeUpdate} value={newFormData.basedPrice} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                          <Label htmlFor="company">{t("dashboardAdmin_users_company")}</Label>
+                                          <Input id="company" name="company" onChange={handleChangeUpdate} value={newFormData.company} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                          <Label htmlFor="nTva">{t("checkout_tva")}</Label>
+                                          <Input id="nTva" name="nTva" onChange={handleChangeUpdate} value={newFormData.nTva} type="text" />
+                                        </div>
+                                        <div className="grid gap-2">
+                                          <Label htmlFor="platform">Platform</Label>
+                                          <Select name="platform" onValueChange={handleSelectChangeUpdatePlatform} value={newFormData.platform}>
+                                            <SelectTrigger id="platform" className="w-full"><SelectValue placeholder="-" /></SelectTrigger>
+                                            <SelectContent>
+                                              {platforms.map((plat, index) => (<SelectItem key={index} value={plat.value}>{plat.label === "Touts" ? "-" : plat.label}</SelectItem>))}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                      </>
+                                    )}
+                                    <div className="grid gap-2">
+                                      <Label htmlFor="email">{t("dashboardAdmin_users_email")}</Label>
+                                      <Input id="email" name="email" onChange={handleChangeUpdate} value={newFormData.email} type="email" />
+                                    </div>
+                                    <div className="grid gap-2">
+                                      <Label htmlFor="phone">{t("dashboardAdmin_users_phone")}</Label>
+                                      <Input id="phone" name="phone" onChange={handleChangeUpdate} value={newFormData.phone} type="tel" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div className="grid gap-2">
+                                        <Label htmlFor="address">{t("dashboardAdmin_users_address")}</Label>
+                                        <Input id="address" name="address" onChange={handleChangeUpdate} value={newFormData.address} />
+                                      </div>
+                                      <div className="grid gap-2">
+                                        <Label htmlFor="postal">{t("dashboardAdmin_users_postalCode")}</Label>
+                                        <Input id="postal" name="postal" onChange={handleChangeUpdate} value={newFormData.postal} />
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div className="grid gap-2">
+                                        <Label htmlFor="city">{t("dashboardAdmin_users_city")}</Label>
+                                        <Input id="city" name="city" onChange={handleChangeUpdate} value={newFormData.city} />
+                                      </div>
+                                      <div className="grid gap-2">
+                                        <Label htmlFor="country">{t("dashboardAdmin_users_country")}</Label>
+                                        <Select name="country" onValueChange={handleSelectChangeUpdate} value={newFormData.country}>
+                                          <SelectTrigger id="country" className="w-full"><SelectValue placeholder={t("dashboardAdmin_users_selectCountry")} /></SelectTrigger>
+                                          <SelectContent>
+                                            {countries.map((country, index) => (<SelectItem key={index} value={country.code}>{country.name}</SelectItem>))}
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    </div>
+                                    <div className="grid gap-2">
+                                      <Label htmlFor="role">{t("dashboardAdmin_users_role")} *</Label>
+                                      <Select name="role" onValueChange={handleSelectChangeUpdateRole} value={newFormData.role}>
+                                        <SelectTrigger id="role" className="w-full"><SelectValue placeholder={t("dashboardAdmin_users_selectrole")} /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="admin">Administrateur</SelectItem>
+                                          <SelectItem value="client">Client</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <Button type="submit" onClick={handleSubmitUpdate} className="w-full mt-2">
+                                      {t("dashboardAdmin_users_save")}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </TabsContent>
+
+                              <TabsContent value="license_edit" className="space-y-4 mt-4">
+                                {user.currentRegistration ? (
+                                  <div className="border rounded-lg p-4">
+                                    <p className="text-sm font-semibold mb-3">Modifier la licence</p>
+                                    <form className="grid gap-3">
+                                      <div className="grid gap-2">
+                                        <Label htmlFor="username">{t("dashboard_rent_userName")}</Label>
+                                        <Input id="username" name="username" placeholder={t("dashboard_rent_userName")} value={formDataUpdate.username} onChange={handleChangeUpdateLicense} />
+                                      </div>
+                                      <div className="grid gap-2">
+                                        <Label htmlFor="nameComputer">{t("dashboard_rent_computerNameLabel")}</Label>
+                                        <Input id="nameComputer" name="nameComputer" placeholder={t("dashboard_rent_computerNameLabel")} value={formDataUpdate.nameComputer} onChange={handleChangeUpdateLicense} />
+                                      </div>
+                                      <div className="grid gap-2">
+                                        <Label htmlFor="codeComputer">{t("dashboard_rent_identificationCodeLabel")}</Label>
+                                        <Input id="codeComputer" name="codeComputer" placeholder={t("dashboard_rent_identificationCodeLabel")} value={formDataUpdate.codeComputer} onChange={handleChangeUpdateLicense} />
+                                      </div>
+                                      <div className="grid gap-2">
+                                        <Label htmlFor="date">{t("dashboard_rent_expirationDate")}</Label>
+                                        <Input id="expirationDate" type="date" name="expirationDate" value={formDataUpdate.expirationDate} onChange={handleChangeUpdateLicense} />
+                                      </div>
+                                      <Button type="button" onClick={() => handleUpdateRegistration(user.currentRegistration._id)} className="w-full mt-2">
+                                        {t("dashboardAdmin_users_save")}
+                                      </Button>
+                                    </form>
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-8 text-muted-foreground">
+                                    <p className="text-sm">Aucune licence à modifier.</p>
+                                  </div>
+                                )}
+                              </TabsContent>
+                            </Tabs>
+                          </DialogContent>
+                        </Dialog>
+
+                        {/* View Button + Dialog */}
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 cursor-pointer"
+                              onClick={() => {
+                                fetchEmailLogs(user._id);
+                              }}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="w-1/2 max-md:w-[90%] max-h-[90vh] overflow-auto">
+                            <DialogHeader>
+                              <DialogTitle>
+                                {user.name} — {t("dashboardAdmin_users_userOverview")}
+                              </DialogTitle>
+                              <DialogDescription>
+                                {t("dashboardAdmin_users_userDetails")}
+                              </DialogDescription>
+                            </DialogHeader>
+
+                            <Tabs defaultValue="user_view" className="w-full">
+                              <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="user_view">👤 Utilisateur</TabsTrigger>
+                                <TabsTrigger value="license_view">🔑 Licence</TabsTrigger>
+                              </TabsList>
+
+                              <TabsContent value="user_view" className="space-y-4 mt-4">
+                                <div className="grid gap-4">
+                                  <div className="grid grid-cols-2 max-md:grid-cols-1 gap-3">
+                                    <CardDetails
+                                      analytic={{
+                                        title: t("dashboardAdmin_users_totalLicenses"),
+                                        icon: MdKey,
+                                        value: user.registration.length,
+                                        isGrowth: true, isCurrency: false, valueGrowth: 2, isDark: true, isPercent: false,
+                                        parag: t("dashboardAdmin_users_totalLicensesDescription"),
+                                      }}
+                                    />
+                                    <CardDetails
+                                      analytic={{
+                                        title: t("dashboardAdmin_users_totalReceived"),
+                                        icon: AiFillEuroCircle,
+                                        value: user.payment.reduce((curr: any, arr: { totalPricePay: any }) => curr + arr.totalPricePay, 0),
+                                        isGrowth: true, isCurrency: true, valueGrowth: 2, isDark: false, isPercent: false,
+                                        parag: t("dashboardAdmin_users_totalReceivedDescription"),
+                                      }}
                                     />
                                   </div>
-
-                                  {/* Company */}
-                                  <div className="grid gap-3">
-                                    <Label htmlFor="company">
-                                      {t("dashboardAdmin_users_company")}
-                                    </Label>
-                                    <Input
-                                      id="company"
-                                      name="company"
-                                      onChange={handleChangeUpdate}
-                                      value={newFormData.company}
-                                    />
+                                  <div>
+                                    <h3 className="font-bold">{user.name}</h3>
+                                    <p className="text-xs font-medium text-black/40">{user.company}</p>
                                   </div>
-
-                                  {/* TVA */}
-                                  <div className="grid gap-3">
-                                    <Label htmlFor="nTva">
-                                      {t("checkout_tva")}
-                                    </Label>
-                                    <Input
-                                      id="nTva"
-                                      name="nTva"
-                                      onChange={handleChangeUpdate}
-                                      value={newFormData.nTva}
-                                      type="text"
-                                    />
-                                  </div>
-
-                                  {/* platform */}
-                                  <div className="grid gap-3">
-                                    <Label htmlFor="platform">Platform</Label>
-                                    <Select
-                                      name="platform"
-                                      onValueChange={
-                                        handleSelectChangeUpdatePlatform
-                                      }
-                                      value={newFormData.platform}
-                                    >
-                                      <SelectTrigger
-                                        id="platform"
-                                        className="w-full"
-                                      >
-                                        <SelectValue placeholder="-" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {platforms.map((plat, index) => (
-                                          <SelectItem
-                                            key={index}
-                                            value={plat.value}
-                                          >
-                                            {plat.label === "Touts"
-                                              ? "-"
-                                              : plat.label}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </>
-                              )}
-
-                              {/* Email */}
-                              <div className="grid gap-3">
-                                <Label htmlFor="email">
-                                  {t("dashboardAdmin_users_email")}
-                                </Label>
-                                <Input
-                                  id="email"
-                                  name="email"
-                                  onChange={handleChangeUpdate}
-                                  value={newFormData.email}
-                                  type="email"
-                                />
-                              </div>
-
-                              {/* Phone */}
-                              <div className="grid gap-3">
-                                <Label htmlFor="phone">
-                                  {t("dashboardAdmin_users_phone")}
-                                </Label>
-                                <Input
-                                  id="phone"
-                                  name="phone"
-                                  onChange={handleChangeUpdate}
-                                  value={newFormData.phone}
-                                  type="tel"
-                                />
-                              </div>
-
-                              {/* Address */}
-                              <div className="grid gap-3">
-                                <Label htmlFor="address">
-                                  {t("dashboardAdmin_users_address")}
-                                </Label>
-                                <Input
-                                  id="address"
-                                  name="address"
-                                  onChange={handleChangeUpdate}
-                                  value={newFormData.address}
-                                />
-                              </div>
-
-                              {/* Postal Code */}
-                              <div className="grid gap-3">
-                                <Label htmlFor="postal">
-                                  {t("dashboardAdmin_users_postalCode")}
-                                </Label>
-                                <Input
-                                  id="postal"
-                                  name="postal"
-                                  onChange={handleChangeUpdate}
-                                  value={newFormData.postal}
-                                />
-                              </div>
-
-                              {/* City */}
-                              <div className="grid gap-3">
-                                <Label htmlFor="city">
-                                  {t("dashboardAdmin_users_city")}
-                                </Label>
-                                <Input
-                                  id="city"
-                                  name="city"
-                                  onChange={handleChangeUpdate}
-                                  value={newFormData.city}
-                                />
-                              </div>
-
-                              {/* Country */}
-                              <div className="grid gap-3">
-                                <Label htmlFor="country">
-                                  {t("dashboardAdmin_users_country")}
-                                </Label>
-                                <Select
-                                  name="country"
-                                  onValueChange={handleSelectChangeUpdate}
-                                  value={newFormData.country}
-                                >
-                                  <SelectTrigger
-                                    id="country"
-                                    className="w-full"
-                                  >
-                                    <SelectValue
-                                      placeholder={t(
-                                        "dashboardAdmin_users_selectCountry"
+                                  <div className="flex flex-col gap-1">
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-sm font-medium text-black/80">Source d’inscription : <span className="text-black/40">{user.source || "Non renseignée"}</span></p>
+                                      {user.source && (
+                                        <Link to={`${user.source === "Formulaire d’inscription" ? "/louer/register" : user.source === "Formulaire d’enregistrement" ? "/enregistrement-du-logiciel" : "#"}`} target="_blanck">
+                                          <FaExternalLinkAlt className="text-sm" />
+                                        </Link>
                                       )}
-                                    />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {countries.map((country, index) => (
-                                      <SelectItem
-                                        key={index}
-                                        value={country.code}
-                                      >
-                                        {country.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <p className="text-sm font-medium text-black/80">{t("dashboardAdmin_users_email")} : <span className="text-black/40">{user.email}</span></p>
+                                      <button onClick={() => { setEmailUser(user); setEmailModalOpen(true); }}><IoIosMail /></button>
+                                    </div>
+                                    <p className="text-sm font-medium text-black/80">Invitation ID : <span className="text-black/40">{user.invitationId}</span></p>
+                                    <p className="text-sm font-medium text-black/80">{t("pay_01_country")} : <span className="text-black/40">{countries.find((e) => e.code === user.country)?.name}</span></p>
+                                    <p className="text-sm font-medium text-black/80">{t("pay_01_phone")} : <span className="text-black/40">{user.phone}</span></p>
+                                    {user.role === "client" && (<p className="text-sm font-medium text-black/80">{t("checkout_tva")} : <span className="text-black/40">{user.nTva}</span></p>)}
+                                    <p className="text-sm font-medium text-black/80">{t("dashboardAdmin_users_postalCode")} : <span className="text-black/40">{user.postal}</span></p>
+                                    <p className="text-sm font-medium text-black/80">{t("dashboardAdmin_users_city")} : <span className="text-black/40">{user.city}</span></p>
+                                    <p className="text-sm font-medium text-black/80">{t("dashboardAdmin_users_address")} : <span className="text-black/40">{user.address}</span></p>
+                                    <p className="text-sm font-medium text-black/80">{t("dashboardAdmin_users_lastConnection")} : <span className="text-black/40">{formatDate(user.lastLogin)}</span></p>
+                                    <p className="text-sm font-medium text-black/80">Compte activé : <span className={cn("font-semibold", user.status !== "pending" ? "text-green-600" : "text-red-500")}>{user.status !== "pending" ? "Oui" : "Non"}</span></p>
+                                    <hr className="my-1 border-t border-black/5" />
+                                    <p className="text-sm font-medium text-black/80">Téléchargement Ferracad : <span className={cn("font-semibold", user.hasDownloaded ? "text-green-600" : "text-red-500")}>{user.hasDownloaded ? "Oui" : "Non"}</span></p>
+                                    <p className="text-sm font-medium text-black/80">Licences : <span className="text-black/40">{user.licenseStats.total} ({user.licenseStats.active} Actives, {user.licenseStats.trial} Essai, {user.licenseStats.expired} Expirées)</span></p>
+                                    <div className="flex flex-wrap gap-2 items-center">
+                                      <p className="text-sm font-medium text-black/80">Compte :</p>
+                                      <Badge className={cn("px-2 py-0 h-5 text-[10px] uppercase font-bold border-transparent cursor-help", user.status === "active" && "bg-green-100 text-green-800", user.status === "pending" && "bg-slate-100 text-slate-800", user.status === "inactive" && "bg-red-100 text-red-800")}>
+                                        {user.status === "active" ? "Actif" : user.status === "pending" ? "Pending" : "Suspendu"}
+                                      </Badge>
+                                      <p className="text-sm font-medium text-black/80 ml-2">Licence :</p>
+                                      <Badge className={cn("px-2 py-0 h-5 text-[10px] uppercase font-bold border-transparent cursor-help", user.licenseStatus === "active" && "bg-purple-100 text-purple-800", user.licenseStatus === "trial" && "bg-blue-100 text-blue-800", user.licenseStatus === "expired" && "bg-orange-100 text-orange-800", user.licenseStatus === "none" && "bg-gray-100 text-gray-500")}>
+                                        {user.licenseStatus === "active" ? "Payante" : user.licenseStatus === "trial" ? "Essai" : user.licenseStatus === "expired" ? "Expirée" : "Aucune"}
+                                      </Badge>
+                                    </div>
+                                    <hr className="my-2 border-stone-100" />
+                                    <div>
+                                      <p className="text-sm font-semibold text-stone-800 mb-2">Historique des e-mails envoyés</p>
+                                      <div className="space-y-2">
+                                        {loadingLogs ? (<p className="text-xs text-muted-foreground">Chargement des logs...</p>) : emailLogs.length === 0 ? (<p className="text-xs text-muted-foreground">Aucun e-mail envoyé à ce jour.</p>) : (
+                                          emailLogs.map((log) => (
+                                            <div key={log._id} className="flex items-center justify-between p-2 border rounded-md bg-stone-50/50">
+                                              <div className="flex-1">
+                                                <p className="text-xs font-medium text-stone-700 truncate max-w-[250px]">{log.subject}</p>
+                                                <p className="text-[10px] text-stone-400">{formatDate(log.createdAt)}</p>
+                                              </div>
+                                              <Popover>
+                                                <PopoverTrigger asChild><Eye className="h-3 w-3 text-stone-500 cursor-pointer" /></PopoverTrigger>
+                                                <PopoverContent className="w-80 p-4">
+                                                  <div className="space-y-2">
+                                                    <p className="text-xs font-bold border-b pb-1">Contenu de l'e-mail</p>
+                                                    <div className="text-[11px] text-stone-600 max-h-[300px] overflow-y-auto whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: log.body.replace(/\n/g, '<br/>') }} />
+                                                  </div>
+                                                </PopoverContent>
+                                              </Popover>
+                                            </div>
+                                          ))
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </TabsContent>
 
-                              {/* Role */}
-                              <div className="grid gap-3">
-                                <Label htmlFor="role">
-                                  {t("dashboardAdmin_users_role")} *
-                                </Label>
-                                <Select
-                                  name="role"
-                                  onValueChange={handleSelectChangeUpdateRole}
-                                  value={newFormData.role}
-                                >
-                                  <SelectTrigger id="role" className="w-full">
-                                    <SelectValue
-                                      placeholder={t(
-                                        "dashboardAdmin_users_selectrole"
-                                      )}
-                                    />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value={"admin"}>
-                                      Administrateur
-                                    </SelectItem>
-                                    <SelectItem value={"client"}>
-                                      Client
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                            <DialogFooter>
-                              <DialogClose asChild>
-                                <Button variant="outline">
-                                  {t("dashboardAdmin_users_cancel")}
-                                </Button>
-                              </DialogClose>
-                              <Button
-                                type="submit"
-                                onClick={handleSubmitUpdate}
-                              >
-                                {t("dashboardAdmin_users_save")}
-                              </Button>
-                            </DialogFooter>
+                              <TabsContent value="license_view" className="space-y-4 mt-4">
+                                {user.currentRegistration ? (
+                                  <>
+                                    <div className="grid grid-cols-2 max-md:grid-cols-1 gap-3">
+                                      <CardDetails
+                                        analytic={{
+                                          title: t("dashboard_rent_totalDaysUsed"),
+                                          icon: MdKey,
+                                          value: `${calculateTotalDays(historyData.filter((e) => e.registerId === user.currentRegistration._id))} Jours`,
+                                          isGrowth: true, isCurrency: false, valueGrowth: 2, isDark: true, isPercent: false,
+                                          parag: t("dashboard_rent_totalUsageDays"),
+                                        }}
+                                      />
+                                      <CardDetails
+                                        analytic={{
+                                          title: t("dashboard_rent_totalReceived"),
+                                          icon: AiFillEuroCircle,
+                                          value: totalPriceSpendLicense(user.currentRegistration),
+                                          isGrowth: true, isCurrency: true, valueGrowth: 2, isDark: false, isPercent: false,
+                                          parag: t("dashboard_rent_totalAmountReceived"),
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                      <div className="flex items-center justify-between">
+                                        <p className="text-sm text-black/50 font-medium">{t("dashboard_rent_licenseStatus")}</p>
+                                        {getStatusBadge(user.currentRegistration)}
+                                      </div>
+                                      <div className="flex items-center justify-between">
+                                        <p className="text-sm text-black/50 font-medium">{t("dashboard_rent_autoPayment")}</p>
+                                        {rentalData.find((r) => r._id === user.currentRegistration.rentalId)?.deductionAuto ? (
+                                          <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200 flex items-center gap-1">
+                                            <CheckCircle className="h-3 w-3" />{t("dashboard_rent_enable")}
+                                          </Badge>
+                                        ) : (
+                                          <Badge variant="destructive" className="flex items-center gap-1">
+                                            <AlertTriangle className="h-3 w-3" />{t("dashboard_rent_disable")}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center justify-between">
+                                        <p className="text-sm text-black/50 font-medium">{t("dashboard_rent_identificationCode")} <span className="text-black/80">{user.currentRegistration.computerCode}</span></p>
+                                        <button onClick={() => copyToClipboard(user.currentRegistration.computerCode)} className="cursor-pointer"><IoCopyOutline /></button>
+                                      </div>
+                                      <div className="flex items-center justify-between">
+                                        <p className="text-sm text-black/50 font-medium">{t("dashboard_rent_authenticationCode")} <span className="text-black/80">{user.currentRegistration.authCode}</span></p>
+                                        <button onClick={() => copyToClipboard(user.currentRegistration.authCode)} className="cursor-pointer"><IoCopyOutline /></button>
+                                      </div>
+                                    </div>
+                                    {/* License history */}
+                                    <div className="mt-4">
+                                      <p className="text-sm font-semibold mb-2">Historique de validité</p>
+                                      <Table>
+                                        <TableHeader>
+                                          <TableRow>
+                                            <TableHead>{t("dashboard_rent_startDate")}</TableHead>
+                                            <TableHead>{t("dashboard_rent_endDate")}</TableHead>
+                                            <TableHead>{t("dashboard_rent_totalDays")}</TableHead>
+                                          </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                          {historyData
+                                            .filter((e) => e.registerId === user.currentRegistration._id)
+                                            .map((l: any, i: any) => (
+                                              <TableRow key={i}>
+                                                <TableCell>{formatDate(l.startAt)}</TableCell>
+                                                <TableCell>{formatDate(l.expirationDate)}</TableCell>
+                                                <TableCell>{getTotalLicenseDays(l.startAt, l.expirationDate)} {t("pay_03_j")}</TableCell>
+                                              </TableRow>
+                                            ))}
+                                        </TableBody>
+                                      </Table>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="text-center py-8 text-muted-foreground">
+                                    <p className="text-sm">Aucune licence associée à cet utilisateur.</p>
+                                  </div>
+                                )}
+                              </TabsContent>
+                            </Tabs>
                           </DialogContent>
                         </Dialog>
 
@@ -1825,783 +1716,6 @@ const Users: React.FC = () => {
                   </Button>
                 </div>
               </div>
-            )}
-
-            {companySelected && filteredUsers.length > 0 && (
-              <div className="p-5 flex flex-col gap-2">
-                <div>
-                  <p className="font-semibold">Liste des licences</p>
-                </div>
-                <div className="flex flex-wrap items-center gap-5">
-                  <div className="flex items-center gap-1">
-                    <RiExchangeLine className="h-4 w-4" />
-                    <p className="text-xs font-medium">
-                      Transférer une licence d’un utilisateur à un autre
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <Edit2 className="h-4 w-4" />
-                    <p className="text-xs font-medium">
-                      Modifier les informations de la licence
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <TbReload className="h-4 w-4" />
-                    <p className="text-xs font-medium">Renouveler la licence</p>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <Eye className="h-4 w-4" />
-                    <p className="text-xs font-medium">
-                      Voir les détails de la licence
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <Trash2 className="h-4 w-4" />
-                    <p className="text-xs font-medium">Supprimer la licence</p>
-                  </div>
-                </div>
-              </div>
-            )}
-            {companySelected && filteredUsers.length > 0 && (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Utilisateur</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Platform</TableHead>
-                      <TableHead>Nom Ordinateur</TableHead>
-                      <TableHead>Date d'expiration</TableHead>
-                      <TableHead>Statut de licence</TableHead>
-                      <TableHead>Jours restants</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {companySelected &&
-                      filteredUsers.length > 0 &&
-                      (() => {
-                        const userReg = enrichedUser.find(
-                          (e) =>
-                            e.company?.toLowerCase() ===
-                            companySelected?.toLowerCase() ||
-                            e.name?.toLowerCase() ===
-                            companySelected?.toLowerCase()
-                        );
-
-                        const licensesToPaginate = userReg?.registration || [];
-                        // const totalLicensePages = Math.ceil(licensesToPaginate.length / licensesPerPage);
-                        const paginatedLicenses = licensesToPaginate.slice(
-                          (currentLicensePage - 1) * licensesPerPage,
-                          currentLicensePage * licensesPerPage
-                        );
-
-                        return paginatedLicenses.map((user: any, i: number) => {
-                          const now = new Date();
-                          const expirationDate = user?.expirationDate
-                            ? new Date(user?.expirationDate)
-                            : 0;
-                          const daysUntilExpiration =
-                            expirationDate !== 0
-                              ? Math.ceil(
-                                (expirationDate.getTime() - now.getTime()) /
-                                (1000 * 60 * 60 * 24)
-                              )
-                              : 0;
-                          return (
-                            <TableRow key={i}>
-                              <TableCell>
-                                <div>
-                                  <p className="font-medium">{user.username}</p>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div>
-                                  <p className="text-sm">{user.email || "N/A"}</p>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div>
-                                  <p className="text-sm font-medium">
-                                    {enrichedUser.find(
-                                      (e) => e.registration._id === user._id
-                                    )?.platform || "-"}
-                                  </p>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div>
-                                  <p className="font-medium text-sm">
-                                    {user.computerName}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {user.computerCode}
-                                  </p>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                {formatDate(user.expirationDate)}
-                              </TableCell>
-                              <TableCell>
-                                {(() => {
-                                  const now = new Date();
-                                  const expirationDate = user.expirationDate ? new Date(user.expirationDate) : null;
-                                  const isExpired = expirationDate && expirationDate < now;
-                                  const status = isExpired ? "expired" : user.status;
-
-                                  return (
-                                    <Badge
-                                      variant={
-                                        status === "active" || status === "pending"
-                                          ? "default"
-                                          : "destructive"
-                                      }
-                                      className={cn(
-                                        status === "active" &&
-                                        "bg-green-100 text-green-800 hover:bg-green-200",
-                                        status === "pending" &&
-                                        "bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
-                                        status === "freetrial" &&
-                                        "bg-purple-100 text-purple-800 hover:bg-purple-200",
-                                        status === "expired" &&
-                                        "bg-red-100 text-red-800 hover:bg-red-200"
-                                      )}
-                                    >
-                                      {status === "active"
-                                        ? t("dashboardAdmin_users_status_active")
-                                        : status === "pending"
-                                          ? "Failed"
-                                          : status === "freetrial"
-                                            ? t("dashboardClient_orders_freeTrial")
-                                            : t("dashboardClient_orders_expired")}
-                                    </Badge>
-                                  );
-                                })()}
-                              </TableCell>
-                              <TableCell>
-                                <span
-                                  className={cn(
-                                    "text-sm",
-                                    user.status === "expire" && "text-red-600",
-                                    user.status === "freetrial" &&
-                                    "text-yellow-600",
-                                    user.status === "active" && "text-green-600"
-                                  )}
-                                >
-                                  {user.status === "expire"
-                                    ? `${t(
-                                      "dashboardClient_orders_left_days"
-                                    )} ${Math.abs(daysUntilExpiration)} ${t(
-                                      "dashboardClient_orders_days_ago"
-                                    )}`
-                                    : `${daysUntilExpiration} ${t("pay_03_j")}`}
-                                </span>
-                              </TableCell>
-                              <TableCell className="">
-                                <div className="flex items-center space-x-1">
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 cursor-pointer"
-                                      >
-                                        <RiExchangeLine className="h-3 w-3" />
-                                      </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden gap-3">
-                                      <DialogHeader>
-                                        <DialogTitle>
-                                          Transférer une licence vers un autre
-                                          utilisateur
-                                        </DialogTitle>
-                                        <DialogDescription>
-                                          Sélectionnez un nouvel utilisateur pour
-                                          transférer la licence actuelle. <br />
-                                          L'utilisateur actuel perdra l'accès
-                                          immédiatement après le transfert.
-                                        </DialogDescription>
-                                      </DialogHeader>
-                                      <div className="grid gap-4">
-                                        <div className="grid gap-1">
-                                          <Label
-                                            htmlFor="company"
-                                            className="text-sm font-semibold text-gray-700"
-                                          >
-                                            De
-                                          </Label>
-                                          <div className="flex flex-col items-start bg-gray-100 py-4 px-4 rounded-lg">
-                                            <span className="text-sm font-medium text-gray-900">
-                                              {
-                                                enrichedUser.find(
-                                                  (e) =>
-                                                    e.company?.toLowerCase() ===
-                                                    companySelected?.toLowerCase() ||
-                                                    e.name?.toLowerCase() ===
-                                                    companySelected?.toLowerCase()
-                                                )?.name
-                                              }
-                                            </span>
-                                            <span className="text-gray-500 text-xs">
-                                              {user.company}
-                                            </span>
-                                          </div>
-                                        </div>
-                                        <div className="grid gap-2">
-                                          <div className="flex justify-between items-center">
-                                            <Label
-                                              htmlFor="company"
-                                              className="text-sm font-semibold text-gray-700"
-                                            >
-                                              À
-                                            </Label>
-                                            <NewUser type="icon" />
-                                          </div>
-                                          <Select
-                                            value={selectedUserId}
-                                            onValueChange={setSelectedUserId}
-                                          >
-                                            <SelectTrigger className="w-full py-6 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-colors">
-                                              <SelectValue
-                                                placeholder={t(
-                                                  "dashboardClient_orders_selectUserLabel"
-                                                )}
-                                              />
-                                            </SelectTrigger>
-
-                                            <SelectContent className="border-gray-200 shadow-lg">
-                                              {usersData
-                                                .filter(
-                                                  (e) => e._id !== user.userId
-                                                )
-                                                .map((user: any, i: number) => (
-                                                  <SelectItem
-                                                    key={i}
-                                                    value={user._id}
-                                                    className="text-sm hover:bg-gray-50 cursor-pointer"
-                                                  >
-                                                    <div className="flex flex-col items-start">
-                                                      <span className="font-medium text-gray-900">
-                                                        {user.name}
-                                                      </span>
-                                                      <span className="text-gray-500 text-xs">
-                                                        {user.company}
-                                                      </span>
-                                                    </div>
-                                                  </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                          </Select>
-                                        </div>
-                                        <button
-                                          onClick={() => handleTransfer(user._id)}
-                                          className="w-full py-3 text-sm rounded-md bg-stone-600 transition-all duration-200 text-white cursor-pointer font-semibold hover:bg-stone-800"
-                                        >
-                                          Transfére
-                                        </button>
-                                      </div>
-                                    </DialogContent>
-                                  </Dialog>
-
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 cursor-pointer"
-                                        onClick={() => handleShow(user)}
-                                      >
-                                        <Edit2 className="h-3 w-3" />
-                                      </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden gap-3">
-                                      <DialogHeader>
-                                        <DialogTitle>
-                                          {t("dashboard_rent_editLicenseInfo")}
-                                        </DialogTitle>
-                                        <DialogDescription>
-                                          {t("dashboard_rent_updateLicenseInfo")}
-                                        </DialogDescription>
-                                      </DialogHeader>
-                                      <div>
-                                        <form className="grid gap-5 mt-2">
-                                          <div className="flex items-center justify-between">
-                                            <div>
-                                              <h3 className="font-medium text-stone-800">
-                                                {user.username}
-                                              </h3>
-                                              <p className="text-xs text-black/40 font-medium">
-                                                {user?.company}
-                                              </p>
-                                            </div>
-                                          </div>
-
-                                          <div className="grid gap-3">
-                                            <Label htmlFor="name">
-                                              {t("dashboard_rent_userName")}
-                                            </Label>
-                                            <Input
-                                              id="username"
-                                              name="username"
-                                              placeholder={t(
-                                                "dashboard_rent_userName"
-                                              )}
-                                              value={formDataUpdate.username}
-                                              onChange={handleChangeUpdateLicense}
-                                            />
-                                          </div>
-                                          <div className="grid gap-3">
-                                            <Label htmlFor="nameComputer">
-                                              {t(
-                                                "dashboard_rent_computerNameLabel"
-                                              )}
-                                            </Label>
-                                            <Input
-                                              id="nameComputer"
-                                              name="nameComputer"
-                                              placeholder={t(
-                                                "dashboard_rent_computerNameLabel"
-                                              )}
-                                              value={formDataUpdate.nameComputer}
-                                              onChange={handleChangeUpdateLicense}
-                                            />
-                                          </div>
-                                          <div className="grid gap-3">
-                                            <Label htmlFor="codeComputer">
-                                              {t(
-                                                "dashboard_rent_identificationCodeLabel"
-                                              )}
-                                            </Label>
-                                            <Input
-                                              id="codeComputer"
-                                              name="codeComputer"
-                                              placeholder={t(
-                                                "dashboard_rent_identificationCodeLabel"
-                                              )}
-                                              value={formDataUpdate.codeComputer}
-                                              onChange={handleChangeUpdateLicense}
-                                            />
-                                          </div>
-                                          <div className="grid gap-3">
-                                            <Label htmlFor="date">
-                                              {t("dashboard_rent_expirationDate")}
-                                            </Label>
-                                            <Input
-                                              id="expirationDate"
-                                              type="date"
-                                              name="expirationDate"
-                                              value={formDataUpdate.expirationDate}
-                                              onChange={handleChangeUpdateLicense}
-                                            />
-                                          </div>
-                                        </form>
-                                      </div>
-                                      <DialogFooter>
-                                        {user.status.toLocaleLowerCase() !==
-                                          "active" &&
-                                          user.status.toLocaleLowerCase() !==
-                                          "expiring" && (
-                                            <Button variant="outline">
-                                              <MdDeleteOutline />
-                                            </Button>
-                                          )}
-                                        <DialogClose asChild>
-                                          <Button variant="outline">
-                                            {t("dashboardAdmin_users_cancel")}
-                                          </Button>
-                                        </DialogClose>
-                                        <DialogClose asChild>
-                                          <Button
-                                            onClick={() =>
-                                              handleUpdateRegistration(user._id)
-                                            }
-                                          >
-                                            {t("dashboardAdmin_users_save")}
-                                          </Button>
-                                        </DialogClose>
-                                      </DialogFooter>
-                                    </DialogContent>
-                                  </Dialog>
-
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 cursor-pointer"
-                                    onClick={() =>
-                                      handleUpgradeCom([user], user.rentalId)
-                                    }
-                                  >
-                                    <TbReload className="h-3 w-3" />
-                                  </Button>
-
-                                  <Dialog>
-                                    <DialogTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 cursor-pointer"
-                                      >
-                                        <Eye className="h-4 w-4" />
-                                      </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden gap-3">
-                                      <DialogHeader>
-                                        <DialogTitle>
-                                          {t("dashboard_rent_licenseDetails")}
-                                        </DialogTitle>
-                                        <DialogDescription>
-                                          {t(
-                                            "dashboard_rent_licenseDetailsDescription"
-                                          )}
-                                        </DialogDescription>
-                                      </DialogHeader>
-                                      <div className="grid gap-4">
-                                        <div className="grid grid-cols-2 max-md:grid-cols-1 gap-3">
-                                          <CardDetails
-                                            analytic={{
-                                              title: t(
-                                                "dashboard_rent_totalDaysUsed"
-                                              ),
-                                              icon: MdKey,
-                                              value: `${calculateTotalDays(
-                                                historyData.filter(
-                                                  (e) => e.registerId === user._id
-                                                )
-                                              )} Jours`,
-                                              isGrowth: true,
-                                              isCurrency: false,
-                                              valueGrowth: 2,
-                                              isDark: true,
-                                              isPercent: false,
-                                              parag: t(
-                                                "dashboard_rent_totalUsageDays"
-                                              ),
-                                            }}
-                                          />
-                                          <CardDetails
-                                            analytic={{
-                                              title: t(
-                                                "dashboard_rent_totalReceived"
-                                              ),
-                                              icon: AiFillEuroCircle,
-                                              value: totalPriceSpendLicense(user),
-                                              isGrowth: true,
-                                              isCurrency: true,
-                                              valueGrowth: 2,
-                                              isDark: false,
-                                              isPercent: false,
-                                              parag: t(
-                                                "dashboard_rent_totalAmountReceived"
-                                              ),
-                                            }}
-                                          />
-                                        </div>
-                                        <div>
-                                          <h3 className="font-medium text-stone-800">
-                                            {user.username}{" "}
-                                            <small>
-                                              (€ {totalPriceSpendLicense(user)})
-                                            </small>
-                                          </h3>
-                                          <p className="text-xs text-black/40 font-medium">
-                                            {user.company}
-                                          </p>
-                                          <div className="mt-3 flex flex-col gap-2">
-                                            <div className="flex items-center justify-between">
-                                              <p className="text-sm text-black/50 font-medium">
-                                                {t(
-                                                  "dashboard_rent_licenseStatus"
-                                                )}{" "}
-                                              </p>
-                                              {getStatusBadge(user)}
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                              <p className="text-sm text-black/50 font-medium">
-                                                {t("dashboard_rent_autoPayment")}{" "}
-                                              </p>
-                                              {rentalData.find(
-                                                (r) => r._id === user.rentalId
-                                              )?.deductionAuto ? (
-                                                <Badge
-                                                  variant="default"
-                                                  className="bg-green-100 text-green-800 hover:bg-green-200 flex items-center gap-1"
-                                                >
-                                                  <CheckCircle className="h-3 w-3" />
-                                                  {t("dashboard_rent_enable")}
-                                                </Badge>
-                                              ) : (
-                                                <Badge
-                                                  variant="destructive"
-                                                  className="flex items-center gap-1"
-                                                >
-                                                  <AlertTriangle className="h-3 w-3" />
-                                                  {t("dashboard_rent_disable")}
-                                                </Badge>
-                                              )}
-                                            </div>
-                                            <p className="text-sm text-black/50 font-medium">
-                                              {t("dashboard_rent_username")}{" "}
-                                              <span className="text-black/80">
-                                                {user.username}
-                                              </span>
-                                            </p>
-                                            <p className="text-sm text-black/50 font-medium">
-                                              {t("dashboard_rent_computerName")}{" "}
-                                              <span className="text-black/80">
-                                                {user.computerName}
-                                              </span>
-                                            </p>
-                                            <div className="flex items-center justify-between">
-                                              <p className="text-sm text-black/50 font-medium">
-                                                {t(
-                                                  "dashboard_rent_identificationCode"
-                                                )}{" "}
-                                                <span className="text-black/80">
-                                                  {user.computerCode}
-                                                </span>
-                                              </p>
-                                              <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                  <button
-                                                    onClick={() =>
-                                                      copyToClipboard(
-                                                        user.computerCode
-                                                      )
-                                                    }
-                                                    className="cursor-pointer"
-                                                  >
-                                                    <IoCopyOutline />
-                                                  </button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                  <p>
-                                                    {t("dashboard_rent_copy")}
-                                                  </p>
-                                                </TooltipContent>
-                                              </Tooltip>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                              <p className="text-sm text-black/50 font-medium">
-                                                {t(
-                                                  "dashboard_rent_authenticationCode"
-                                                )}{" "}
-                                                <span className="text-black/80">
-                                                  {user.authCode}
-                                                </span>
-                                              </p>
-                                              <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                  <button
-                                                    onClick={() =>
-                                                      copyToClipboard(
-                                                        user.authCode
-                                                      )
-                                                    }
-                                                    className="cursor-pointer"
-                                                  >
-                                                    <IoCopyOutline />
-                                                  </button>
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                  <p>
-                                                    {t("dashboard_rent_copy")}
-                                                  </p>
-                                                </TooltipContent>
-                                              </Tooltip>
-                                            </div>
-                                            <Table>
-                                              <TableHeader>
-                                                <TableRow>
-                                                  <TableHead>
-                                                    {t(
-                                                      "dashboard_rent_startDate"
-                                                    )}
-                                                  </TableHead>
-                                                  <TableHead>
-                                                    {t("dashboard_rent_endDate")}
-                                                  </TableHead>
-                                                  <TableHead>
-                                                    {t(
-                                                      "dashboard_rent_totalDays"
-                                                    )}
-                                                  </TableHead>
-                                                </TableRow>
-                                              </TableHeader>
-                                              <TableBody>
-                                                {historyData
-                                                  .filter(
-                                                    (e) =>
-                                                      e.registerId === user._id
-                                                  )
-                                                  .map((l: any, i: any) => (
-                                                    <TableRow key={i}>
-                                                      <TableCell>
-                                                        {formatDate(l.startAt)}
-                                                      </TableCell>
-                                                      <TableCell>
-                                                        {formatDate(
-                                                          l.expirationDate
-                                                        )}
-                                                      </TableCell>
-                                                      <TableCell>
-                                                        {getTotalLicenseDays(
-                                                          l.startAt,
-                                                          l.expirationDate
-                                                        )}{" "}
-                                                        {t("pay_03_j")}
-                                                      </TableCell>
-                                                    </TableRow>
-                                                  ))}
-                                              </TableBody>
-                                            </Table>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </DialogContent>
-                                  </Dialog>
-
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 cursor-pointer text-destructive"
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>
-                                          Supprimer la licence
-                                        </AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Cette action est irréversible. Êtes-vous
-                                          sûr de vouloir supprimer cette licence ?
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>
-                                          Annuler
-                                        </AlertDialogCancel>
-                                        <AlertDialogAction
-                                          className="bg-destructive text-white hover:bg-destructive/90"
-                                          onClick={() =>
-                                            handleDeleteLicence(user._id)
-                                          }
-                                        >
-                                          Supprimer
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        });
-                      })()}
-                  </TableBody>
-                </Table>
-
-                {/* Pagination for Licenses list */}
-                {(() => {
-                  const userReg = enrichedUser.find(
-                    (e) =>
-                      e.company?.toLowerCase() === companySelected?.toLowerCase() ||
-                      e.name?.toLowerCase() === companySelected?.toLowerCase()
-                  );
-
-                  const totalLicenses = userReg?.registration?.length || 0;
-                  const totalLicensePages = Math.ceil(totalLicenses / licensesPerPage);
-
-                  if (totalLicensePages <= 1) return null;
-
-                  return (
-                    <div className="flex items-center justify-between px-4 py-4 border-t">
-                      <div className="text-sm text-muted-foreground">
-                        Affichage de {(currentLicensePage - 1) * licensesPerPage + 1} à{" "}
-                        {Math.min(currentLicensePage * licensesPerPage, totalLicenses)} sur{" "}
-                        {totalLicenses} licences
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        {/* Bouton précédent */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            setCurrentLicensePage((prev) => Math.max(prev - 1, 1))
-                          }
-                          disabled={currentLicensePage === 1}
-                        >
-                          Précédent
-                        </Button>
-
-                        {/* Pages */}
-                        <div className="flex items-center gap-1">
-                          {[...Array(totalLicensePages)].map((_, i) => {
-                            const pageNum = i + 1;
-
-                            if (
-                              totalLicensePages <= 7 ||
-                              pageNum === 1 ||
-                              pageNum === totalLicensePages ||
-                              (pageNum >= currentLicensePage - 1 &&
-                                pageNum <= currentLicensePage + 1)
-                            ) {
-                              return (
-                                <Button
-                                  key={pageNum}
-                                  variant={
-                                    currentLicensePage === pageNum ? "default" : "outline"
-                                  }
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                  onClick={() => setCurrentLicensePage(pageNum)}
-                                >
-                                  {pageNum}
-                                </Button>
-                              );
-                            } else if (
-                              pageNum === currentLicensePage - 2 ||
-                              pageNum === currentLicensePage + 2
-                            ) {
-                              return (
-                                <span key={pageNum} className="px-1 text-muted-foreground">
-                                  ...
-                                </span>
-                              );
-                            }
-
-                            return null;
-                          })}
-                        </div>
-
-                        {/* Bouton suivant */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            setCurrentLicensePage((prev) =>
-                              Math.min(prev + 1, totalLicensePages)
-                            )
-                          }
-                          disabled={currentLicensePage === totalLicensePages}
-                        >
-                          Suivant
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </>
             )}
           </div>
         </CardContent>

@@ -603,6 +603,9 @@
   "dashboard_rent_identificationCodeLabel": "Identification code",
   "dashboard_rent_expirationDate": "Expiration date",
   "dashboard_rent_codeUpdateNotice": "After modifying the code, the new code will be automatically sent to your email address.",
+  "dashboard_rent_edit": "Edit",
+  "dashboard_rent_license": "License",
+  "dashboard_rent_user": "User",
 
   "dashboard_payment_free": "Free",
   "dashboard_payment_cash": "Cash",

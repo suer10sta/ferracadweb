@@ -602,6 +602,9 @@
   "dashboard_rent_identificationCodeLabel": "Identificatiecode",
   "dashboard_rent_expirationDate": "Vervaldatum",
   "dashboard_rent_codeUpdateNotice": "Na het wijzigen van de code wordt de nieuwe code automatisch naar uw e-mailadres gestuurd.",
+  "dashboard_rent_edit": "Bewerken",
+  "dashboard_rent_license": "Licentie",
+  "dashboard_rent_user": "Gebruiker",
 
   "dashboard_payment_free": "Gratis",
   "dashboard_payment_cash": "Contant",
