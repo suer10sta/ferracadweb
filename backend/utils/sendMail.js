@@ -10,6 +10,7 @@ const sendEmail = async ({
   data = {},
   user = {},
   freeTrial = false,
+  disableCc = false,
 }) => {
   let subject = "";
   let html = "";
@@ -1457,7 +1458,83 @@ const sendEmail = async ({
       `;
       break;
 
-    default:
+    case "free-trial-reminder":
+  subject = "Votre accès gratuit n'est pas encore activé";
+  html = `
+    <div style="font-family: Arial, sans-serif; padding: 40px 20px;">
+      <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 32px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+
+        <!-- Header -->
+        <div style="text-align: center; margin-bottom: 24px;">
+          <img src="https://ferracad.com/assets/ferracad-logo-B4kX6JH0.png" style="width: 120px;" alt="Ferracad" />
+        </div>
+
+        <h2 style="color: #ff3a3a; font-size: 22px; text-align: center; margin-bottom: 20px;">
+          Votre accès gratuit n'est pas encore activé
+        </h2>
+
+        <p style="font-size: 16px; color: #333333;">Bonjour ${data.prenom},</p>
+
+        <p style="font-size: 15px; color: #444444; line-height: 1.6;">
+          Nous avons remarqué que votre accès gratuit n'a pas encore été activé sur 
+          <a href="https://ferracad.com" style="color: #d80000;">ferracad.com</a>. 
+          Suite à une mise à jour récente, nous avons simplifié le processus d'activation 
+          pour vous faciliter la démarche.
+        </p>
+
+        <!-- Instructions -->
+        <div style="background: #fff4f4; border-left: 4px solid #d80000; padding: 16px 20px; border-radius: 6px; margin: 24px 0;">
+          <p style="font-size: 15px; font-weight: bold; color: #d80000; margin: 0 0 12px 0;">
+            👉 Pour activer votre accès :
+          </p>
+          <p style="font-size: 14px; color: #444; margin: 8px 0;">
+            ✅ <strong>Vous avez déjà le plugin Ferracad ?</strong><br/>
+            Lancez-le, puis cliquez sur le lien qui s'affiche pour finaliser votre activation.
+          </p>
+          <div style="text-align: center; margin: 15px 0;">
+            <img src="https://ferracad.com/plugin.png" alt="Activation Plugin" style="width: 100%; max-width: 500px; border-radius: 8px; border: 1px solid #eee;" />
+          </div>
+          
+          <p style="font-size: 14px; color: #444; margin: 8px 0;">
+            📥 <strong>Vous ne l'avez plus ?</strong><br/>
+            Retéléchargez-le directement ici :
+            <a href="https://ferracad.com" style="color: #d80000; font-weight: bold;">
+              https://ferracad.com
+            </a>
+          </p>
+          <div style="text-align: center; margin: 15px 0;">
+            <img src="https://ferracad.com/home.png" alt="Ferracad Home" style="width: 100%; max-width: 500px; border-radius: 8px; border: 1px solid #eee;" />
+          </div>
+        </div>
+
+        <!-- Warning -->
+        <div style="background: #fffbe6; border-left: 4px solid #f0a500; padding: 14px 20px; border-radius: 6px; margin: 16px 0;">
+          <p style="font-size: 14px; color: #555; margin: 0;">
+            ⚠️ <strong>Un problème ?</strong> Répondez simplement à cet email, 
+            notre équipe vous prendra en charge rapidement.
+          </p>
+        </div>
+
+        <p style="font-size: 14px; color: #555555; margin-top: 24px;">
+          Merci pour votre patience et votre confiance.
+        </p>
+
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;" />
+
+        <!-- Footer -->
+        <div style="text-align: center;">
+          <p style="font-size: 13px; color: #999999; margin-bottom: 4px;">Cordialement,</p>
+          <p style="font-size: 13px; color: #999999; margin: 0;">— L'équipe Support Ferracad</p>
+          <p style="font-size: 12px; color: #cccccc; margin-top: 16px;">
+            © ${new Date().getFullYear()} Ferracad. Tous droits réservés.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  `;
+  break;
+      default:
       throw new Error(`Unknown email type: ${type}`);
   }
 
@@ -1468,7 +1545,7 @@ const sendEmail = async ({
     await transporter.sendMail({
       from: `"Ferracad Support " <${process.env.SMTP_USER}>`,
       to: email,
-      cc: email !== adminSupport ? adminSupport : undefined,
+      cc: (email !== adminSupport && !disableCc) ? adminSupport : undefined,
       subject,
       html,
       attachments: data.path

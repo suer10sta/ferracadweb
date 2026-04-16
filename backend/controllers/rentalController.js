@@ -1,4 +1,4 @@
-const Rental = require('../models/rental');
+const Rental = require('../models/Rental');
 const Registration = require('../models/Registration');
 const User = require('../models/User');
 const LicenseHistory = require('../models/LicenseHistory');

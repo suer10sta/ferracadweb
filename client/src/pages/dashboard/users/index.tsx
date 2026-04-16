@@ -283,7 +283,7 @@ const Users: React.FC = () => {
 
     const hasDownloaded = downloads.length > 0;
     const now = new Date();
-    
+
     // Compter les licences réellement actives (statut active et date non passée)
     const activeCount = registration.filter((l) => {
       const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
@@ -721,7 +721,7 @@ const Users: React.FC = () => {
     setformDataUpdate((prev) => ({ ...prev, [name]: value }));
   };
 
-  const [minDate, setMinDate] = useState("");
+  const [, setMinDate] = useState("");
 
   useEffect(() => {
     const today = new Date();
@@ -1894,7 +1894,7 @@ const Users: React.FC = () => {
                         );
 
                         const licensesToPaginate = userReg?.registration || [];
-                        const totalLicensePages = Math.ceil(licensesToPaginate.length / licensesPerPage);
+                        // const totalLicensePages = Math.ceil(licensesToPaginate.length / licensesPerPage);
                         const paginatedLicenses = licensesToPaginate.slice(
                           (currentLicensePage - 1) * licensesPerPage,
                           currentLicensePage * licensesPerPage

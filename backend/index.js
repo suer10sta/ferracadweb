@@ -21,7 +21,7 @@ const bcrypt = require("bcrypt");
 //models
 const Payment = require('./models/Payment');
 const User = require('./models/User');
-const Rental = require('./models/rental');
+const Rental = require('./models/Rental');
 const Registration = require('./models/Registration');
 const Facture = require('./models/Facture');
 
@@ -65,22 +65,31 @@ app.use(getIp);
 const allowedOrigins = [
   'http://localhost:5173',
   'https://www.ferracad.com',
-  'http://www.ferracad.com',
   'https://ferracad.com',
+  'http://www.ferracad.com',
   'http://ferracad.com',
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
+    // Supprime le préfixe www. pour comparer plus facilement
+    const originHostname = origin.replace(/^https?:\/\//, '').replace(/^www\./, '');
+    const isDomainAllowed = allowedOrigins.some(allowed => {
+      const allowedHostname = allowed.replace(/^https?:\/\//, '').replace(/^www\./, '');
+      return originHostname === allowedHostname;
+    });
+
+    if (isDomainAllowed || allowedOrigins.includes(origin)) {
       return callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin); // 👈 add this
+      console.log('CORS blocked origin:', origin);
+      return callback(null, new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
 // Port configuration

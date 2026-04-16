@@ -2,7 +2,7 @@ require("dotenv").config();
 const Facture = require("../models/Facture");
 const User = require("../models/User");
 const Payment = require("../models/Payment");
-const Rental = require("../models/rental");
+const Rental = require("../models/Rental");
 const sendEmail = require("../utils/sendMail");
 const path = require("path");
 const fs = require("fs");

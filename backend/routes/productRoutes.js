@@ -98,9 +98,11 @@ router.put('/unknown/download/:filename', async (req, res) => {
     }
 
     // Recherche du produit
-    const normalizedFilePath = "uploads\\" + safeFilename;
-    const getFile = await Product.findOne({ filePath: normalizedFilePath });
-
+    // const normalizedFilePath = "uploads\\" + safeFilename;
+    // const getFile = await Product.findOne({ filePath: normalizedFilePath });
+    const getFile = await Product.findOne({
+      filePath: { $in: [`uploads\\${safeFilename}`, `uploads/${safeFilename}`] }
+    });
     if (!getFile) {
       return res.status(404).json({ error: 'Produit non trouvé' });
     }

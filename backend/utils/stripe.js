@@ -1,14 +1,14 @@
 const Stripe = require("stripe");
 
 // Load from environment variables in real projects
-const stripe = Stripe(
-  process.env.STRIPE_SECRET_KEY_TEST ||
-    "sk_test_51SI4slB4LVww0NzzB0Ok33mLnJu3BEFBl8urO3e82If6hrGAsdqd2fHNtfVCLRazjlELcdGivZYjEyOeXqsS76vT00tolSUdNi"
-);
 // const stripe = Stripe(
-//   process.env.STRIPE_SECRET_KEY ||
-//     "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"
+//   process.env.STRIPE_SECRET_KEY_TEST ||
+//     "sk_test_51SI4slB4LVww0NzzB0Ok33mLnJu3BEFBl8urO3e82If6hrGAsdqd2fHNtfVCLRazjlELcdGivZYjEyOeXqsS76vT00tolSUdNi"
 // );
+const stripe = Stripe(
+  process.env.STRIPE_SECRET_KEY ||
+  "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"
+);
 
 /**
  * Create one-time payment (PaymentIntent)
@@ -93,17 +93,17 @@ async function finalizeSubscription(subscriptionId) {
     console.log("Payment intent:", subscription.latest_invoice.payment_intent);
 
     // Si l'invoice est "open" et n'a pas de payment_intent, nous devons la payer
-    if (subscription.status === 'incomplete' && 
-        subscription.latest_invoice.status === 'open' &&
-        !subscription.latest_invoice.payment_intent) {
-      
+    if (subscription.status === 'incomplete' &&
+      subscription.latest_invoice.status === 'open' &&
+      !subscription.latest_invoice.payment_intent) {
+
       console.log("Paying open invoice...");
-      
+
       // Payer l'invoice
       const paidInvoice = await stripe.invoices.pay(subscription.latest_invoice.id);
-      
+
       console.log("Invoice paid, status:", paidInvoice.status);
-      
+
       if (paidInvoice.status === 'paid') {
         // L'abonnement devrait maintenant passer à active
         const updatedSubscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -111,13 +111,13 @@ async function finalizeSubscription(subscriptionId) {
         return updatedSubscription;
       }
     }
-    
+
     // Si il y a un payment_intent qui nécessite une action
-    if (subscription.latest_invoice.payment_intent && 
-        subscription.latest_invoice.payment_intent.status === 'requires_action') {
-      
+    if (subscription.latest_invoice.payment_intent &&
+      subscription.latest_invoice.payment_intent.status === 'requires_action') {
+
       console.log("Confirming payment intent...");
-      
+
       const confirmedPaymentIntent = await stripe.paymentIntents.confirm(
         subscription.latest_invoice.payment_intent.id
       );

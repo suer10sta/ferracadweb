@@ -1,7 +1,7 @@
 const Payment = require('../models/Payment');
 const mongoose = require('mongoose');
 const addActivityLog = require("../utils/addActivityLog");
-const { 
+const {
   createOneTimePayment,
   createSubscription,
   createCustomer,
@@ -12,14 +12,14 @@ const {
 } = require('../utils/stripe');
 const Stripe = require("stripe");
 const User = require('../models/User');
-const stripe = Stripe(
-  process.env.STRIPE_SECRET_KEY_TEST ||
-    "sk_test_51SI4slB4LVww0NzzB0Ok33mLnJu3BEFBl8urO3e82If6hrGAsdqd2fHNtfVCLRazjlELcdGivZYjEyOeXqsS76vT00tolSUdNi"
-);
 // const stripe = Stripe(
-//   process.env.STRIPE_SECRET_KEY ||
-//     "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"
+//   process.env.STRIPE_SECRET_KEY_TEST ||
+//     "sk_test_51SI4slB4LVww0NzzB0Ok33mLnJu3BEFBl8urO3e82If6hrGAsdqd2fHNtfVCLRazjlELcdGivZYjEyOeXqsS76vT00tolSUdNi"
 // );
+const stripe = Stripe(
+  process.env.STRIPE_SECRET_KEY ||
+  "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"
+);
 // Champs autorisés pour insert/update
 const allowedFields = [
   'operatorId',
@@ -79,7 +79,7 @@ exports.getAllPayments = async (req, res) => {
     const roleUser = req.user.role;
     const userId = req.user.id;
 
-    if(roleUser === "admin") {
+    if (roleUser === "admin") {
       paymentsData = await Payment.find().sort({ createdAt: -1 });
     } else {
       paymentsData = await Payment.find({ userId }).sort({ createdAt: -1 });
@@ -190,7 +190,7 @@ exports.getTauxTva = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error getting TVA rate:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Erreur lors de la récupération du taux TVA',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
@@ -207,7 +207,7 @@ async function getTaxRateForCountry(countryCode) {
     });
 
     // 2. Filtrer pour trouver le taux du pays spécifique
-    const countryTaxRate = allTaxRates.data.find(rate => 
+    const countryTaxRate = allTaxRates.data.find(rate =>
       rate.jurisdiction && rate.jurisdiction.toUpperCase() === countryCode.toUpperCase()
     );
 
@@ -242,7 +242,7 @@ async function getTaxRateForCountry(countryCode) {
 
   } catch (error) {
     console.error(`Error getting tax rate for ${countryCode}:`, error);
-    
+
     // Retourner un objet par défaut en cas d'erreur
     const defaultTaxRates = {
       'FR': 20.0, 'DE': 19.0, 'IT': 22.0, 'ES': 21.0,
@@ -251,9 +251,9 @@ async function getTaxRateForCountry(countryCode) {
       'MA': 20.0, 'TN': 19.0, 'DZ': 19.0,
       'US': 0.0, 'CA': 0.0, 'AU': 10.0, 'JP': 10.0,
     };
-    
-    return { 
-      id: null, 
+
+    return {
+      id: null,
       percentage: defaultTaxRates[countryCode] || 20.0,
       jurisdiction: countryCode,
       display_name: 'TVA Standard'
