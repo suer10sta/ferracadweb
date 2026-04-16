@@ -260,17 +260,22 @@ const Users: React.FC = () => {
   }, [loading]);
 
   const totalPriceSpendLicense = (license: any) => {
-    const paymentId = paymentData.find((e) => e._id === license.rentalId);
-    // const couponId = paymentData.find((e) => e._id === paymentId)?.couponId;
-    // const coupon = couponData.find((e) => e._id === couponId);
+    if (!license || !license.rentalId) return 0;
 
-    // const basedPrice =
-    //   Number(
-    //     usersData?.find((e: any) => e?._id === license.userId)?.basedPrice
-    //   ) || 5;
-    // let totalPrice = Number((totalDaysSpend * basedPrice).toFixed(2));
+    const paymentId = rentalData.find((e) => e._id === license.rentalId);
+    const getPaymentData = paymentData.find((e) => e._id === paymentId?.payId);
 
-    return paymentId?.totalPricePay || 0;
+    if (!getPaymentData?._id) {
+      // Fallback au filtrage par rentalId si payId n'est pas trouvé
+      const payments = paymentData.filter((p) => {
+        const pRentalId = (p.rentalId?._id || p.rentalId)?.toString();
+        const lRentalId = (license.rentalId?._id || license.rentalId)?.toString();
+        return pRentalId === lRentalId;
+      });
+      return payments.reduce((sum, p) => sum + (Number(p.totalPricePay) || 0), 0);
+    }
+
+    return getPaymentData.totalPricePay;
   };
 
   const rawEnrichedUsers = usersData?.map((user: any) => {
@@ -335,11 +340,11 @@ const Users: React.FC = () => {
       ...user,
       currentRegistration: reg,
       // On surcharge l'état de la licence pour cette ligne spécifique
-      licenseStatus: (reg.status?.toLowerCase() === "active" && (!reg.expirationDate || new Date(reg.expirationDate) > new Date())) 
-        ? "active" 
+      licenseStatus: (reg.status?.toLowerCase() === "active" && (!reg.expirationDate || new Date(reg.expirationDate) > new Date()))
+        ? "active"
         : (reg.status?.toLowerCase() === "freetrial" || reg.status?.toLowerCase() === "période d'essai")
-        ? "trial"
-        : "expired"
+          ? "trial"
+          : "expired"
     }));
   });
 
@@ -1133,7 +1138,7 @@ const Users: React.FC = () => {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-[11px] font-medium">
-                      {user.currentRegistration?.expirationDate 
+                      {user.currentRegistration?.expirationDate
                         ? formatDate(user.currentRegistration.expirationDate)
                         : "-"}
                     </TableCell>
