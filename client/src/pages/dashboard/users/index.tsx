@@ -488,57 +488,131 @@ const Users: React.FC = () => {
   const [QuickAnalytic, setQuickAnalytic] = useState<any[]>([]);
 
   useEffect(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const lastMonthDate = new Date();
+    lastMonthDate.setMonth(now.getMonth() - 1);
+    const lastMonth = lastMonthDate.getMonth();
+    const lastMonthYear = lastMonthDate.getFullYear();
+
+    const getTrend = (items: any[]) => {
+      const thisMonth = items.filter((i) => {
+        const d = new Date(i.createdAt || i.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      }).length;
+      if (thisMonth === 0) return null;
+      return `+${thisMonth} ce mois`;
+    };
+
+    // Calculs des statistiques de licences
+    const activeLicensesItems = registrationData.filter((l) => {
+      const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
+      return l.status?.toLowerCase() === "active" && !isDatePassed;
+    });
+    const activeLicensesCount = activeLicensesItems.length;
+
+    const trialLicensesItems = registrationData.filter((l) => {
+      const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
+      const statusLower = l.status?.toLowerCase();
+      return (statusLower === "freetrial" || statusLower === "période d'essai") && !isDatePassed;
+    });
+    const trialLicensesCount = trialLicensesItems.length;
+
+    const expiredLicensesItems = registrationData.filter((l) => {
+      const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
+      const statusLower = l.status?.toLowerCase();
+      return statusLower === "expire" || statusLower === "expired" || isDatePassed;
+    });
+    const expiredLicensesCount = expiredLicensesItems.length;
+
     setQuickAnalytic([
       {
-        title: t("dashboardAdmin_users_totalUsers"),
+        title: "Utilisateurs",
         icon: FaUsers,
         value: usersData.length,
-        isGrowth: true,
-        isCurrency: false,
-        valueGrowth: 0,
-        isDark: true,
+        trend: getTrend(usersData),
+        iconBg: "bg-blue-500/20",
+        iconColor: "text-blue-400",
         path: "/tableau-de-board/utilisateurs",
-        isPercent: false,
-        parag: t("dashboardAdmin_users_totalUsersDescription"),
+        isDark: true,
+        parag: "Total des comptes",
       },
       {
-        title: t("dashboardAdmin_users_active"),
+        title: "Actifs",
         icon: PiRadioactiveBold,
         value: usersData.filter((u: any) => u.status === "active").length,
-        isGrowth: true,
-        isCurrency: false,
-        valueGrowth: 0,
-        isDark: false,
+        trend: getTrend(usersData.filter((u: any) => u.status === "active")),
+        iconBg: "bg-emerald-500/20",
+        iconColor: "text-emerald-400",
         path: "/tableau-de-board/utilisateurs?filter=active",
-        isPercent: false,
-        parag: t("dashboardAdmin_users_recentlyConnected"),
+        isDark: true,
+        parag: "Connectés récemment",
       },
       {
-        title: t("dashboardAdmin_users_clients"),
+        title: "Clients",
         icon: HiMiniUsers,
         value: usersData.filter((u: any) => u.role === "client").length,
-        isGrowth: true,
-        isCurrency: false,
-        valueGrowth: 0,
-        isDark: true,
+        trend: getTrend(usersData.filter((u: any) => u.role === "client")),
+        iconBg: "bg-sky-500/20",
+        iconColor: "text-sky-400",
         path: "/tableau-de-board/utilisateurs?filter=client",
-        isPercent: false,
-        parag: t("dashboardAdmin_users_standardUsers"),
+        isDark: true,
+        parag: "Utilisateurs standards",
       },
       {
-        title: t("dashboardAdmin_users_admins"),
+        title: "Admins",
         icon: MdAdminPanelSettings,
         value: usersData.filter((u: any) => u.role === "admin").length,
-        isGrowth: true,
-        isCurrency: false,
-        valueGrowth: 0,
-        isDark: false,
+        trend: getTrend(usersData.filter((u: any) => u.role === "admin")),
+        iconBg: "bg-violet-500/20",
+        iconColor: "text-violet-400",
         path: "/tableau-de-board/utilisateurs?filter=admin",
-        isPercent: false,
-        parag: t("dashboardAdmin_users_systemAdmins"),
+        isDark: true,
+        parag: "Accès total",
+      },
+      {
+        title: "Licences",
+        icon: MdKey,
+        value: registrationData.length,
+        trend: getTrend(registrationData),
+        iconBg: "bg-amber-500/20",
+        iconColor: "text-amber-400",
+        isDark: true,
+        parag: "Total générées",
+      },
+      {
+        title: "Payantes",
+        icon: CheckCircle,
+        value: activeLicensesCount,
+        trend: getTrend(activeLicensesItems),
+        iconBg: "bg-cyan-500/20",
+        iconColor: "text-cyan-400",
+        isDark: true,
+        parag: "Licences valides",
+      },
+      {
+        title: "Essais",
+        icon: FaRegClock,
+        value: trialLicensesCount,
+        trend: getTrend(trialLicensesItems),
+        iconBg: "bg-indigo-500/20",
+        iconColor: "text-indigo-400",
+        isDark: true,
+        parag: "Périodes de test",
+      },
+      {
+        title: "Expirées",
+        icon: AlertTriangle,
+        value: expiredLicensesCount,
+        trend: getTrend(expiredLicensesItems),
+        iconBg: "bg-rose-500/20",
+        iconColor: "text-rose-400",
+        isDark: true,
+        parag: "Nécessitent renouvellement",
       },
     ]);
-  }, [usersData]);
+  }, [usersData, registrationData]);
 
   const [newFormData, setNewFormData] = useState({
     name: "",
@@ -843,11 +917,37 @@ const Users: React.FC = () => {
         <NewUser />
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {QuickAnalytic.map((analytic, index) => (
-          <CardDetails key={index} analytic={analytic} />
-        ))}
+      {/* Stats Sections */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Group: User Management */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <div className="w-1 h-3 bg-blue-500 rounded-full" />
+            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              Gestion Utilisateurs
+            </h4>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {QuickAnalytic.slice(0, 4).map((analytic, index) => (
+              <CardDetails key={index} analytic={analytic} />
+            ))}
+          </div>
+        </div>
+
+        {/* Group: License Management */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <div className="w-1 h-3 bg-amber-500 rounded-full" />
+            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              Gestion Licences
+            </h4>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {QuickAnalytic.slice(4, 8).map((analytic, index) => (
+              <CardDetails key={index} analytic={analytic} />
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -1620,7 +1720,7 @@ const Users: React.FC = () => {
                                   {t("dashboardAdmin_users_confirmDeletion")}
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  {user.currentRegistration 
+                                  {user.currentRegistration
                                     ? "Que souhaitez-vous supprimer ? Vous pouvez supprimer uniquement cette licence ou supprimer l'intégralité du compte utilisateur ainsi que toutes ses données."
                                     : t("dashboardAdmin_users_irreversibleAction")}
                                 </AlertDialogDescription>
@@ -1629,7 +1729,7 @@ const Users: React.FC = () => {
                                 <AlertDialogCancel className="mt-0">
                                   {t("dashboardAdmin_users_cancel")}
                                 </AlertDialogCancel>
-                                
+
                                 {user.currentRegistration && (
                                   <AlertDialogAction
                                     className="bg-orange-600 hover:bg-orange-700 text-white"

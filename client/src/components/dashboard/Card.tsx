@@ -1,47 +1,55 @@
 import { formatNumber } from '@/utils/formatNumber'
-import { FaArrowUp } from 'react-icons/fa'
+import { FaArrowUp, FaArrowDown } from 'react-icons/fa'
 import { Link } from 'react-router-dom'
+import { cn } from '@/lib/utils'
 
 const Card = ({ analytic }: any) => {
+  const isPositive = analytic.trend && !analytic.trend.includes('-');
+  
   return (
     <Link 
-        to={analytic.path}
-        className={`flex flex-col justify-between ${analytic.isDark ? "bg-stone-900 text-white" : "bg-white"} rounded-2xl p-7 transition-all duration-200 hover:shadow-lg`}
+        to={analytic.path || "#"}
+        className={cn(
+          "flex flex-col justify-between rounded-xl p-4 transition-all duration-300 hover:shadow-2xl border bg-[#111827] border-slate-800 text-white group"
+        )}
     >
-        <div className='flex items-center justify-between'>
-            <h5 className='font-semibold text-xs'>{analytic.title}</h5>
-            <analytic.icon size={20} />
-        </div>
-        <div className='mt-5'>
-            <p className='font-medium text-4xl'>{analytic.isCurrency && "€ "}{formatNumber(analytic.value)}</p>
-            <div className='flex items-center gap-1 text-[10px] mt-2'>
-                {
-                    analytic.parag ?
-                        <p>{analytic.parag}</p>
-                    : (
-                        <>
-                            {
-                                analytic.isGrowth ? (
-                                    <>
-                                        <div className='text-green-700 flex items-center gap-1'>
-                                            <FaArrowUp />
-                                            <p>{analytic.valueGrowth} {analytic.isPercent && "%"}</p>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        <div className='text-red-700 flex items-center gap-1'>
-                                            <FaArrowUp />
-                                            <p>{analytic.valueGrowth} {analytic.isPercent && "%"}</p>
-                                        </div>
-                                    </>
-                                )
-                            }
-                            <p className={`${analytic.isDark ? "text-white/60" : "text-black/60"}`}>Par rapport au mois dernier</p>
-                        </>
-                    )
-                }
+        <div className='flex items-center justify-between gap-2'>
+            <div className="flex flex-col">
+              <h5 className='font-bold text-[11px] text-slate-400 group-hover:text-slate-300 transition-colors'>
+                {analytic.title}
+              </h5>
             </div>
+            <div className={cn(
+              'w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 shadow-lg',
+              analytic.iconBg ? analytic.iconBg : "bg-slate-800"
+            )}>
+               <analytic.icon size={18} className={analytic.iconColor ? analytic.iconColor : "text-slate-300"} />
+            </div>
+        </div>
+
+        <div className='mt-3'>
+            <div className="flex items-baseline justify-between gap-1">
+              <p className='font-bold text-2xl tracking-tight text-white'>
+                {analytic.isCurrency && "€ "}
+                {formatNumber(analytic.value)}
+              </p>
+              
+              {analytic.trend && (
+                <div className={cn(
+                  "flex items-center gap-0.5 text-[9px] font-bold px-2 py-0.5 rounded-full border",
+                  isPositive 
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" 
+                    : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                )}>
+                  {isPositive ? <FaArrowUp size={7} /> : <FaArrowDown size={7} />}
+                  <span>{analytic.trend}</span>
+                </div>
+              )}
+            </div>
+
+            <p className='text-[10px] mt-1 text-slate-300/60 line-clamp-1'>
+              {analytic.parag}
+            </p>
         </div>
     </Link>
   )
