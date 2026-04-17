@@ -1227,31 +1227,7 @@ const Users: React.FC = () => {
 
 
 
-                            {/* Delete license */}
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 cursor-pointer text-destructive">
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Supprimer la licence</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Cette action est irréversible. Êtes-vous sûr de vouloir supprimer cette licence ?
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    className="bg-destructive text-white hover:bg-destructive/90"
-                                    onClick={() => handleDeleteLicence(user.currentRegistration._id)}
-                                  >
-                                    Supprimer
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+
                           </>
                         )}
 
@@ -1626,10 +1602,10 @@ const Users: React.FC = () => {
                           </DialogContent>
                         </Dialog>
 
-                        {/* remove user */}
+                        {/* Unified delete action (User or License) */}
                         {!user.mainAccount && (
                           <AlertDialog>
-                            <AlertDialogTrigger>
+                            <AlertDialogTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -1638,23 +1614,36 @@ const Users: React.FC = () => {
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent>
+                            <AlertDialogContent className="sm:max-w-xl">
                               <AlertDialogHeader>
                                 <AlertDialogTitle>
                                   {t("dashboardAdmin_users_confirmDeletion")}
                                 </AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  {t("dashboardAdmin_users_irreversibleAction")}
+                                  {user.currentRegistration 
+                                    ? "Que souhaitez-vous supprimer ? Vous pouvez supprimer uniquement cette licence ou supprimer l'intégralité du compte utilisateur ainsi que toutes ses données."
+                                    : t("dashboardAdmin_users_irreversibleAction")}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>
+                              <AlertDialogFooter className="flex flex-col sm:flex-row sm:justify-end gap-2">
+                                <AlertDialogCancel className="mt-0">
                                   {t("dashboardAdmin_users_cancel")}
                                 </AlertDialogCancel>
+                                
+                                {user.currentRegistration && (
+                                  <AlertDialogAction
+                                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                                    onClick={() => handleDeleteLicence(user.currentRegistration._id)}
+                                  >
+                                    Supprimer la licence
+                                  </AlertDialogAction>
+                                )}
+
                                 <AlertDialogAction
+                                  className="bg-destructive text-white hover:bg-destructive/90"
                                   onClick={() => handleDeleteUser(user._id)}
                                 >
-                                  {t("dashboardAdmin_users_confirmDelete")}
+                                  Supprimer le compte
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>

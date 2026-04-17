@@ -3,7 +3,6 @@
   "checkout_processing": "Processing...",
   "dashboardClient_orders_transferred": "Transferred",
   "description": "Ferracad helps you create rebar plans with unmatched precision and speed. Boost your construction workflow with a smart, reliable solution built for engineering professionals.",
-  
   "Accueil": "Home",
   "Docs": "Docs",
   "Fonctionnalites": "Features & Training",
@@ -17,20 +16,15 @@
   "create_acc": "Create your account",
   "video_title": "Demonstration of how to use Ferracad",
   "message_send_success": "Sent successfully.",
-
   "VAT_AUTO_21_2_BE": "Reverse charge – Art. 21 § 2 of the Belgian VAT Code",
-  
   "and": "and",
   "read_our": "Read our",
-
   "hero_title": "REINFORCEMENT OF CONCRETE ELEMENTS",
   "hero_description": "Ferracad is an add-on for <span class='font-bold'>AutoCAD®</span>, <span class='font-bold'>ZWCAD®</span>, allowing you to easily design your reinforcement plans.",
   "hero_download_free": "Download for Free",
   "hero_subtit_download": "30-day limited demo",
   "hero_how_it_works": "Discover the platform",
-
   "presentation_desc": "Ferracad is a software add-on for <span class='font-bold'>AutoCAD®</span>, <span class='font-bold'>ZWCAD®</span> that enables faster, more precise, and standards-compliant rebar drawings while eliminating manual drafting.",
-
   "feature_title1": "Faster Drawing and Reinforcement",
   "feature_description1": "Create bars, frames, and stirrups in just a few clicks.",
   "feature_title2": "Time Savings and Fewer Manual Errors",
@@ -43,11 +37,9 @@
   "feature_description5": "Adapt Ferracad to your needs: spacing, cover, scales, title blocks, etc.",
   "feature_title6": "Easy to Learn, Powerful to Use",
   "feature_description6": "Intuitive interface with a dedicated palette and clear commands.",
-
   "work_title": "Compatibility with Your Favorite Tools",
   "work_description": "Ferracad integrates seamlessly into your workflow, supporting the main CAD platforms used in structural design.",
   "work_play": "How does it work?",
-
   "whyus_title": "Why Choose Ferracad Over Another Tool?",
   "whyus_description": "Combining ease of use, fast onboarding, and high performance, Ferracad boosts productivity while meeting the technical demands of reinforced concrete professionals.",
   "whyus_question": "Got a question?",
@@ -60,7 +52,6 @@
   "whyus_feature_description2": "Thanks to automation of markers, diagrams, and schedules, the produced plans are consistent, accurate, and compliant with technical standards.",
   "whyus_feature_description3": "Every modification to a bar or marker is tracked and controllable, making it easier to revise, validate, and follow up on projects.",
   "whyus_feature_description4": "Quick to learn and supported by dedicated assistance to ensure optimal use from your first projects onward.",
-
   "funtion_title": "Ferracad's Key Features",
   "funtion_description": "Powerful tools to automate, structure, and secure your rebar drawings",
   "funtion_more": "Show More",
@@ -70,7 +61,6 @@
   "funtion_description2": "Neatly arranges markers in columns within the drawing, making it easier to read and validate by various stakeholders.",
   "funtion_title3": "Drawing of Bars (Rebar)",
   "funtion_description3": "Allows precise drawing of rebar according to project parameters directly within AutoCAD or ZWCAD, with full control over dimensions and shapes.",
-
   "questions": [
     {
       "q": "What is Ferracad?",
@@ -136,7 +126,6 @@
   "faq_title": "Frequently Asked Questions",
   "faq_description": "All the answers to the questions you may have about Ferracad.",
   "faq_see_more": "See all FAQs",
-
   "newsletter_title": "Stay informed with our Ferracad newsletter",
   "newsletter_description": "Get the latest Ferracad news by email: updates, tips, tutorials, promotions, and new features for <span class='font-bold'>AutoCAD®</span>, <span class='font-bold'>ZWCAD®</span>!",
   "newsletter_btn": "Subscribe",
@@ -145,7 +134,6 @@
   "newsletter_success": "You’ve been subscribed to our newsletter!",
   "newsletter_warning_request": "Email already subscribed.",
   "newsletter_error": "An error occurred. Please try again later.",
-
   "features_title": "Key Features of Ferracad",
   "features_description": "Everything you need to manage, share, and secure your reinforcement drawings efficiently.",
   "features_list_title1": "Draw rebars (straight bars)",
@@ -178,16 +166,13 @@
   "features_moin": "Show less",
   "features_title_demo": "Discover Ferracad in Action",
   "features_description_demo": "Watch this short video to get started with Ferracad and master the basics in just a few minutes.",
-
   "call_title": "Take a Tour of Vesto",
   "call_btn": "Get a Demo",
   "call_title1": "Save Time with Ferracad — Rent It by the Day",
   "call_description": "Access the full power of Ferracad for just <span class='font-bold'>€5/day</span>. A fast, flexible, commitment-free solution to produce your reinforcement drawings directly in AutoCAD.",
   "call_btn2": "Get Your License",
-
   "louer_title": "Rent Ferracad",
   "louer_description": "Access all Ferracad features with flexible rental options starting from 7 days, monthly, or yearly.",
-
   "contact_title": "Contact Us",
   "contact_description": "For any technical questions, order inquiries, or general questions. Please do not send messages for <span class='font-bold underline'>commercial or promotional</span> purposes.",
   "contact_require": "* Required fields",
@@ -200,10 +185,8 @@
   "contact_condition": "Stay informed about product updates, industry news, and promotional offers.",
   "contact_send": "Send",
   "contact_response": "Thank you for your message. Our team will respond as soon as possible, usually within 24 to 48 hours.",
-
   "pay_title": "Complete Your Billing Information",
   "pay_description": "Enter your billing details to access your Ferracad license or service and enjoy all our advanced features.",
-
   "pay_01_title": "Creating Your Account",
   "pay_01_description": "Thank you for signing up. Please confirm your email address to complete your account activation.",
   "pay_01_prenom": "First Name",
@@ -218,7 +201,6 @@
   "pay_01_address": "Address",
   "pay_01_save_address": "I have read and agree to the <a href='/conditions-generales' class='underline' target='_blank'>terms and conditions</a> and <a href='/privacy' class='underline' target='_blank'>privacy policy</a>.",
   "pay_01_save": "Saved",
-
   "pay_02_title": "License Information",
   "pay_02_description": "Enter your Ferracad license number to activate your rental. You may also add a note if needed.",
   "pay_02_num_ferracad": "Ferracad License Number",
@@ -231,7 +213,6 @@
   "pay_02_date_start": "Rental Start Date",
   "pay_02_date_fin": "Rental End Date",
   "pay_02_auto_ren": "Automatic Renewal",
-
   "pay_03_title": "Information Summary",
   "pay_03_description": "Review the entered information before finalizing your request. You can go back to edit it if needed.",
   "pay_03_fullname": "Full Name",
@@ -242,7 +223,6 @@
   "pay_03_j": "days",
   "pay_03_send": "Confirm",
   "pay_03_title_licence": "License Information",
-
   "pay_04_title": "Payment Method",
   "pay_04_description": "Choose your preferred payment method to securely complete your order.",
   "pay_04_cart": "Credit/Debit Card",
@@ -253,7 +233,6 @@
   "pay_04_ccv_num": "3 digits on the back",
   "pay_04_way_store_title": "Your data is protected",
   "pay_04_way_store_subtitle": "Payments are processed directly by Stripe. We never store your card information on our servers.",
-
   "checkout_title": "Billing Summary",
   "checkout_price_j": "Price per day",
   "checkout_sous_total": "Subtotal",
@@ -267,14 +246,12 @@
   "checkout_security_pau": "Secure Payment",
   "checkout_tva": "VAT",
   "checkout_licence": "License",
-
   "download_desc": "Still hesitating? Give it a try! You won't be able to live without it.",
   "telechargement2": "Install Now",
   "rules": "Legal Notice",
   "policy": "Privacy Policy",
   "conditions": "General Terms and Conditions for Ferracad Rental",
   "descriptionfooter": "AutoCAD are registered trademarks of Autodesk, Inc. – ZWCAD is a registered trademark of ZWSOFT Co., Ltd. – Excel and Microsoft are registered trademarks of Microsoft Corporation.",
-
   "connexion_title": "Hello !",
   "connexion_title_return": "Welcome back",
   "connexion_description": "Enter your credentials to access your account",
@@ -288,22 +265,18 @@
   "connexion_haveaccount": "Don't have an account?",
   "connexion_signup": "Sign up now",
   "connexion_forgetmailpwd": "Email and password are required",
-
   "forget_title": "Password Recovery",
   "forget_description": "Enter your email address to receive your password.",
   "forget_btn": "Recover my password",
   "forget_returnlink": "Retour à la page d'connexion",
-
   "register_show": "Registration successful",
   "register_desc": "The activation link for your account has been sent to your email address.",
-
   "form_01_error_incomplete": "Some fields still need to be filled!",
   "form_02_error_password_mismatch": "Passwords do not match",
   "form_02_error_accept": "Please accept the terms and conditions and the privacy policy.",
   "form_02_error_send": "Sending ...",
   "form_02_error_eight_car": "* Please enter at least 8 characters",
   "form_02_error_atless_eight": "The password must contain at least 8 characters.",
-
   "twofactors_title": "Two-step verification",
   "twofactors_verifyButton": "Verify",
   "twofactors_resendButton": "Resend code",
@@ -314,7 +287,6 @@
   "twofactors_verify": "Check your email",
   "twofactors_verifycomplete": "to get the verification code",
   "twofactors_send": "Resend in",
-
   "recover_title": "Password Reset",
   "recover_description": "Set a new password to secure your account.",
   "recover_labelNewPassword": "New password",
@@ -326,7 +298,6 @@
   "recover_toastEmptyFields": "Please enter and confirm your password.",
   "recover_toastMismatch": "Passwords do not match.",
   "recover_toastShortPassword": "Your password must contain at least 8 characters.",
-
   "sidebarDashboard": "Dashboard",
   "sidebarUsers": "Users",
   "sidebarOrders": "Orders",
@@ -338,13 +309,11 @@
   "sidebarLogs": "Logs",
   "sidebarSettings": "Settings",
   "sidebarLogout": "Logged out",
-
   "headerNotificationError": "An error occurred while updating the notification.",
   "headerMarkAllAsRead": "Mark all as read",
   "headerNoNotification": "No notifications.",
   "headerLoadMore": "Load more",
   "headerMyAccount": "My account",
-
   "pagetitle_dashboard": "Dashboard - Ferracad",
   "pagetitle_users": "Users - Dashboard | Ferracad",
   "pagetitle_orders": "Orders - Dashboard | Ferracad",
@@ -357,7 +326,6 @@
   "pagetitle_marketingCreate": "Create Campaign - Dashboard | Ferracad",
   "pagetitle_logs": "System Logs - Dashboard | Ferracad",
   "pagetitle_settings": "Settings - Dashboard | Ferracad",
-
   "dashboardClient_totalActiveLicenses": "Total number of active licenses",
   "dashboardClient_nextRecurringPayment": "Next scheduled recurring payment",
   "dashboardClient_currentPlan": "Current plan for this account",
@@ -377,9 +345,8 @@
   "dashboardClient_expiredLicenses": "Expired licenses",
   "dashboardClient_totalLicenses": "Total licenses",
   "dashboardClient_autoPayment": "Auto-payment active",
-
   "dashboardAdmin_totalUsers": "Total users",
-  "dashboardAdmin_totalUsers_client": "Total client users",  
+  "dashboardAdmin_totalUsers_client": "Total client users",
   "dashboardAdmin_totalActiveUsers": "Total number of active users excluding administrators",
   "dashboardAdmin_monthlyRevenue": "Revenue this month",
   "dashboardAdmin_totalAmountThisMonth": "Total amount generated this month",
@@ -407,7 +374,6 @@
   "dashboardClient_addNewVersion": "Add a new version of FerraCAD",
   "dashboardClient_createNewCampaign": "Create a new campaign",
   "dashboardClient_createNewFAQ": "Create a new FAQ",
-
   "dashboardAdmin_users_totalUsers": "Total Users (Admins & Clients)",
   "dashboardAdmin_users_totalUsersDescription": "Total number of users registered on the platform.",
   "dashboardAdmin_users_active": "Active",
@@ -420,7 +386,7 @@
   "dashboardAdmin_users_registrationSuccess": "Registration successful",
   "dashboardAdmin_users_updateSuccess": "Information updated successfully.",
   "dashboardAdmin_users_deletionSuccess": "Deletion successful.",
-  "dashboardAdmin_users_users": "Users",
+  "dashboardAdmin_users_users": "Users & licenses",
   "dashboardAdmin_users_manageAccounts": "Manage user accounts and their information",
   "dashboardAdmin_users_newUser": "New user",
   "dashboardAdmin_users_addUser": "Add a user",
@@ -465,7 +431,6 @@
   "dashboardAdmin_users_status_pending": "The account is not active",
   "dashboardAdmin_users_status_inactive": "Inactive",
   "dashboardAdmin_users_status_new": "New",
-
   "dashboardClient_orders_expired": "Expired",
   "dashboardClient_orders_expiring_soon": "Expiring soon",
   "dashboardClient_orders_active": "Active",
@@ -511,7 +476,6 @@
   "dashboardClient_orders_updateInfo": "Update the information associated with this user order.",
   "dashboardClient_orders_autoRenewal": "Auto-Renewal",
   "dashboardClient_orders_autoRenewal_desc": "To enable automatic payment, you must first subscribe to a plan and make the payment via Stripe from your personal account.",
-
   "dashboardClient_orders_acceptTerms": "Please accept the terms and privacy policy to continue.",
   "dashboardClient_orders_selectUser": "Please select a user.",
   "dashboardClient_orders_usernameRequired": "Username is required",
@@ -565,7 +529,6 @@
   "dashboardClient_orders_fac_title": "Professional billing",
   "dashboardClient_orders_subtitle": "This information will appear on your invoice. To make any changes, update your details in the Settings section.",
   "dashboardClient_orders_subtitle_licence": "License and user configuration",
-
   "dashboard_rent_registeredLicenses": "Registered Licenses",
   "dashboard_rent_active": "Active",
   "dashboard_rent_activeDescription": "Currently valid",
@@ -606,7 +569,6 @@
   "dashboard_rent_edit": "Edit",
   "dashboard_rent_license": "License",
   "dashboard_rent_user": "User",
-
   "dashboard_payment_free": "Free",
   "dashboard_payment_cash": "Cash",
   "dashboard_payment_totalRevenue": "Total Revenue",
@@ -632,7 +594,6 @@
   "dashboard_payment_action": "Action",
   "dashboard_payment_invoiceRestriction": "The invoice can only be generated for successful payments.",
   "dashboard_payment_totalAmountInvested": "Total amount invested in Ferracad",
-
   "dashboard_invoice_sendError": "Error while sending",
   "dashboard_invoice_sending": "Sending the invoice...",
   "dashboard_invoice_sendSuccess": "Sent successfully",
@@ -676,7 +637,6 @@
   "dashboard_invoice_one_time": "One-time Payment",
   "dashboard_invoice_website": "Website",
   "dashboard_invoice_invoice": "INVOICE",
-
   "dashboard_product_title": "Products",
   "dashboard_product_description": "Manage Ferracad plugins for different platforms",
   "dashboard_product_latestVersion": "latest version",
@@ -715,7 +675,6 @@
   "dashboard_product_confirmDeleteDesc": "This action is irreversible. The product and associated file will be permanently deleted.",
   "dashboard_product_delete": "Delete",
   "dashboard_product_selectPlatform": "Select a platform",
-
   "dashboard_faq_deleted": "FAQ deleted",
   "dashboard_faq_updated": "FAQ updated",
   "dashboard_faq_total": "Total FAQ",
@@ -747,7 +706,6 @@
   "dashboard_faq_cancel": "Cancel",
   "dashboard_faq_delete": "Delete",
   "dashboard_faq_save": "Save",
-
   "dashboard_logs_totalActivities": "Total activities",
   "dashboard_logs_recordedActions": "Recorded actions",
   "dashboard_logs_logins": "Logins",
@@ -780,7 +738,6 @@
   "dashboard_logs_location": "Location",
   "dashboard_logs_localNetwork": "Local network",
   "dashboard_logs_external": "External",
-
   "dashboard_settings_passwordMinLength": "Password must be longer than 8 characters",
   "dashboard_settings_passwordUpdated": "Password successfully updated.",
   "dashboard_settings_title": "Settings",
@@ -846,24 +803,19 @@
   "dashboard_settings_invid_email_label": "Emails",
   "dashboard_settings_invid_email_loading": "Sending",
   "dashboard_settings_invid_email_btn": "Send Invitations",
-
   "error_page_title": "Oops! Page not found",
   "error_page_description": "The page you are looking for may have been deleted, moved, or never existed.",
   "error_page_backHome": "Back to home",
-
   "global_loading_text": "Loading...",
-
   "pagetitle_software_registration": "Software Registration",
   "pagetitle_rental_registration": "Registration",
   "pagetitle_activation_error": "Activation Error",
   "pagetitle_privacy_policy": "Privacy Policy",
   "pagetitle_legal_notice": "Legal Notice",
-
   "cookie_title": "We use essential cookies to provide a better user experience. By clicking 'Accept', you agree to our use of cookies.",
   "cookie_decline": "Decline",
   "cookie_ignore": "Ignore",
   "cookie_accept": "Accept",
-
   "comparaisonFerracad_1_tache": "Drawing bars",
   "comparaisonFerracad_1_avant": "Manually drawing each bar with polylines and adding dimensions by hand. Risk of errors in lengths and shapes.",
   "comparaisonFerracad_1_apres": "Point-by-point drawing with automatic calculation of length and shape based on entered parameters.",
@@ -894,7 +846,6 @@
   "comparaisonFerracad_10_tache": "Bar scheme (DWG)",
   "comparaisonFerracad_10_avant": "Profiles manually saved, often inconsistently.",
   "comparaisonFerracad_10_apres": "Centralized DWG file with modifiable and reusable profiles.",
-
   "avantagesFerracad_1_title": "Time saving",
   "avantagesFerracad_1_description": "Drawing and annotation process 80% faster",
   "avantagesFerracad_2_title": "Fewer errors",
@@ -903,17 +854,14 @@
   "avantagesFerracad_3_description": "Automatic link between the drawing and the Excel nomenclature",
   "avantagesFerracad_4_title": "Professional quality",
   "avantagesFerracad_4_description": "Production of professional plans for rebar and construction",
-
   "policy_page": "<div class='max-w-4xl mx-auto px-5 py-10 text-gray-800'> <h1 class='text-3xl font-bold mb-6 text-[#8B0000]'> Privacy Policy </h1> <p class='text-sm text-gray-500 mb-10'> Last updated: 15-05-2025 </p> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>1. Introduction</h2> <p class='leading-relaxed'> As part of its operations, the site <strong>Ferracad</strong> collects and processes personal data. This privacy policy aims to inform users about the types of data collected, how it is used, and the rights they have. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>2. Data collected</h2> <p class='leading-relaxed mb-2'> The following data may be collected during your use of the site: </p> <ul class='list-disc ml-6 space-y-1'> <li>First name, last name</li> <li>Email address</li> <li>Phone number</li> <li>Information related to a reservation or contact request</li> <li>Browsing data (cookies, IP address)</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>3. Purposes of processing</h2> <p class='leading-relaxed mb-2'>These data are collected for:</p> <ul class='list-disc ml-6 space-y-1'> <li>Responding to your contact or reservation requests</li> <li>Managing and improving our site</li> <li>Sending you communications if you have consented</li> <li>Complying with our legal obligations</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>4. Legal basis for processing</h2> <ul class='list-disc ml-6 space-y-1'> <li>Your consent (forms, newsletter)</li> <li>The performance of a contract (reservations)</li> <li>Our legal obligations</li> <li>Our legitimate interest (site improvement)</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>5. Retention period</h2> <ul class='list-disc ml-6 space-y-1'> <li>Contact data: 3 years from last contact</li> <li>Reservation data: 5 years (legal period)</li> <li>Cookies: maximum 13 months</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>6. Recipients of data</h2> <p class='leading-relaxed'> The data is intended exclusively for <strong>Ferracad</strong> and is never sold. It may be shared with technical service providers (hosting, form handling tools) under confidentiality agreements. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>7. Your rights</h2> <p class='leading-relaxed mb-2'> Under the GDPR, you have the following rights: </p> <ul class='list-disc ml-6 space-y-1'> <li>Right of access</li> <li>Right of rectification</li> <li>Right to object</li> <li>Right to erasure</li> <li>Right to restriction of processing</li> <li>Right to data portability</li> </ul> <p class='leading-relaxed mt-2'> You can exercise these rights by contacting us at: <a href='mailto:support@ferracad.com' class='text-[#8B0000] font-medium underline' > support@ferracad.com </a> . </p> <p class='leading-relaxed mt-2'> You also have the right to lodge a complaint with the relevant data protection authority. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>8. Cookies</h2> <p class='leading-relaxed'> During your browsing, cookies may be placed on your device. You can modify your cookie preferences at any time via the management banner provided for that purpose. </p> </section></div>",
   "LegalMentions_page": "<div class='max-w-4xl mx-auto px-5 py-10 text-gray-800'> <h1 class='text-3xl font-bold mb-6 text-[#8B0000]'> Legal Notice </h1> <section class='mb-6'> <h2 class='text-xl mb-2'>Publisher Information</h2> <p class='leading-relaxed mb-2'> The publisher of the sites ferracad.be and ferracad.com is the company BME. </p> <p class='leading-relaxed'> The registered office is located at 127-129 rue Colonel Bourg in  Brussels (1140 - Belgium). </p> </section></div>",
   "cgv_page": " <div class='max-w-4xl mx-auto py-6 rounded-md'> <h1 class='text-3xl font-bold mb-6'>General Terms and Conditions of Rental of Ferracad</h1> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>1. Purpose</h2> <p> These General Terms and Conditions of Rental (hereinafter 'GTR') aim to define the rights and obligations of users and the Ferracad platform in the context of online rental of the Ferracad software extension, intended for CAD software. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>2. Definitions</h2> <p><strong>Ferracad Platform:</strong> the website or application Ferracad, allowing rental, download, and license management.</p> <p><strong>Ferracad (software):</strong> software extension developed to work with CAD software, made temporarily available through the platform.</p> <p><strong>Publisher:</strong> BMe, the developer and owner of the Ferracad software offered for rental.</p> <p><strong>User / Renter:</strong> any individual or legal entity having created an account on the platform and subscribed to the rental of Ferracad software.</p> <p><strong>License:</strong> temporary, personal, non-exclusive, and non-transferable right to use Ferracad.</p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>3. Access to the service</h2> <ul class='list-disc list-inside space-y-1'> <li>Rental and use of Ferracad require creating a user account on the Ferracad platform.</li> <li>The user must have a legal and compatible version of CAD software.</li> <li>Access to Ferracad software is conditioned on prior payment of the rental period and license validation on the user’s account.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>4. Rental terms</h2> <ul class='list-disc list-inside space-y-1'> <li>The rental is concluded for a minimum duration of 7 days specified during the order.</li> <li>The license is automatically activated upon payment confirmation and remains valid until the end of the subscribed period.</li> <li>At the expiration of the period, access to the software is automatically suspended unless renewed by the user.</li> <li>No refund is possible after activation, except in case of technical failure attributable to the platform or publisher.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>5. Use of Ferracad</h2> <ul class='list-disc list-inside space-y-1'> <li>The user agrees to use Ferracad according to its purpose, respecting applicable laws and intellectual property rights.</li> <li>Any copying, distribution, resale, secondary rental, decompilation, or modification of the software is strictly prohibited.</li> <li>Ferracad must not be used in an illegal environment or to circumvent CAD licenses.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>6. Pricing and payment</h2> <ul class='list-disc list-inside space-y-1'> <li>Rental prices are indicated online on the platform and may vary according to duration, version, and options chosen.</li> <li>Payments are made via secure methods offered on the platform (credit card, bank transfer, e-wallet, etc.).</li> <li>The invoice is available in the user area once the order is confirmed.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>7. Support and updates</h2> <ul class='list-disc list-inside space-y-1'> <li>The Ferracad platform provides basic technical support by email or contact form during the rental period.</li> <li>Corrective updates may be provided automatically.</li> <li>Major updates may require a new subscription or a separate license.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>8. Liability</h2> <ul class='list-disc list-inside space-y-1'> <li>The user is solely responsible for hardware compatibility, CAD software version, and file security.</li> <li>The platform and publisher cannot be held liable for data loss, indirect damages, or service interruptions related to Ferracad usage.</li> <li>In case of proven malfunction attributable to Ferracad, the platform’s liability is limited to the amount of the concerned rental period.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>9. Intellectual property</h2> <p> Ferracad software remains the exclusive property of its publisher. Rental does not imply any transfer of ownership. The user acknowledges that all rights related to Ferracad (source code, interface, documentation, logo, etc.) are protected by copyright and international conventions. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>10. Personal data and confidentiality</h2> <p> Data collected via the platform are used only for managing the user account, license, and billing. Ferracad commits to respecting the European GDPR regulation and Belgian legislation on personal data protection, ensuring user information security and confidentiality. Data is never transferred to third parties without prior consent. The user has rights to access, rectify, erase, limit, portability, and oppose in accordance with GDPR and applicable Belgian laws. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>11. Termination and suspension</h2> <ul class='list-disc list-inside space-y-1'> <li>In case of non-compliance with these GTR (including illegal use, license circumvention, non-payment), the platform reserves the right to suspend or terminate the license immediately without refund.</li> <li>The user may request account deletion anytime via their personal space or direct contact.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>12. Applicable law and jurisdiction</h2> <p> These conditions are governed by Belgian law and, if applicable, European regulations. Any dispute concerning their interpretation or execution falls under the competent courts of the Ferracad headquarters in Belgium. </p> </section> <section> <h2 class='text-xl font-semibold mb-2'>13. Acceptance</h2> <p> By confirming the order on the Ferracad platform, the user acknowledges having read and accepted without reservation these General Terms and Conditions of Rental of Ferracad. </p> </section> </div>",
-
   "active_account_title": "Verify Your Email",
   "active_account_sub": "We’ve sent a verification link to",
   "active_account_description": "Please check your inbox (and spam folder) and click the link to activate your account. The link will expire in 24 hours.",
   "active_account_resend": "Resend Email",
   "active_account_login": "Go to Login",
-
   "free_trial_success": "The code has been generated successfully.",
   "free_trial_title": "Your activation code",
   "free_trial_description": "Here is your unique activation code. You can copy it by clicking the button below.",
@@ -929,7 +877,6 @@
   "free_trial_form_incomplete": "Form incomplete",
   "free_trial_form_incomplete_description": "Please fill in all required fields before submitting.",
   "free_trial_both": "Both",
-
   "formation_titre": "Ferracad Training Center",
   "formation_description": "Master Ferracad with our complete video tutorials.",
   "formation_cours_1_title": "How to start Ferracad?",
@@ -949,12 +896,10 @@
   "tutoriels_title": "Tutorials",
   "tutoriels_description": "Description",
   "en_cours_de_lecture": "Now playing",
-
   "how_it_works_zwcad": "How does it work in ZWCAD?",
   "how_it_works_autocad": "How does it work in AutoCAD?",
   "presentation_ferracad_zwcad": "Ferracad presentation for ZWCAD",
   "new_ferracad_zwcad": "The new Ferracad for ZWCAD",
-
   "ALMOST_DONE": "Almost done!",
   "DOWNLOAD": "Download",
   "LAST_STEP": "One more step before accessing your file",
@@ -963,6 +908,5 @@
   "ACCESS_UPDATES": "Access to free updates",
   "PRIORITY_SUPPORT": "Priority technical support",
   "EXCLUSIVE_CONTENT": "Exclusive content and tutorials",
-
   "error_generic": "An error occurred, please try again."
 }
