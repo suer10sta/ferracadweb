@@ -23,32 +23,32 @@ const index = () => {
         '/tableau-de-board/marketing/create': t("pagetitle_marketingCreate"),
         '/tableau-de-board/logs': t("pagetitle_logs"),
         '/tableau-de-board/parametres': t("pagetitle_settings"),
-    };      
+    };
 
     const currentPageTitle = pageTitles[location.pathname] || "Ferracad 23.14 - Logiciel pour AutoCAD®, ZWCAD®";
 
     return (
-    <>
-        <Helmet>
-            <title>{currentPageTitle}</title>
-            <link rel="canonical" href="https://www.ferracad.com/" />
-            <meta name="robots" content="noindex,nofollow" />
-        </Helmet>
-        <div className='flex bg-[#F9F9F9]'>
-            <div 
-                className={`transition-all duration-200 max-lg:absolute top-0 left-0 ${activeSidebar ? "translate-x-[0%] w-[20%] max-lg:w-[40%] max-md:w-full max-md:z-[100]" : "w-[0%] translate-x-[-1000px]"} bg-white`}
-            >
-                <SideBar setActiveSidebar={setActiveSidebar} activeSidebar={activeSidebar} />
-            </div>
-            <div className={`transition-all duration-200 ${activeSidebar ? "w-[80%] ": "w-full"} mx-auto px-5`}>
-                <div className={`mx-auto`}>
-                    <Header setActiveSidebar={setActiveSidebar} activeSidebar={activeSidebar} />
-                    <Outlet />
+        <>
+            <Helmet>
+                <title>{currentPageTitle}</title>
+                <link rel="canonical" href="https://www.ferracad.com/" />
+                <meta name="robots" content="noindex,nofollow" />
+            </Helmet>
+            <div className='flex bg-[#F9F9F9]'>
+                <div
+                    className={`transition-all duration-200 max-lg:absolute top-0 left-0 ${activeSidebar ? "translate-x-[0%] w-[13%] max-lg:w-[35%] max-md:w-full max-md:z-[100]" : "w-[0%] translate-x-[-1000px]"} bg-white`}
+                >
+                    <SideBar setActiveSidebar={setActiveSidebar} activeSidebar={activeSidebar} />
+                </div>
+                <div className={`transition-all duration-200 ${activeSidebar ? "w-[85%] " : "w-full"} mx-auto px-5`}>
+                    <div className={`mx-auto`}>
+                        <Header setActiveSidebar={setActiveSidebar} activeSidebar={activeSidebar} />
+                        <Outlet />
+                    </div>
                 </div>
             </div>
-        </div>
-    </>
-  )
+        </>
+    )
 }
 
 export default index;

@@ -121,15 +121,14 @@ const SideBar = ({ setActiveSidebar, activeSidebar }: any) => {
                 menuDashboard.map((m, i) => {
                   const isAdmin = userIdn.role === "admin" && m.role !== "justclient";
                   const isAllowed = userIdn.role === m.role || m.role === "justclient";
-                
+
                   if (isAdmin || isAllowed) {
                     return (
                       <li key={m.path || i} className='flex justify-between items-center'>
                         <Link
                           to={m.path}
-                          className={`flex items-center gap-2 py-2 text-sm font-semibold relative ${
-                            m.path === subpath ? "text-black/80" : "text-black/30"
-                          } transition-all duration-200 hover:text-black/50`}
+                          className={`flex items-center gap-2 py-2 text-sm font-semibold relative ${m.path === subpath ? "text-black/80" : "text-black/30"
+                            } transition-all duration-200 hover:text-black/50`}
                         >
                           <m.icon />
                           {m.title}
@@ -137,14 +136,14 @@ const SideBar = ({ setActiveSidebar, activeSidebar }: any) => {
                       </li>
                     );
                   }
-                
+
                   return null;
-                })                  
+                })
               }
             </ul>
           </nav>
         </div>
-        <button 
+        <button
           onClick={logout}
           className={`flex cursor-pointer items-center gap-2 py-2 text-sm font-semibold text-red-800 transition-all duration-200 hover:text-red-800/50`}
         >
