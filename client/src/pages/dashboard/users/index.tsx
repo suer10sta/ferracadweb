@@ -43,6 +43,7 @@ import {
   AlertTriangle,
   ListFilter,
   Mail,
+  Plus,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -907,14 +908,23 @@ const Users: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
             {t("dashboardAdmin_users_users")}
           </h2>
-          <p className="text-sm text-black/40">
+          <p className="text-sm text-slate-500">
             {t("dashboardAdmin_users_manageAccounts")}
           </p>
         </div>
-        <NewUser />
+        <div className="flex items-center gap-3">
+          <Link to="/tableau-de-board/commande/paiement">
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 h-10 shadow-md transition-all">
+              <Plus size={16} />
+              <span className="hidden sm:inline">{t("dashboardClient_orders_new_order")}</span>
+              <span className="sm:hidden">Commande</span>
+            </Button>
+          </Link>
+          <NewUser />
+        </div>
       </div>
 
       {/* Stats Sections */}

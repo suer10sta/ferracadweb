@@ -387,7 +387,7 @@
   "dashboardAdmin_users_updateSuccess": "Information updated successfully.",
   "dashboardAdmin_users_deletionSuccess": "Deletion successful.",
   "dashboardAdmin_users_users": "Users & licenses",
-  "dashboardAdmin_users_manageAccounts": "Manage user accounts and their information",
+  "dashboardAdmin_users_manageAccounts": "Manage user accounts and their licenses",
   "dashboardAdmin_users_newUser": "New user",
   "dashboardAdmin_users_addUser": "Add a user",
   "dashboardAdmin_users_fillInfo": "Fill in the information to create a new user",

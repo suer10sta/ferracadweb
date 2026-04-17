@@ -2,7 +2,6 @@
   "title": "Ferracad 23.14 - Software voor AutoCAD®, ZWCAD®",
   "checkout_processing": "Verwerken...",
   "description": "Ferracad maakt het mogelijk om wapeningsplannen sneller en nauwkeuriger te realiseren. Optimaliseer uw bouwprojecten met een slimme en betrouwbare oplossing voor bouwprofessionals.",
-
   "Accueil": "Startpagina",
   "Docs": "Documentatie",
   "Fonctionnalites": "Functies & Opleiding",
@@ -16,20 +15,15 @@
   "create_acc": "Maak uw account aan",
   "video_title": "Demonstratie van het gebruik van Ferracad",
   "message_send_success": "Succesvol verzonden.",
-
   "VAT_AUTO_21_2_BE": "Zelfbelasting – Art. 21 § 2 van het Belgische btw-wetboek",
-  
   "and": "en",
   "read_our": "Lees onze",
-
   "hero_title": "WAPENING VAN BETONELEMENTEN",
   "hero_description": "Ferracad is een uitbreiding voor <span class='font-bold'>AutoCAD®</span>, <span class='font-bold'>ZWCAD®</span>, waarmee u eenvoudig uw wapeningstekeningen kunt ontwerpen.",
   "hero_download_free": "Gratis downloaden",
   "hero_subtit_download": "Beperkte demonstratie van 30 dagen",
   "hero_how_it_works": "Ontdek het platform",
-
   "presentation_desc": "Ferracad is aanvullende software voor <span class='font-bold'>AutoCAD®</span>, <span class='font-bold'>ZWCAD®</span>, waarmee u sneller, nauwkeuriger en normconform wapeningstekeningen kunt maken – zonder handmatig tekenwerk.",
-
   "feature_title1": "Sneller tekenen en wapening zetten",
   "feature_description1": "Maak staven, kaders en banden in enkele klikken.",
   "feature_title2": "Tijdswinst en minder handmatige fouten",
@@ -42,11 +36,9 @@
   "feature_description5": "Pas Ferracad aan uw behoeften aan: dekking, schalen, kanttekeningen, enzovoort.",
   "feature_title6": "Gemakkelijk leerbaar, krachtig in gebruik",
   "feature_description6": "Intuïtieve interface met speciale palet en duidelijke commando’s.",
-
   "work_title": "Compatibel met uw favoriete tools",
   "work_description": "Ferracad integreert perfect in uw werkomgeving, met ondersteuning voor de belangrijkste CAD‑platforms gebruikt in structuurbouw.",
   "work_play": "Hoe werkt het?",
-
   "whyus_title": "Waarom kiezen voor Ferracad in plaats van een ander programma?",
   "whyus_description": "Met snelle leercurve, gebruiksgemak en hoge prestaties verhoogt Ferracad de productiviteit terwijl het voldoet aan de technische eisen van betonprofessionals.",
   "whyus_question": "Heeft u een vraag?",
@@ -59,7 +51,6 @@
   "whyus_feature_description2": "Dankzij automatisering van markeringen, diagrammen en overzichten zijn de tekeningen consistent, nauwkeurig en conform technische normen.",
   "whyus_feature_description3": "Elke wijziging aan staaf of markering is gevolgd en controleerbaar, wat revisies, goedkeuringen en projectopvolging vergemakkelijkt.",
   "whyus_feature_description4": "Snelle opstart en toegewijde ondersteuning om optimaal gebruik te garanderen vanaf de eerste projecten.",
-
   "funtion_title": "Belangrijkste functionaliteiten van Ferracad",
   "funtion_description": "Krachtige tools om uw wapeningstekeningen te automatiseren, structureren en beveiligen",
   "funtion_more": "Meer tonen",
@@ -69,7 +60,6 @@
   "funtion_description2": "Presenteert de markeringen op nette en geordende wijze in de tekening, wat de leesbaarheid en goedkeuring door betrokken partijen vergemakkelijkt.",
   "funtion_title3": "Tekenen van staven (wapenstaven)",
   "funtion_description3": "Maakt het mogelijk wapeningstaven nauwkeurig te tekenen volgens projectparameters direct in AutoCAD, ZWCAD, met perfecte beheersing van afmetingen en vormen.",
-
   "questions": [
     {
       "q": "Wat is Ferracad?",
@@ -135,7 +125,6 @@
   "faq_title": "Veelgestelde vragen",
   "faq_description": "Alle antwoorden op de vragen die u heeft over Ferracad.",
   "faq_see_more": "Alle FAQ bekijken",
-
   "newsletter_title": "Blijf op de hoogte met onze Ferracad‑nieuwsbrief",
   "newsletter_description": "Ontvang het laatste Ferracad-nieuws via e-mail: updates, tips, tutorials, promoties en nieuwigheden voor <span class='font-bold'>AutoCAD®</span>, <span class='font-bold'>ZWCAD®</span>!",
   "newsletter_btn": "Ik schrijf me in",
@@ -144,7 +133,6 @@
   "newsletter_success": "Je bent nu ingeschreven op onze nieuwsbrief!",
   "newsletter_warning_request": "E-mailadres is al ingeschreven.",
   "newsletter_error": "Er is een fout opgetreden. Probeer het later opnieuw.",
-
   "features_title": "Kernfunctionaliteiten van Ferracad",
   "features_description": "Alles wat u nodig hebt om uw projecten efficiënt te beheren, te delen en te beveiligen.",
   "features_list_title1": "Tekenen van staven (staaf‑elementen)",
@@ -177,16 +165,13 @@
   "features_moin": "Minder weergeven",
   "features_title_demo": "Ontdek Ferracad in actie",
   "features_description_demo": "Bekijk deze korte video om uw eerste stappen met Ferracad te zetten en de basis in enkele minuten onder de knie te krijgen.",
-
   "call_title": "Maak een rondleiding van Vesto",
   "call_btn": "Vraag een demo aan",
   "call_title1": "Bespaar Tijd met Ferracad — Huur per Dag",
   "call_description": "Toegang tot de volledige kracht van Ferracad voor slechts <span style='font-weight: bold' class='font-bold'>€ 5/dag</span>. Een snelle, flexibele en vrijblijvende oplossing om uw wapeningstekeningen direct in AutoCAD te produceren.",
   "call_btn2": "Vraag uw licentie aan",
-
   "louer_title": "Ferracad huren",
   "louer_description": "Toegang tot alle functies van Ferracad in flexibele huur vanaf 7 dagen, per maand of per jaar.",
-
   "contact_title": "Neem contact met ons op",
   "contact_description": "Voor technische vragen of vragen over uw bestelling of algemene vragen. Gelieve geen berichten te sturen met commerciële of promotionele doeleinden.",
   "contact_require": "* Verplichte velden",
@@ -199,10 +184,8 @@
   "contact_condition": "Blijf op de hoogte van productupdates, nieuws uit de sector en promotionele aanbiedingen.",
   "contact_send": "Verzenden",
   "contact_response": "Dank voor uw bericht. Ons team zal u zo snel mogelijk antwoorden, gewoonlijk binnen 24‑48 uur.",
-
   "pay_title": "Vul uw facturatiegegevens in",
   "pay_description": "Voer uw facturatiegegevens in om toegang te krijgen tot uw Ferracad‑licentie of dienst en te profiteren van alle geavanceerde functies.",
-
   "pay_01_title": "Account aanmaken",
   "pay_01_description": "Bedankt voor je registratie. Bevestig je e-mailadres om je account te activeren.",
   "pay_01_prenom": "Voornaam",
@@ -217,7 +200,6 @@
   "pay_01_address": "Adres",
   "pay_01_save_address": "Ik heb de <a href='/conditions-generales' class='underline' target='_blank'>algemene voorwaarden</a> en het <a href='/privacy' class='underline' target='_blank'>privacybeleid</a> gelezen en ga ermee akkoord.",
   "pay_01_save": "Opgeslagen",
-
   "pay_02_title": "Licentie‑informatie",
   "pay_02_description": "Voer uw Ferracad‑licentienummer in om uw huur te activeren. U kunt ook desgewenst een opmerking toevoegen.",
   "pay_02_num_ferracad": "Ferracad‑licentienummer",
@@ -230,7 +212,6 @@
   "pay_02_date_start": "Startdatum van de huur",
   "pay_02_date_fin": "Einddatum van de huur",
   "pay_02_auto_ren": "Automatisch verlengen",
-
   "pay_03_title": "Overzicht van ingevoerde gegevens",
   "pay_03_description": "Controleer de ingevulde informatie voordat u uw aanvraag definitief maakt. U kunt teruggaan om aanpassingen te doen indien nodig.",
   "pay_03_fullname": "Volledige naam",
@@ -241,7 +222,6 @@
   "pay_03_j": "dagen",
   "pay_03_send": "Bevestigen",
   "pay_03_title_licence": "Licentiegegevens",
-
   "pay_04_title": "Betaalmethode",
   "pay_04_description": "Kies uw favoriete betaalmiddel om uw bestelling veilig af te ronden.",
   "pay_04_cart": "Bankkaart",
@@ -252,7 +232,6 @@
   "pay_04_ccv_num": "3 cijfers op de achterkant",
   "pay_04_way_store_title": "Uw gegevens zijn beschermd",
   "pay_04_way_store_subtitle": "De betaling wordt rechtstreeks verwerkt door Stripe. We slaan uw kaartgegevens nooit op onze servers op.",
-
   "checkout_title": "Facturatie overzicht",
   "checkout_price_j": "Prijs per dag",
   "checkout_sous_total": "Subtotaal",
@@ -266,14 +245,12 @@
   "checkout_security_pau": "Veilige betaling",
   "checkout_tva": "BTW",
   "checkout_licence": "Licentie",
-
   "download_desc": "Twijfelt u nog? Probeer het! U zult er niet meer zonder kunnen.",
   "telechargement2": "Nu installeren",
   "rules": "Juridische vermeldingen",
   "policy": "Privacy‑beleid",
   "conditions": "Algemene Voorwaarden voor de Verhuur van Ferracad",
   "descriptionfooter": "AutoCAD zijn geregistreerde handelsmerken van Autodesk, Inc. – ZWCAD is een geregistreerd handelsmerk van ZWSOFT Co., Ltd. – Excel en Microsoft zijn geregistreerde handelsmerken van Microsoft Corporation.",
-
   "connexion_title": "Goedemorgen",
   "connexion_title_return": "Welkom terug",
   "connexion_description": "Voer uw gegevens in om toegang te krijgen tot uw account",
@@ -287,22 +264,18 @@
   "connexion_haveaccount": "Heb je nog geen account?",
   "connexion_signup": "Registreer nu",
   "connexion_forgetmailpwd": "E-mailadres en wachtwoord zijn verplicht",
-
   "forget_title": "Wachtwoord herstellen",
   "forget_description": "Voer uw e-mailadres in om uw wachtwoord te ontvangen.",
   "forget_btn": "Mijn wachtwoord herstellen",
   "forget_returnlink": "Terug naar de inlogpagina",
-
   "register_show": "Registratie geslaagd",
   "register_desc": "De activatielink voor uw account is naar uw e-mailadres gestuurd.",
-
   "form_01_error_incomplete": "Er moeten nog enkele velden worden ingevuld!",
   "form_02_error_password_mismatch": "Wachtwoorden komen niet overeen",
   "form_02_error_accept": "Gelieve de algemene voorwaarden en het privacybeleid te accepteren.",
   "form_02_error_send": "Bezig met verzenden ...",
   "form_02_error_eight_car": "* Vul minstens 8 tekens in",
   "form_02_error_atless_eight": "Het wachtwoord moet minstens 8 tekens bevatten.",
-
   "twofactors_title": "Tweestapsverificatie",
   "twofactors_verifyButton": "Verifiëren",
   "twofactors_resendButton": "Code opnieuw verzenden",
@@ -313,7 +286,6 @@
   "twofactors_verify": "Controleer je e-mail",
   "twofactors_verifycomplete": "om de verificatiecode te ontvangen",
   "twofactors_send": "Opnieuw verzenden over",
-
   "recover_title": "Wachtwoord opnieuw instellen",
   "recover_description": "Stel een nieuw wachtwoord in om je account te beveiligen.",
   "recover_labelNewPassword": "Nieuw wachtwoord",
@@ -325,7 +297,6 @@
   "recover_toastEmptyFields": "Voer en bevestig je wachtwoord in.",
   "recover_toastMismatch": "Wachtwoorden komen niet overeen.",
   "recover_toastShortPassword": "Je wachtwoord moet minimaal 8 tekens bevatten.",
-
   "sidebarDashboard": "Dashboard",
   "sidebarUsers": "Gebruikers",
   "sidebarOrders": "Bestellingen",
@@ -337,13 +308,11 @@
   "sidebarLogs": "Logboeken",
   "sidebarSettings": "Instellingen",
   "sidebarLogout": "Uitgelogd",
-
   "headerNotificationError": "Er is een fout opgetreden bij het bijwerken van de melding.",
   "headerMarkAllAsRead": "Alles als gelezen markeren",
   "headerNoNotification": "Geen meldingen.",
   "headerLoadMore": "Meer laden",
   "headerMyAccount": "Mijn account",
-
   "pagetitle_dashboard": "Dashboard - Ferracad",
   "pagetitle_users": "Gebruikers - Dashboard | Ferracad",
   "pagetitle_orders": "Bestellingen - Dashboard | Ferracad",
@@ -356,7 +325,6 @@
   "pagetitle_marketingCreate": "Campagne maken - Dashboard | Ferracad",
   "pagetitle_logs": "Systeemlogs - Dashboard | Ferracad",
   "pagetitle_settings": "Instellingen - Dashboard | Ferracad",
-
   "dashboardClient_totalActiveLicenses": "Totaal aantal actieve licenties",
   "dashboardClient_nextRecurringPayment": "Volgende geplande terugkerende betaling",
   "dashboardClient_currentPlan": "Huidig abonnement voor dit account",
@@ -376,9 +344,8 @@
   "dashboardClient_expiredLicenses": "Verlopen licenties",
   "dashboardClient_totalLicenses": "Totaal aantal licenties",
   "dashboardClient_autoPayment": "Automatische betaling actief",
-
   "dashboardAdmin_totalUsers": "Totaal gebruikers",
-  "dashboardAdmin_totalUsers_client": "Totaal aantal klantgebruikers",  
+  "dashboardAdmin_totalUsers_client": "Totaal aantal klantgebruikers",
   "dashboardAdmin_totalActiveUsers": "Totaal aantal actieve gebruikers exclusief beheerders",
   "dashboardAdmin_monthlyRevenue": "Inkomsten deze maand",
   "dashboardAdmin_totalAmountThisMonth": "Totaalbedrag deze maand",
@@ -406,7 +373,6 @@
   "dashboardClient_addNewVersion": "Een nieuwe versie van FerraCAD toevoegen",
   "dashboardClient_createNewCampaign": "Nieuwe campagne aanmaken",
   "dashboardClient_createNewFAQ": "Nieuwe FAQ aanmaken",
-
   "dashboardAdmin_users_totalUsers": "Totaal gebruikers (Beheerders en Klanten)",
   "dashboardAdmin_users_totalUsersDescription": "Totaal aantal gebruikers geregistreerd op het platform.",
   "dashboardAdmin_users_active": "Actief",
@@ -420,7 +386,7 @@
   "dashboardAdmin_users_updateSuccess": "Informatie succesvol bijgewerkt.",
   "dashboardAdmin_users_deletionSuccess": "Verwijderen geslaagd.",
   "dashboardAdmin_users_users": "Gebruikers & licenties",
-  "dashboardAdmin_users_manageAccounts": "Beheer gebruikersaccounts en hun informatie",
+  "dashboardAdmin_users_manageAccounts": "Beheer gebruikersaccounts en hun licenties",
   "dashboardAdmin_users_newUser": "Nieuwe gebruiker",
   "dashboardAdmin_users_addUser": "Voeg een gebruiker toe",
   "dashboardAdmin_users_fillInfo": "Vul de informatie in om een nieuwe gebruiker aan te maken",
@@ -464,7 +430,6 @@
   "dashboardAdmin_users_status_pending": "Het account is niet actief.",
   "dashboardAdmin_users_status_inactive": "Inactief",
   "dashboardAdmin_users_status_new": "Nieuw",
-
   "dashboardClient_orders_expired": "Verlopen",
   "dashboardClient_orders_expiring_soon": "Vervalt binnenkort",
   "dashboardClient_orders_active": "Actief",
@@ -510,7 +475,6 @@
   "dashboardClient_orders_updateInfo": "Werk de informatie bij die gekoppeld is aan deze gebruikersbestelling.",
   "dashboardClient_orders_autoRenewal": "Automatisch verlengen",
   "dashboardClient_orders_autoRenewal_desc": "Om automatische betaling te activeren, moet u zich eerst abonneren op een abonnement en de betaling via Stripe uitvoeren vanuit uw persoonlijke account.",
-
   "dashboardClient_orders_acceptTerms": "Accepteer de algemene voorwaarden en het privacybeleid om door te gaan.",
   "dashboardClient_orders_selectUser": "Selecteer een gebruiker.",
   "dashboardClient_orders_usernameRequired": "Gebruikersnaam is verplicht",
@@ -564,7 +528,6 @@
   "dashboardClient_orders_fac_title": "Professionele facturatie",
   "dashboardClient_orders_subtitle": "Deze gegevens verschijnen op uw factuur. Voor wijzigingen past u uw gegevens aan in de rubriek Instellingen.",
   "dashboardClient_orders_subtitle_licence": "Configuratie van licenties en gebruikers",
-
   "dashboard_rent_registeredLicenses": "Geregistreerde licenties",
   "dashboard_rent_active": "Actief",
   "dashboard_rent_activeDescription": "Momenteel geldig",
@@ -605,7 +568,6 @@
   "dashboard_rent_edit": "Bewerken",
   "dashboard_rent_license": "Licentie",
   "dashboard_rent_user": "Gebruiker",
-
   "dashboard_payment_free": "Gratis",
   "dashboard_payment_cash": "Contant",
   "dashboard_payment_totalRevenue": "Totale inkomsten",
@@ -631,7 +593,6 @@
   "dashboard_payment_action": "Actie",
   "dashboard_payment_invoiceRestriction": "De factuur kan alleen worden gegenereerd voor geslaagde betalingen.",
   "dashboard_payment_totalAmountInvested": "Totaalbedrag geïnvesteerd in Ferracad",
-
   "dashboard_invoice_sendError": "Fout bij verzenden",
   "dashboard_invoice_sending": "Factuur wordt verzonden...",
   "dashboard_invoice_sendSuccess": "Succesvol verzonden",
@@ -675,7 +636,6 @@
   "dashboard_invoice_one_time": "Eenmalige betaling",
   "dashboard_invoice_website": "Website",
   "dashboard_invoice_invoice": "FACTUUR",
-
   "dashboard_product_title": "Producten",
   "dashboard_product_description": "Beheer van Ferracad-plugins voor verschillende platforms",
   "dashboard_product_latestVersion": "laatste versie",
@@ -714,7 +674,6 @@
   "dashboard_product_confirmDeleteDesc": "Deze actie is onomkeerbaar. Het product en het bijbehorende bestand worden definitief verwijderd.",
   "dashboard_product_delete": "Verwijderen",
   "dashboard_product_selectPlatform": "Selecteer een platform",
-
   "dashboard_faq_deleted": "FAQ verwijderd",
   "dashboard_faq_updated": "FAQ bijgewerkt",
   "dashboard_faq_total": "Totaal FAQ",
@@ -746,7 +705,6 @@
   "dashboard_faq_cancel": "Annuleren",
   "dashboard_faq_delete": "Verwijderen",
   "dashboard_faq_save": "Opslaan",
-
   "dashboard_logs_totalActivities": "Totale activiteiten",
   "dashboard_logs_recordedActions": "Geregistreerde acties",
   "dashboard_logs_logins": "Inloggen",
@@ -779,7 +737,6 @@
   "dashboard_logs_location": "Locatie",
   "dashboard_logs_localNetwork": "Lokaal netwerk",
   "dashboard_logs_external": "Extern",
-
   "dashboard_settings_passwordMinLength": "Het wachtwoord moet langer zijn dan 8 tekens",
   "dashboard_settings_passwordUpdated": "Wachtwoord succesvol bijgewerkt.",
   "dashboard_settings_title": "Instellingen",
@@ -845,24 +802,19 @@
   "dashboard_settings_invid_email_label": "E-mails",
   "dashboard_settings_invid_email_loading": "Verzenden",
   "dashboard_settings_invid_email_btn": "Uitnodigingen verzenden",
-
   "error_page_title": "Oeps! Pagina niet gevonden",
   "error_page_description": "De pagina die u zoekt is mogelijk verwijderd, verplaatst of heeft nooit bestaan.",
   "error_page_backHome": "Terug naar startpagina",
-
   "global_loading_text": "Bezig met laden...",
-
   "pagetitle_software_registration": "Softwareregistratie",
   "pagetitle_rental_registration": "Registratie",
   "pagetitle_activation_error": "Activatiefout",
   "pagetitle_privacy_policy": "Privacybeleid",
   "pagetitle_legal_notice": "Wettelijke kennisgeving",
-
   "cookie_title": "We gebruiken essentiële cookies om een betere gebruikerservaring te bieden. Door op 'Accepteren' te klikken, ga je akkoord met ons gebruik van cookies.",
   "cookie_decline": "Weigeren",
   "cookie_ignore": "Negeren",
   "cookie_accept": "Accepteren",
-
   "comparaisonFerracad_1_tache": "Tekenen van staven",
   "comparaisonFerracad_1_avant": "Elke staaf handmatig tekenen met polylijnen en afmetingen handmatig toevoegen. Risico op fouten in lengtes en vormen.",
   "comparaisonFerracad_1_apres": "Punt-voor-punt tekenen met automatische berekening van lengte en vorm op basis van ingevoerde parameters.",
@@ -893,7 +845,6 @@
   "comparaisonFerracad_10_tache": "Staafschema (DWG)",
   "comparaisonFerracad_10_avant": "Profielen handmatig opgeslagen, vaak inconsistent.",
   "comparaisonFerracad_10_apres": "Gecentraliseerd DWG-bestand met bewerkbare en herbruikbare profielen.",
-
   "avantagesFerracad_1_title": "Tijdbesparing",
   "avantagesFerracad_1_description": "Tekenen en annoteren proces 80% sneller",
   "avantagesFerracad_2_title": "Minder fouten",
@@ -902,17 +853,14 @@
   "avantagesFerracad_3_description": "Automatische koppeling tussen tekening en Excel-nomenclatuur",
   "avantagesFerracad_4_title": "Professionele kwaliteit",
   "avantagesFerracad_4_description": "Productie van professionele plannen voor wapening en constructie",
-
   "policy_page": "<div class='max-w-4xl mx-auto px-5 py-10 text-gray-800'> <h1 class='text-3xl font-bold mb-6 text-[#8B0000]'> Privacybeleid </h1> <p class='text-sm text-gray-500 mb-10'> Laatst bijgewerkt: 15-05-2025 </p> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>1. Inleiding</h2> <p class='leading-relaxed'> In het kader van haar activiteiten verzamelt en verwerkt de website <strong>Ferracad</strong> persoonsgegevens. Dit privacybeleid heeft als doel gebruikers te informeren over welke gegevens worden verzameld, hoe deze worden gebruikt en welke rechten u hebt. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>2. Verzamelde gegevens</h2> <p class='leading-relaxed mb-2'> De volgende gegevens kunnen worden verzameld tijdens uw gebruik van de site: </p> <ul class='list-disc ml-6 space-y-1'> <li>Voornaam, achternaam</li> <li>E-mailadres</li> <li>Telefoonnummer</li> <li>Informatie in verband met een reservatie of contactaanvraag</li> <li>Browsegegevens (cookies, IP-adres)</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>3. Doeleinden van verwerking</h2> <p class='leading-relaxed mb-2'>Deze gegevens worden verzameld voor:</p> <ul class='list-disc ml-6 space-y-1'> <li>Het beantwoorden van uw contact- of reservatieaanvragen</li> <li>Het beheren en verbeteren van onze website</li> <li>U communicatie te sturen indien u hiermee hebt ingestemd</li> <li>Te voldoen aan onze wettelijke verplichtingen</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>4. Wettelijke grondslag van verwerking</h2> <ul class='list-disc ml-6 space-y-1'> <li>Uw toestemming (formulieren, nieuwsbrief)</li> <li>De uitvoering van een overeenkomst (reservaties)</li> <li>Onze wettelijke verplichtingen</li> <li>Ons gerechtvaardigd belang (verbetering van de site)</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>5. Bewaartermijnen</h2> <ul class='list-disc ml-6 space-y-1'> <li>Contactgegevens: 3 jaar na het laatste contact</li> <li>Reservatiegegevens: 5 jaar (wettelijke bewaartermijn)</li> <li>Cookies: maximaal 13 maanden</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>6. Ontvangers van de gegevens</h2> <p class='leading-relaxed'> De gegevens zijn uitsluitend bestemd voor <strong>Ferracad</strong> en worden nooit verkocht. Ze kunnen worden gedeeld met technische dienstverleners (hosting, formuliertools) onder een vertrouwelijkheidsovereenkomst. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>7. Uw rechten</h2> <p class='leading-relaxed mb-2'> In overeenstemming met de GDPR hebt u de volgende rechten: </p> <ul class='list-disc ml-6 space-y-1'> <li>Recht op toegang</li> <li>Recht op rectificatie</li> <li>Recht op bezwaar</li> <li>Recht op verwijdering</li> <li>Recht op beperking van verwerking</li> <li>Recht op overdraagbaarheid van gegevens</li> </ul> <p class='leading-relaxed mt-2'> U kunt deze rechten uitoefenen door contact met ons op te nemen via: <a href='mailto:support@ferracad.com' class='text-[#8B0000] font-medium underline' > support@ferracad.com </a> . </p> <p class='leading-relaxed mt-2'> U hebt ook het recht om een klacht in te dienen bij de Gegevensbeschermingsautoriteit (GBA). </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>8. Cookies</h2> <p class='leading-relaxed'> Tijdens het surfen kunnen er cookies op uw apparaat worden geplaatst. U kunt op elk moment uw cookievoorkeuren aanpassen via de voorziene cookiebanner. </p> </section></div>",
   "LegalMentions_page": "<div class='max-w-4xl mx-auto px-5 py-10 text-gray-800'> <h1 class='text-3xl font-bold mb-6 text-[#8B0000]'> Juridische vermeldingen </h1> <section class='mb-6'> <h2 class='text-xl mb-2'>Informatie over de uitgever</h2> <p class='leading-relaxed mb-2'> De uitgever van de websites ferracad.be en ferracad.com is het bedrijf BME. </p> <p class='leading-relaxed'> Het hoofdkantoor is gevestigd op 127-129 rue Colonel Bourg in  Brussel (1140 - België). </p> </section></div>",
   "cgv_page": " <div class='max-w-4xl mx-auto py-6 rounded-md'> <h1 class='text-3xl font-bold mb-6'>Algemene Huurvoorwaarden van Ferracad</h1> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>1. Doel</h2> <p> Deze Algemene Huurvoorwaarden (hierna 'AHV') hebben tot doel de rechten en plichten van gebruikers en het Ferracad-platform vast te leggen in het kader van de online huur van de Ferracad software-extensie, bedoeld voor CAD-software. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>2. Definities</h2> <p><strong>Ferracad Platform:</strong> de website of applicatie Ferracad, die verhuur, download en licentiebeheer mogelijk maakt.</p> <p><strong>Ferracad (software):</strong> software-extensie ontwikkeld om te werken met CAD-software, tijdelijk beschikbaar gesteld via het platform.</p> <p><strong>Uitgever:</strong> BMe, de ontwikkelaar en eigenaar van de Ferracad software die te huur wordt aangeboden.</p> <p><strong>Gebruiker / Huurder:</strong> elke natuurlijke of rechtspersoon die een account heeft aangemaakt op het platform en zich heeft geabonneerd op de huur van de Ferracad software.</p> <p><strong>Licentie:</strong> tijdelijk, persoonlijk, niet-exclusief en niet-overdraagbaar recht om Ferracad te gebruiken.</p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>3. Toegang tot de dienst</h2> <ul class='list-disc list-inside space-y-1'> <li>Huur en gebruik van Ferracad vereisen het aanmaken van een gebruikersaccount op het Ferracad-platform.</li> <li>De gebruiker moet beschikken over een legale en compatibele versie van CAD-software.</li> <li>Toegang tot Ferracad-software is afhankelijk van voorafgaande betaling van de huurperiode en validatie van de licentie op het gebruikersaccount.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>4. Huurvoorwaarden</h2> <ul class='list-disc list-inside space-y-1'> <li>De huur wordt afgesloten voor een minimale duur van 7 dagen, gespecificeerd bij de bestelling.</li> <li>De licentie wordt automatisch geactiveerd na bevestiging van betaling en blijft geldig tot het einde van de geabonneerde periode.</li> <li>Na afloop van de periode wordt de toegang tot de software automatisch geschorst, tenzij verlengd door de gebruiker.</li> <li>Na activatie is geen terugbetaling mogelijk, behalve bij technische problemen toe te rekenen aan het platform of de uitgever.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>5. Gebruik van Ferracad</h2> <ul class='list-disc list-inside space-y-1'> <li>De gebruiker verbindt zich ertoe Ferracad te gebruiken volgens de bestemming, in overeenstemming met de geldende wetgeving en intellectuele eigendomsrechten.</li> <li>Het kopiëren, verspreiden, doorverkopen, onderverhuren, decompileren of aanpassen van de software is strikt verboden.</li> <li>Ferracad mag niet gebruikt worden in een illegale omgeving of om CAD-licenties te omzeilen.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>6. Prijzen en betaling</h2> <ul class='list-disc list-inside space-y-1'> <li>De huurprijzen staan online vermeld op het platform en kunnen variëren naargelang duur, versie en gekozen opties.</li> <li>Betalingen gebeuren via beveiligde methoden aangeboden op het platform (creditcard, overschrijving, e-wallet, enz.).</li> <li>De factuur is beschikbaar in de gebruikersruimte na bevestiging van de bestelling.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>7. Ondersteuning en updates</h2> <ul class='list-disc list-inside space-y-1'> <li>Het Ferracad-platform biedt basis technische ondersteuning via e-mail of contactformulier tijdens de huurperiode.</li> <li>Correctieve updates kunnen automatisch worden geleverd.</li> <li>Grote updates kunnen een nieuw abonnement of een aparte licentie vereisen.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>8. Aansprakelijkheid</h2> <ul class='list-disc list-inside space-y-1'> <li>De gebruiker is zelf verantwoordelijk voor compatibiliteit van hardware, CAD-software versie en beveiliging van bestanden.</li> <li>Het platform en de uitgever kunnen niet aansprakelijk worden gesteld voor gegevensverlies, indirecte schade of onderbrekingen in de dienstverlening door het gebruik van Ferracad.</li> <li>Bij bewezen storing toe te schrijven aan Ferracad, is de aansprakelijkheid van het platform beperkt tot het bedrag van de betrokken huurperiode.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>9. Intellectuele eigendom</h2> <p> De Ferracad-software blijft exclusief eigendom van de uitgever. Huur geeft geen eigendomsoverdracht. De gebruiker erkent dat alle rechten verbonden aan Ferracad (broncode, interface, documentatie, logo, enz.) beschermd zijn door auteursrecht en internationale verdragen. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>10. Persoonsgegevens en vertrouwelijkheid</h2> <p> Gegevens verzameld via het platform worden enkel gebruikt voor het beheer van het gebruikersaccount, de licentie en facturatie. Ferracad verbindt zich tot naleving van de Europese AVG-regelgeving en de Belgische wetgeving betreffende gegevensbescherming, en garandeert de veiligheid en vertrouwelijkheid van gebruikersinformatie. Gegevens worden nooit aan derden overgedragen zonder voorafgaande toestemming. De gebruiker beschikt over rechten tot toegang, correctie, verwijdering, beperking, overdraagbaarheid en bezwaar conform AVG en toepasselijke Belgische wetten. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>11. Beëindiging en opschorting</h2> <ul class='list-disc list-inside space-y-1'> <li>Bij niet-naleving van deze AHV (met name illegaal gebruik, omzeiling van licentie, niet-betaling) behoudt het platform zich het recht voor de licentie onmiddellijk te schorsen of te beëindigen zonder terugbetaling.</li> <li>De gebruiker kan te allen tijde de verwijdering van zijn account aanvragen via zijn persoonlijke ruimte of via direct contact.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>12. Toepasselijk recht en bevoegde rechtbank</h2> <p> Deze voorwaarden worden beheerst door het Belgische recht en, indien van toepassing, door Europese regelgeving. Elk geschil betreffende de interpretatie of uitvoering valt onder de bevoegde rechtbanken van de vestigingsplaats van Ferracad in België. </p> </section> <section> <h2 class='text-xl font-semibold mb-2'>13. Aanvaarding</h2> <p> Door het bevestigen van de bestelling op het Ferracad-platform erkent de gebruiker deze Algemene Huurvoorwaarden van Ferracad zonder voorbehoud te hebben gelezen en aanvaard. </p> </section> </div>",
-
   "active_account_title": "Verifieer je e-mailadres",
   "active_account_sub": "We hebben een verificatielink gestuurd naar",
   "active_account_description": "Controleer je inbox (en spammap) en klik op de link om je account te activeren. De link verloopt binnen 24 uur.",
   "active_account_resend": "E-mail opnieuw verzenden",
   "active_account_login": "Ga naar inloggen",
-
   "free_trial_success": "De code is succesvol gegenereerd.",
   "free_trial_title": "Uw activatiecode",
   "free_trial_description": "Hier is uw unieke activatiecode. U kunt deze kopiëren door op de knop hieronder te klikken.",
@@ -928,7 +876,6 @@
   "free_trial_form_incomplete": "Formulier incompleet",
   "free_trial_form_incomplete_description": "Vul alle verplichte velden in voordat u verzendt.",
   "free_trial_both": "Beide",
-
   "formation_titre": "Ferracad Opleidingscentrum",
   "formation_description": "Beheers Ferracad met onze volledige videotutorials.",
   "formation_cours_1_title": "Hoe Ferracad starten?",
@@ -948,12 +895,10 @@
   "tutoriels_title": "Handleidingen",
   "tutoriels_description": "Beschrijving",
   "en_cours_de_lecture": "Bezig met afspelen",
-
   "how_it_works_zwcad": "Hoe werkt het in ZWCAD?",
   "how_it_works_autocad": "Hoe werkt het in AutoCAD?",
   "presentation_ferracad_zwcad": "Presentatie van Ferracad voor ZWCAD",
   "new_ferracad_zwcad": "De nieuwe Ferracad voor ZWCAD",
-
   "ALMOST_DONE": "Bijna klaar!",
   "DOWNLOAD": "Downloaden",
   "LAST_STEP": "Nog één stap voordat u toegang krijgt tot uw bestand",
@@ -962,6 +907,5 @@
   "ACCESS_UPDATES": "Toegang tot gratis updates",
   "PRIORITY_SUPPORT": "Prioritaire technische ondersteuning",
   "EXCLUSIVE_CONTENT": "Exclusieve inhoud en tutorials",
-
   "error_generic": "Er is een fout opgetreden, probeer het opnieuw."
 }
