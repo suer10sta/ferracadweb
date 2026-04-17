@@ -405,7 +405,7 @@
   "dashboardAdmin_users_save": "Opslaan",
   "dashboardAdmin_users_userList": "Gebruikerslijst",
   "dashboardAdmin_users_searchManage": "Zoek en beheer alle gebruikersaccounts",
-  "dashboardAdmin_users_searchPlaceholder": "Zoeken op naam, e-mail of bedrijf...",
+  "dashboardAdmin_users_searchPlaceholder": "Zoeken op naam, e-mail, bedrijf, computer code of autorisatiecode...",
   "dashboardAdmin_users_user": "Gebruiker",
   "dashboardAdmin_users_contact": "Contact",
   "dashboardAdmin_users_role": "Rol",

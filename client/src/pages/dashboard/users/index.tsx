@@ -153,6 +153,8 @@ const Users: React.FC = () => {
   const [licenseStatusFilter, setLicenseStatusFilter] = useState("all");
   const [accountStatusFilter, setAccountStatusFilter] = useState("all");
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [activityFilter, setActivityFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
@@ -398,7 +400,9 @@ const Users: React.FC = () => {
       const matchesSearchTerm =
         user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.company?.toLowerCase().includes(searchTerm.toLowerCase());
+        user.company?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.currentRegistration?.computerCode?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.currentRegistration?.authCode?.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Company filter
       const matchesCompany = companySelected
@@ -458,7 +462,23 @@ const Users: React.FC = () => {
         if (!sourceMatch) return false;
       }
 
-      // User filter (active / inactive / role)
+      // Role filter
+      if (roleFilter !== "all" && user.role !== roleFilter) return false;
+
+      // Activity filter
+      if (activityFilter !== "all") {
+        const lastLogin = user.lastLogin ? new Date(user.lastLogin) : null;
+        if (!lastLogin) return false;
+
+        const now = new Date();
+        const diffInDays = (now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24);
+
+        if (activityFilter === "today" && diffInDays > 1) return false;
+        if (activityFilter === "week" && diffInDays > 7) return false;
+        if (activityFilter === "inactive" && diffInDays < 30) return false;
+      }
+
+      // Legacy User filter (active / inactive / role) - Keep for URL compatibility but check state first
       if (filterUser && filterUser !== "all") {
         if (filterUser === "active" && user.status !== "active") return false;
         if (filterUser === "inactive" && user.status !== "inactive")
@@ -488,7 +508,7 @@ const Users: React.FC = () => {
   // reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, typeSelected, companySelected, date, licenseStatusFilter, accountStatusFilter, sourceFilter, platform, filterUser]);
+  }, [searchTerm, typeSelected, companySelected, date, licenseStatusFilter, accountStatusFilter, sourceFilter, platform, filterUser, roleFilter, activityFilter]);
 
   const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
   const paginatedUsers = filteredUsers.slice(
@@ -1046,6 +1066,35 @@ const Users: React.FC = () => {
                     </Select>
                   </div>
 
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">👤 Rôle utilisateur</Label>
+                    <Select value={roleFilter} onValueChange={setRoleFilter}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choisir un rôle" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Tous les rôles</SelectItem>
+                        <SelectItem value="admin">Administrateur</SelectItem>
+                        <SelectItem value="client">Client</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">🔥 Activité utilisateur</Label>
+                    <Select value={activityFilter} onValueChange={setActivityFilter}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Choisir une activité" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toute l'activité</SelectItem>
+                        <SelectItem value="today">Connecté aujourd'hui</SelectItem>
+                        <SelectItem value="week">Connecté cette semaine</SelectItem>
+                        <SelectItem value="inactive">Inactif depuis 30 jours</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <div className="pt-2 flex justify-between">
                     <Button
                       variant="ghost"
@@ -1055,6 +1104,8 @@ const Users: React.FC = () => {
                         setLicenseStatusFilter("all");
                         setAccountStatusFilter("all");
                         setSourceFilter("all");
+                        setRoleFilter("all");
+                        setActivityFilter("all");
                       }}
                     >
                       Réinitialiser

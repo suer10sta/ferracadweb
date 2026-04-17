@@ -439,7 +439,7 @@
   "dashboardAdmin_users_save": "Enregistrer",
   "dashboardAdmin_users_userList": "Liste des utilisateurs",
   "dashboardAdmin_users_searchManage": "Rechercher et gérer tous les comptes utilisateurs",
-  "dashboardAdmin_users_searchPlaceholder": "Rechercher par nom, email ou entreprise...",
+  "dashboardAdmin_users_searchPlaceholder": "Rechercher par nom, email, entreprise, code d'ordinateur ou code d'autorisation...",
   "dashboardAdmin_users_user": "Utilisateur",
   "dashboardAdmin_users_contact": "Contact",
   "dashboardAdmin_users_role": "Rôle",

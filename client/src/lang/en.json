@@ -406,7 +406,7 @@
   "dashboardAdmin_users_save": "Save",
   "dashboardAdmin_users_userList": "User list",
   "dashboardAdmin_users_searchManage": "Search and manage all user accounts",
-  "dashboardAdmin_users_searchPlaceholder": "Search by name, email or company...",
+  "dashboardAdmin_users_searchPlaceholder": "Search by name, email, company, computer code or authorization code...",
   "dashboardAdmin_users_user": "User",
   "dashboardAdmin_users_contact": "Contact",
   "dashboardAdmin_users_role": "Role",
