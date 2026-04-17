@@ -34,13 +34,13 @@ const SideBar = ({ setActiveSidebar, activeSidebar }: any) => {
       icon: TbLicense,
       title: t("sidebarOrders"),
       path: "/tableau-de-board/commande",
-      role: "client"
+      role: "only_client"
     },
     {
       icon: FiTarget,
       title: t("sidebarLocations"),
       path: "/tableau-de-board/locations",
-      role: "client"
+      role: "only_client"
     },
     {
       icon: BsCurrencyDollar,
@@ -119,8 +119,8 @@ const SideBar = ({ setActiveSidebar, activeSidebar }: any) => {
             <ul className='flex flex-col gap-2'>
               {
                 menuDashboard.map((m, i) => {
-                  const isAdmin = userIdn.role === "admin" && m.role !== "justclient";
-                  const isAllowed = userIdn.role === m.role || m.role === "justclient";
+                  const isAdmin = userIdn.role === "admin" && m.role !== "justclient" && m.role !== "only_client";
+                  const isAllowed = userIdn.role === m.role || m.role === "justclient" || (userIdn.role === "client" && m.role === "only_client");
 
                   if (isAdmin || isAllowed) {
                     return (
