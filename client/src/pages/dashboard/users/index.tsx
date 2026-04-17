@@ -335,18 +335,32 @@ const Users: React.FC = () => {
   // Aplatissement des données : une ligne par licence
   const flattenedUsers = rawEnrichedUsers?.flatMap((user: any) => {
     if (user.registration.length === 0) {
-      return [{ ...user, currentRegistration: null }];
+      return [{ ...user, currentRegistration: null, daysUntilExpiration: null }];
     }
-    return user.registration.map((reg: any) => ({
-      ...user,
-      currentRegistration: reg,
-      // On surcharge l'état de la licence pour cette ligne spécifique
-      licenseStatus: (reg.status?.toLowerCase() === "active" && (!reg.expirationDate || new Date(reg.expirationDate) > new Date()))
-        ? "active"
-        : (reg.status?.toLowerCase() === "freetrial" || reg.status?.toLowerCase() === "période d'essai")
-          ? "trial"
-          : "expired"
-    }));
+    return user.registration.map((reg: any) => {
+      const expirationDate = new Date(reg.expirationDate);
+      const now = new Date();
+      const daysUntilExpiration = reg.expirationDate
+        ? Math.ceil(
+          (expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        )
+        : null;
+
+      return {
+        ...user,
+        currentRegistration: reg,
+        daysUntilExpiration,
+        // On surcharge l'état de la licence pour cette ligne spécifique
+        licenseStatus:
+          reg.status?.toLowerCase() === "active" &&
+          (!reg.expirationDate || new Date(reg.expirationDate) > new Date())
+            ? "active"
+            : reg.status?.toLowerCase() === "freetrial" ||
+              reg.status?.toLowerCase() === "période d'essai"
+            ? "trial"
+            : "expired",
+      };
+    });
   });
 
   // filter users
@@ -1151,6 +1165,7 @@ const Users: React.FC = () => {
                   <TableHead>Status Compte</TableHead>
                   <TableHead>Type Licence</TableHead>
                   <TableHead>Expiration</TableHead>
+                  <TableHead>Jours</TableHead>
                   <TableHead>Création / Connexion</TableHead>
                   <TableHead>{t("dashboardAdmin_users_actions")}</TableHead>
                 </TableRow>
@@ -1251,6 +1266,26 @@ const Users: React.FC = () => {
                       {user.currentRegistration?.expirationDate
                         ? formatDate(user.currentRegistration.expirationDate)
                         : "-"}
+                    </TableCell>
+                    <TableCell>
+                      {user.daysUntilExpiration !== null ? (
+                        <span
+                          className={cn(
+                            "text-[10px] font-bold px-2 py-0.5 rounded-full w-fit",
+                            user.daysUntilExpiration <= 0
+                              ? "bg-red-100 text-red-700"
+                              : user.daysUntilExpiration <= 7
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-emerald-100 text-emerald-700"
+                          )}
+                        >
+                          {user.daysUntilExpiration > 0
+                            ? `${user.daysUntilExpiration} j`
+                            : `${user.daysUntilExpiration} j`}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
