@@ -34,7 +34,7 @@ import Loading from '../elements/Loading';
 import { useLanguage } from '@/lang/LanguageProvider';
 import { FaRegClock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Info, HelpCircle } from 'lucide-react';
 import { TbReload } from 'react-icons/tb';
 
 function calculateTotalDays(histories: LicenseHistory[]): number {
@@ -53,7 +53,7 @@ function calculateTotalDays(histories: LicenseHistory[]): number {
   return totalDays;
 }
 
-const LicensesClient = ({ userIdn } : any) => {
+const LicensesClient = ({ userIdn, statusFilter } : any) => {
   const { t } = useLanguage()
   const [rentalData, setRentalData] = useState<Rental[]>([]);
   const [registrationData, setregistrationData] = useState<any[]>([]);
@@ -126,23 +126,35 @@ const LicensesClient = ({ userIdn } : any) => {
     const isExpired = expirationDate !== 0? expirationDate < now: false;
     const daysUntilExpiration = expirationDate !== 0? Math.ceil((expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)): 0;
     
+    const isTrial = license.status === "freetrial";
+    const status = isExpired 
+      ? 'expired' 
+      : (isTrial 
+          ? "Période d'essai" 
+          : (daysUntilExpiration <= 30 ? 'expiring' : 'active'));
+    
     return {
       ...license,
       userData,
       isExpired,
       licenseHistories,
       daysUntilExpiration,
-      status: license.status === "freetrial"? "Période d'essai" : isExpired ? 'expired' : (daysUntilExpiration <= 30 ? 'expiring' : 'active')
+      status
     };
   });
 
-  const filteredLicenses = enrichedLicenses.filter(license =>
-    license.computerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    license.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    license.computerCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    license.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    license.company.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredLicenses = enrichedLicenses.filter(license => {
+    const matchesSearch = 
+      license.computerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      license.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      license.computerCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      license.company.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus = !statusFilter || statusFilter === "all" || 
+      (statusFilter === "active" ? (license.status === "active" || license.status === "expiring") : license.status === statusFilter);
+
+    return matchesSearch && matchesStatus;
+  });
 
   const getStatusBadge = (license: typeof enrichedLicenses[0]) => {
     if (license.status.toLocaleLowerCase() === "période d'essai") {
@@ -254,14 +266,32 @@ const LicensesClient = ({ userIdn } : any) => {
 
   return (
     <div className="space-y-6 mb-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">{t('dashboard_rent_licensesRental')}</h2>
-          <p className="text-sm text-black/40">
-            {t('dashboard_rent_manageLicenses')}
-          </p>
+      {/* Renewal Guide */}
+      <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 flex gap-4 items-start shadow-sm transition-all hover:shadow-md">
+        <div className="bg-blue-100 p-2 rounded-xl text-blue-600">
+          <HelpCircle className="h-5 w-5" />
         </div>
+        <div className="space-y-2">
+          <h3 className="text-sm font-bold text-blue-900">Besoin de renouveler vos licences ?</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex gap-2 items-center text-xs text-blue-800/80">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-200 text-[10px] font-bold">1</span>
+              <span><strong>Individuel :</strong> Cliquez sur <TbReload className="inline h-3 w-3" /> au bout de la ligne d'un PC.</span>
+            </div>
+            <div className="flex gap-2 items-center text-xs text-blue-800/80">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-200 text-[10px] font-bold">2</span>
+              <span><strong>Groupé :</strong> Cochez plusieurs PC et cliquez sur "Renouveler la sélection".</span>
+            </div>
+            <div className="flex gap-2 items-center text-xs text-blue-800/80">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-200 text-[10px] font-bold">3</span>
+              <span><strong>Nouveau :</strong> Cliquez sur "Nouvelle licence" pour ajouter ou renouveler des postes.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-4">
         <div className="flex gap-2">
           {selectedLicenses.length > 0 && (
             <Button 
@@ -320,7 +350,9 @@ const LicensesClient = ({ userIdn } : any) => {
                     />
                   </TableHead>
                   <TableHead>{t('dashboardClient_orders_user')}</TableHead>
-                  <TableHead>{t('dashboardClient_orders_computer_name')}</TableHead>
+                  <TableHead>Nom Ordinateur</TableHead>
+                  <TableHead>Code d'identification</TableHead>
+                  <TableHead>Date de création</TableHead>
                   <TableHead>{t('dashboardClient_orders_expiration_date')}</TableHead>
                   <TableHead>{t('dashboardClient_orders_status')}</TableHead>
                   <TableHead>{t('dashboardClient_orders_days_left')}</TableHead>
@@ -347,8 +379,18 @@ const LicensesClient = ({ userIdn } : any) => {
                     <TableCell>
                       <div>
                         <p className="font-medium text-sm">{license.computerName}</p>
-                        <p className="text-xs text-muted-foreground">{license.computerCode.slice(0, 10)}...</p>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <code className="text-[10px] bg-slate-100 p-1 rounded font-mono">{license.computerCode}</code>
+                        <button onClick={()=> copyToClipboard(license.computerCode)} className="cursor-pointer text-slate-400 hover:text-slate-600">
+                          <IoCopyOutline size={12} />
+                        </button>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {formatDate(license.createdAt)}
                     </TableCell>
                     <TableCell>
                       {formatDate(license.expirationDate)}

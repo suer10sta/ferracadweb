@@ -326,7 +326,7 @@
   "recover_toastMismatch": "Les mots de passe ne correspondent pas.",
   "recover_toastShortPassword": "Votre mot de passe doit contenir au moins 8 caractères.",
 
-  "sidebarDashboard": "Tableau de bord",
+  "sidebarDashboard": "Gestion des Licences",
   "sidebarUsers": "Utilisateurs",
   "sidebarOrders": "Commandes",
   "sidebarLocations": "Locations",

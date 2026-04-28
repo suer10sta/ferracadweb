@@ -298,7 +298,7 @@
   "recover_toastEmptyFields": "Please enter and confirm your password.",
   "recover_toastMismatch": "Passwords do not match.",
   "recover_toastShortPassword": "Your password must contain at least 8 characters.",
-  "sidebarDashboard": "Dashboard",
+  "sidebarDashboard": "License Management",
   "sidebarUsers": "Users",
   "sidebarOrders": "Orders",
   "sidebarLocations": "Rentals",

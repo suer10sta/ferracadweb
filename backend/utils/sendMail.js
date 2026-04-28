@@ -1546,7 +1546,7 @@ const sendEmail = async ({
     await transporter.sendMail({
       from: `"Ferracad Support " <${process.env.SMTP_USER}>`,
       to: email,
-      cc: (email !== adminSupport && !disableCc) ? adminSupport : undefined,
+      // cc: (email !== adminSupport && !disableCc) ? adminSupport : undefined,
       subject,
       html,
       attachments: data.path

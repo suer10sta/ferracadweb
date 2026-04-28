@@ -22,69 +22,93 @@ import { IoGiftSharp } from 'react-icons/io5';
 import Loading from '../elements/Loading';
 import { useLanguage } from '@/lang/LanguageProvider';
 import LicensesClient from '../client/Rent';
+import { FaRegClock } from 'react-icons/fa';
 
 const DashboardClient = () => {
   const { t } = useLanguage();
   const user: any = enrichedUser();
-  const [cardsAnalytics, setcardsAnalytics] = useState<any []>([]);
+  const [cardsAnalytics, setcardsAnalytics] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
 
-  useEffect(()=> {
-    if(loading) return;
+  useEffect(() => {
+    if (loading) return;
 
-    if(user._id) {
+    if (user._id) {
       setLoading(true)
     }
+
+    const now = new Date();
+    const getStatus = (reg: any) => {
+      const expDate = reg.expirationDate ? new Date(reg.expirationDate) : null;
+      const isExpired = expDate ? expDate < now : false;
+      const daysUntil = expDate ? Math.ceil((expDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+      
+      if (isExpired) return "expired";
+      if (reg.status === "freetrial") return "freetrial";
+      if (daysUntil <= 30) return "active"; // expiring is counted as active for the card
+      return "active";
+    };
 
     setcardsAnalytics([
       {
         title: t("dashboardClient_activeLicenses"),
-        value: user.registrationData?.filter((e: { status: string; })=> e?.status.toLowerCase() === 'active' || e?.status.toLowerCase() === 'freetrial').length || 0,
+        value: user.registrationData?.filter((e: any) => getStatus(e) === "active").length || 0,
         icon: MdKey,
         isGrowth: false,
         isCurrency: false,
         isPercent: false,
-        isDark: true,
+        isDark: statusFilter === "active" || statusFilter === "all",
+        iconBg: statusFilter === "active" ? "bg-green-600" : "bg-slate-800",
+        onClick: () => setStatusFilter(statusFilter === "active" ? "all" : "active"),
         parag: t("dashboardClient_totalActiveLicenses")
       },
       {
         title: t("dashboardClient_expiredLicenses"),
-        value: user.registrationData?.filter((e: { status: string; })=> e?.status.toLowerCase() === 'expired').length || 0,
+        value: user.registrationData?.filter((e: any) => getStatus(e) === "expired").length || 0,
         icon: MdVpnKeyOff,
         isCurrency: false,
         isPercent: false,
+        isDark: statusFilter === "expired",
+        iconBg: statusFilter === "expired" ? "bg-red-600" : "bg-slate-800",
+        onClick: () => setStatusFilter(statusFilter === "expired" ? "all" : "expired"),
         parag: t("dashboardClient_nextRecurringPayment")
       },
       {
-        title: t("dashboardClient_totalLicenses"),
+        title: "Périodes d'essai",
+        value: user.registrationData?.filter((e: any) => getStatus(e) === "freetrial").length || 0,
+        icon: FaRegClock,
+        isCurrency: false,
+        isPercent: false,
+        isDark: statusFilter === "Période d'essai",
+        iconBg: statusFilter === "Période d'essai" ? "bg-blue-600" : "bg-slate-800",
+        onClick: () => setStatusFilter(statusFilter === "Période d'essai" ? "all" : "Période d'essai"),
+        parag: "Licences en test gratuit"
+      },
+      {
+        title: "Toutes mes licences",
         value: user.registrationData?.length || 0,
         icon: TbLicense,
         isCurrency: false,
         isPercent: false,
-        isDark: true,
+        isDark: statusFilter === "all",
+        iconBg: statusFilter === "all" ? "bg-stone-600" : "bg-slate-800",
+        onClick: () => setStatusFilter("all"),
         parag: t("dashboardClient_currentPlan")
-      },
-      {
-        title: t("dashboardClient_autoPayment"),
-        value: user.rentalData?.filter((e: { deductionAuto: boolean; })=> e?.deductionAuto === true).length || 0,
-        icon: PiContactlessPaymentBold,
-        isCurrency: false,
-        isPercent: false,
-        parag: t("dashboardClient_autoRenewLicenses")
       }
     ])
-  }, [user, loading, t]);
+  }, [user, loading, t, statusFilter]);
 
   const lastPayments = user.paymentData;
-  const totalAmount = lastPayments?.reduce((curr: any, arr: { totalPricePay: any; })=> curr + arr.totalPricePay, 0).toFixed(2) || 0;
+  const totalAmount = lastPayments?.reduce((curr: any, arr: { totalPricePay: any; }) => curr + arr.totalPricePay, 0).toFixed(2) || 0;
 
-  const handleGetFreeTrial = ()=> {
-    if(user.rentalData.length > 0) return;
+  const handleGetFreeTrial = () => {
+    if (user.rentalData.length > 0) return;
     navigate("/tableau-de-board/commande/paiement", { state: { freeTrial: true } });
   }
 
-  if(!user._id) {
+  if (!user._id) {
     return <Loading />
   }
 
@@ -105,29 +129,25 @@ const DashboardClient = () => {
       }
       <div className='grid grid-cols-4 max-lg:grid-cols-2 max-md:grid-cols-1 gap-5'>
         {
-          cardsAnalytics.map((analytic, index)=> (
-            <Card 
-              key={index} 
-              analytic={analytic} 
+          cardsAnalytics.map((analytic, index) => (
+            <Card
+              key={index}
+              analytic={analytic}
             />
           ))
         }
       </div>
       <div className='grid grid-cols-1 gap-5'>
         <div className='bg-white p-7 rounded-2xl transition-all duration-200 hover:shadow-lg'>
-          <div className='flex justify-between items-start'>
-            <div>
-              <h4 className='font-bold text-sm'>{t("dashboard_rent_licensesRental")}</h4>
-              <p className='font-medium text-xs text-black/40 w-8/12'>{t("dashboard_rent_manageLicenses")}</p>
-            </div>
+          {/* <div className='flex justify-end items-start'>
             <div className='flex items-center gap-4'>
               <Link to="/tableau-de-board/paiements">
                 <FiExternalLink />
               </Link>
             </div>
-          </div>
+          </div> */}
           <div className="mt-6">
-            <LicensesClient userIdn={{ id: user._id }} />
+            <LicensesClient userIdn={{ id: user._id }} statusFilter={statusFilter} />
           </div>
         </div>
       </div>
