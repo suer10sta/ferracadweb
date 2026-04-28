@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { HiExternalLink } from "react-icons/hi";
 import { IoGift } from "react-icons/io5";
 import { MdInfo } from "react-icons/md";
@@ -38,7 +38,9 @@ import {
   FaCcDiscover,
   FaCreditCard,
   FaCalendarAlt,
-  FaCcDinersClub
+  FaCcDinersClub,
+  FaDesktop,
+  FaCheck
 } from 'react-icons/fa';
 import {
   Select,
@@ -117,7 +119,7 @@ const NewLicence = () => {
           tva: valueTva
         }));
 
-        setregistrationData(getRegistrations.filter((e: { rentalId: any; }) => !e.rentalId) || []);
+        setregistrationData(getRegistrations || []);
 
         setuserData(getUser);
         setSettings(getSettings);
@@ -130,6 +132,48 @@ const NewLicence = () => {
 
     getData();
   }, [loading]);
+
+  useEffect(() => {
+    if (selectedRegistrations.length === 0) {
+      // Reset to default (today + 1) if no registration is selected
+      if (!licenses) {
+        const dateToday = new Date();
+        dateToday.setDate(dateToday.getDate() + 1);
+        const formattedDate = dateToday.toISOString().split("T")[0];
+        setMinDate(formattedDate);
+      }
+      return;
+    }
+
+    // Find the furthest expiration date among selected registrations
+    let maxExp = new Date();
+    selectedRegistrations.forEach((id) => {
+      const reg = registrationData.find((r) => r._id === id);
+      if (reg && reg.expirationDate) {
+        const d = new Date(reg.expirationDate);
+        if (d > maxExp) maxExp = d;
+      }
+    });
+
+    // The new minimum date must be at least the day after the latest existing expiration
+    const newMin = new Date(maxExp);
+    newMin.setDate(newMin.getDate() + 1);
+    const formattedMin = newMin.toISOString().split("T")[0];
+
+    setMinDate(formattedMin);
+    
+    // Update the 'today' reference so that daysUntilExpiration only counts the NEW days
+    setToday(maxExp);
+
+    // If the currently chosen expiration date is before this new minimum, auto-update it
+    if (formData.expirationDate < formattedMin) {
+      setFormData((prev: any) => ({
+        ...prev,
+        expirationDate: formattedMin,
+      }));
+      setValidateDateExp(false);
+    }
+  }, [selectedRegistrations, registrationData]);
 
   const userIdn = getUser();
 
@@ -159,18 +203,31 @@ const NewLicence = () => {
     if (!licenses) return;
 
     const expDate = new Date(licenses[0].expirationDate);
-    let formattedDate: React.SetStateAction<string>;
+    let formattedDate: string;
+    let formattedMinDate: string;
     const dateToday = new Date();
 
     if (expDate > dateToday) {
-      expDate.setDate(expDate.getDate() + 1);
+      // Minimum is still +1 day
+      const minDate = new Date(expDate);
+      minDate.setDate(minDate.getDate() + 1);
+      formattedMinDate = minDate.toISOString().split("T")[0];
+
+      // Default target is +30 days
+      expDate.setDate(expDate.getDate() + 30);
       formattedDate = expDate.toISOString().split("T")[0];
     } else {
-      dateToday.setDate(dateToday.getDate() + 1);
+      // Minimum is still +1 day
+      const minDate = new Date(dateToday);
+      minDate.setDate(minDate.getDate() + 1);
+      formattedMinDate = minDate.toISOString().split("T")[0];
+
+      // Default target is +30 days
+      dateToday.setDate(dateToday.getDate() + 30);
       formattedDate = dateToday.toISOString().split("T")[0];
     }
 
-    setMinDate(formattedDate);
+    setMinDate(formattedMinDate);
 
     const users: any[] = [];
     for (const license of licenses) {
@@ -274,7 +331,8 @@ const NewLicence = () => {
       try {
         const res = await apiClient.post("/rental/admin", {
           ...formData,
-          daysUntilExpiration: daysUntilExpiration
+          users: formData.detailedUsers,
+          daysUntilExpiration: formData.daysUntilExpiration
         });
 
         if (res.status === 201) {
@@ -330,7 +388,8 @@ const NewLicence = () => {
       // Create Payment Intent
       const createIntentResponse = await apiClient.post("/rental/create-payment-intent", {
         ...formData,
-        daysUntilExpiration: daysUntilExpiration,
+        users: formData.detailedUsers,
+        daysUntilExpiration: formData.daysUntilExpiration,
         paymentMethodId: paymentMethod.id,
       });
 
@@ -488,15 +547,50 @@ const NewLicence = () => {
   };
 
 
+  const pricePerDay = freeTrial ? 0 : (userData.basedPrice || 5);
 
-  const [pricePerDay, setPricePerDay] = useState(5)
+  const minExpirationDate = useMemo(() => {
+    if (selectedRegistrations.length === 0) {
+      const today = new Date();
+      today.setDate(today.getDate() + 1);
+      return today.toISOString().split("T")[0];
+    }
+
+    const dates = selectedRegistrations.map((id) => {
+      const reg = registrationData.find((r) => r._id === id);
+      return reg ? new Date(reg.expirationDate) : new Date();
+    });
+
+    const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
+    maxDate.setDate(maxDate.getDate() + 1);
+    return maxDate.toISOString().split("T")[0];
+  }, [selectedRegistrations, registrationData]);
+
   useEffect(() => {
-    // const priceUser = formData.userId ? usersData.find((e: any) => e._id === formData.userId)?.basedPrice : 5
-    setPricePerDay(
-      freeTrial ? 0 : (userData.basedPrice || 5)
-    )
-  }, [formData.freeTrial, userData])
-  // const pricePerDay = freeTrial ? 0 : 5;
+    setValidateDateExp(formData.expirationDate >= minExpirationDate);
+  }, [formData.expirationDate, minExpirationDate]);
+
+  const calculateAddedDays = (reg: any) => {
+    if (!reg) return 0;
+    const targetExp = new Date(formData.expirationDate);
+    let currentExp = new Date();
+    
+    if (reg.expirationDate) {
+      const regExp = new Date(reg.expirationDate);
+      if (regExp > currentExp) currentExp = regExp;
+    }
+    const diffTime = targetExp.getTime() - currentExp.getTime();
+    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  };
+
+  const totalAdditionalDays = formData.users.reduce((acc: number, user: any) => {
+    const reg = registrationData.find(r => 
+      (user.id && r._id === user.id) || 
+      (user.identificationCode && r.computerCode === user.identificationCode)
+    );
+
+    return acc + calculateAddedDays(reg);
+  }, 0);
 
   const discountType: any = "percent";
   const discountValue =
@@ -505,7 +599,9 @@ const NewLicence = () => {
     formData.licenses > (SettingsData?.licenseThresholdForDiscount || 4)
       ? 0.1
       : 0;
-  const basedPrice = daysUntilExpiration * formData.licenses * pricePerDay;
+
+  // Price based on TOTAL CUMULATIVE DAYS
+  const basedPrice = totalAdditionalDays * pricePerDay;
 
   const totalHT =
     discountType === "percent"
@@ -517,12 +613,29 @@ const NewLicence = () => {
   let totalPayer = (totalHT * tva + totalHT).toFixed(2);
 
   useEffect(() => {
+    // Pre-calculate individual details for each user
+    const usersWithDetails = formData.users.map((user: any) => {
+      const reg = registrationData.find(r => 
+        (user.id && r._id === user.id) || 
+        (user.identificationCode && r.computerCode === user.identificationCode)
+      );
+
+      const diffDays = calculateAddedDays(reg);
+      
+      return {
+        ...user,
+        addedDays: diffDays,
+        priceHT: diffDays * pricePerDay
+      };
+    });
+
     setFormData((prev: any) => ({
       ...prev,
       totalPayer: totalPayer,
-      daysUntilExpiration,
+      daysUntilExpiration: totalAdditionalDays,
+      detailedUsers: usersWithDetails // We'll send this to the backend
     }));
-  }, [totalPayer, daysUntilExpiration]);
+  }, [totalPayer, totalAdditionalDays]);
 
   const navigate = useNavigate();
 
@@ -618,6 +731,7 @@ const NewLicence = () => {
       if (selectedReg) {
         users[index] = {
           ...users[index],
+          id: selectedReg._id,
           username: selectedReg.username || "",
           email: selectedReg.email || "",
           computerName: selectedReg.computerName || "",
@@ -633,6 +747,65 @@ const NewLicence = () => {
       updated[index] = regId;
       return updated;
     });
+  };
+
+  const handleBulkSelect = (reg: any) => {
+    const isSelected = selectedRegistrations.includes(reg._id);
+    
+    if (isSelected) {
+      // Remove license
+      const indexToRemove = selectedRegistrations.indexOf(reg._id);
+      if (indexToRemove !== -1) {
+        setFormData((prev: any) => {
+          const newUsers = [...prev.users];
+          newUsers.splice(indexToRemove, 1);
+          // Ensure at least one empty slot if all removed
+          if (newUsers.length === 0) {
+            newUsers.push({
+              username: "",
+              email: "",
+              computerName: "",
+              identificationCode: "",
+            });
+          }
+          return { ...prev, users: newUsers, licenses: newUsers.length };
+        });
+        setSelectedRegistrations(prev => prev.filter(id => id !== reg._id));
+      }
+    } else {
+      // Add license
+      setSelectedRegistrations(prev => [...prev, reg._id]);
+      
+      setFormData((prev: any) => {
+        const newUsers = prev.users.filter((u: any) => u.identificationCode !== "");
+        newUsers.push({
+          id: reg._id,
+          username: reg.username || "",
+          email: reg.email || "",
+          computerName: reg.computerName || "",
+          identificationCode: reg.computerCode || "",
+        });
+
+        // AUTO-ADJUST DATE: If the new computer expires after or near the current target date,
+        // move the target date to new computer expiry + 30 days
+        const regExp = new Date(reg.expirationDate);
+        const currentTarget = new Date(prev.expirationDate);
+        let newExpirationDate = prev.expirationDate;
+
+        if (regExp >= currentTarget) {
+          const recommendedDate = new Date(regExp);
+          recommendedDate.setMonth(recommendedDate.getMonth() + 1);
+          newExpirationDate = recommendedDate.toISOString().split('T')[0];
+        }
+
+        return { 
+          ...prev, 
+          users: newUsers, 
+          licenses: newUsers.length,
+          expirationDate: newExpirationDate 
+        };
+      });
+    }
   };
 
   if (!userIdn.role) {
@@ -891,6 +1064,74 @@ const NewLicence = () => {
               </div>
             </div>
 
+            {/* Global License Selection */}
+            {!licenses && registrationData.length > 0 && (
+              <div className="mb-10">
+                {/* Enhanced Info Banner */}
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-5 mb-6 rounded-r-2xl shadow-sm">
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 bg-blue-100 rounded-xl">
+                      <FaDesktop className="text-blue-600 text-base" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-blue-900 uppercase tracking-tight">
+                        {t("Gestion de votre parc informatique")}
+                      </h4>
+                      <p className="text-xs text-blue-700 mt-1.5 leading-relaxed font-medium">
+                        {t("Sélectionnez les ordinateurs que vous souhaitez renouveler. Le système prolonge chaque licence individuellement jusqu'à la date choisie. Vous ne payez que les jours ajoutés !")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {registrationData.map((reg) => {
+                    const isSelected = selectedRegistrations.includes(reg._id);
+                    const isExpired = new Date(reg.expirationDate) < new Date();
+                    
+                    return (
+                      <div 
+                        key={reg._id}
+                        onClick={() => handleBulkSelect(reg)}
+                        className={`group cursor-pointer p-4 rounded-2xl border-2 transition-all duration-300 flex items-center gap-4 ${
+                          isSelected 
+                          ? "border-blue-500 bg-blue-50/40 shadow-md transform scale-[1.01]" 
+                          : "border-slate-100 bg-white hover:border-blue-200 hover:shadow-lg"
+                        }`}
+                      >
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                          isSelected ? "bg-blue-600 border-blue-600 rotate-0" : "bg-white border-slate-200 group-hover:border-blue-300 -rotate-12"
+                        }`}>
+                          {isSelected && <FaCheck className="text-white text-[10px] stroke-[3]" />}
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                          <p className={`text-sm font-bold truncate transition-colors ${isSelected ? "text-blue-900" : "text-slate-700"}`}>
+                            {reg.computerName}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              isExpired ? "bg-red-100 text-red-600" : "bg-green-100 text-green-600"
+                            }`}>
+                              {isExpired ? "Expiré" : `Expire le ${new Date(reg.expirationDate).toLocaleDateString()}`}
+                            </span>
+                            {isSelected && (
+                              <span className="text-[10px] font-black text-blue-500 animate-pulse">
+                                + {calculateAddedDays(reg)} j
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-4 text-[11px] text-slate-400 italic flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
+                  {t("Les licences sélectionnées seront automatiquement synchronisées sur la même date de fin.")}
+                </p>
+              </div>
+            )}
+
             {/* Number of Licenses */}
             <div className="mb-6">
               <Label htmlFor="licenses" className="text-sm font-medium text-gray-700 mb-2 block">
@@ -1123,9 +1364,12 @@ const NewLicence = () => {
                   </div>
                 </div>
 
-                {/* Hint Text */}
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  {t("dashboardClient_orders_expirationDateHint")}
+                {/* Dynamic Hint Text */}
+                <p className="text-xs text-blue-600 leading-relaxed font-medium bg-blue-50/50 p-2 rounded border border-blue-100">
+                  <FaInfoCircle className="inline mr-1 mb-0.5" />
+                  {selectedRegistrations.length > 0 || (licenses && licenses.length > 0)
+                    ? `Date minimale requise : ${new Date(minExpirationDate).toLocaleDateString()} (pour prolonger vos licences sélectionnées).`
+                    : t("dashboardClient_orders_expirationDateHint") || "La date à laquelle la licence expirera (minimum 1 jour)."}
                 </p>
 
                 {/* Validation Status */}
@@ -1176,11 +1420,16 @@ const NewLicence = () => {
               </span>
             </div>
 
-            <div className="flex justify-between mb-2">
-              <span className="text-sm font-medium">{t("pay_03_num_j")}</span>
-              <span className="font-bold text-sm">
-                {daysUntilExpiration} {t("pay_03_j")}
-              </span>
+            <div className="flex flex-col mb-4 border-b border-gray-100 pb-4">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-semibold text-gray-700">{t("Cumul total des jours")}</span>
+                <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-sm">
+                  {formData.daysUntilExpiration} {t("pay_03_j")}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400 italic leading-tight">
+                {t("* Somme des jours ajoutés individuellement pour chaque ordinateur sélectionné.")}
+              </p>
             </div>
 
             <div className="flex justify-between mb-2">

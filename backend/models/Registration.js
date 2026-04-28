@@ -12,6 +12,8 @@ const registrationSchema = new Schema({
     computerCode: { type: String, unique: true },
     authCode: String,
     expirationDate: Date,
+    addedDays: Number,
+    priceHT: Number,
 }, { timestamps: true });
 
 const Registration = mongoose.model('Registration', registrationSchema);

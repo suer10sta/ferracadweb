@@ -31,12 +31,6 @@ const SideBar = ({ setActiveSidebar, activeSidebar }: any) => {
       role: "admin"
     },
     {
-      icon: TbLicense,
-      title: t("sidebarOrders"),
-      path: "/tableau-de-board/commande",
-      role: "only_client"
-    },
-    {
       icon: FiTarget,
       title: t("sidebarLocations"),
       path: "/tableau-de-board/locations",

@@ -33,6 +33,9 @@ import apiClient from '@/services/api';
 import Loading from '../elements/Loading';
 import { useLanguage } from '@/lang/LanguageProvider';
 import { FaRegClock } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
+import { TbReload } from 'react-icons/tb';
 
 function calculateTotalDays(histories: LicenseHistory[]): number {
   let totalDays = 0;
@@ -65,6 +68,30 @@ const LicensesClient = ({ userIdn } : any) => {
     codeComputer: "",
     username: ""
   })
+
+  const [selectedLicenses, setSelectedLicenses] = useState<string[]>([]);
+  const navigate = useNavigate();
+
+  const handleSelectLicense = (id: string) => {
+    setSelectedLicenses(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkRenew = () => {
+    const licensesToRenew = registrationData.filter(reg => selectedLicenses.includes(reg._id));
+    if (licensesToRenew.length === 0) return;
+    
+    navigate("/tableau-de-board/commande/paiement", {
+      state: { commandData: licensesToRenew }
+    });
+  };
+
+  const handleIndividualRenew = (license: any) => {
+    navigate("/tableau-de-board/commande/paiement", {
+      state: { commandData: [license] }
+    });
+  };
 
   useEffect(()=> {
     const getData = async () => {
@@ -235,6 +262,25 @@ const LicensesClient = ({ userIdn } : any) => {
             {t('dashboard_rent_manageLicenses')}
           </p>
         </div>
+        <div className="flex gap-2">
+          {selectedLicenses.length > 0 && (
+            <Button 
+              onClick={handleBulkRenew}
+              className="bg-blue-600 hover:bg-blue-700 text-white animate-in fade-in slide-in-from-right-5"
+            >
+              <TbReload className="mr-2 h-4 w-4" />
+              Renouveler la sélection ({selectedLicenses.length})
+            </Button>
+          )}
+          <Button 
+            onClick={() => navigate("/tableau-de-board/commande/paiement")}
+            variant="outline" 
+            className="border-slate-200 hover:bg-slate-50"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Nouvelle Licence
+          </Button>
+        </div>
       </div>
 
       {/* Licenses Table */}
@@ -262,17 +308,36 @@ const LicensesClient = ({ userIdn } : any) => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[40px]">
+                    <input 
+                      type="checkbox" 
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedLicenses(filteredLicenses.map(l => l._id));
+                        else setSelectedLicenses([]);
+                      }}
+                      checked={selectedLicenses.length === filteredLicenses.length && filteredLicenses.length > 0}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </TableHead>
                   <TableHead>{t('dashboardClient_orders_user')}</TableHead>
                   <TableHead>{t('dashboardClient_orders_computer_name')}</TableHead>
                   <TableHead>{t('dashboardClient_orders_expiration_date')}</TableHead>
                   <TableHead>{t('dashboardClient_orders_status')}</TableHead>
                   <TableHead>{t('dashboardClient_orders_days_left')}</TableHead>
-                  <TableHead>{t('dashboardClient_orders_action')}</TableHead>
+                  <TableHead className="text-right">{t('dashboardClient_orders_action')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredLicenses.map((license) => (
-                  <TableRow key={license._id}>
+                  <TableRow key={license._id} className={selectedLicenses.includes(license._id) ? "bg-blue-50/30" : ""}>
+                    <TableCell>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedLicenses.includes(license._id)}
+                        onChange={() => handleSelectLicense(license._id)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                    </TableCell>
                     <TableCell>
                       <div>
                         <p className="font-medium">{license.username}</p>
@@ -308,8 +373,22 @@ const LicensesClient = ({ userIdn } : any) => {
                         }
                       </span>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-1">
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end space-x-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              onClick={() => handleIndividualRenew(license)}
+                            >
+                              <TbReload className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Renouveler cette licence</p></TooltipContent>
+                        </Tooltip>
+
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8 cursor-pointer">

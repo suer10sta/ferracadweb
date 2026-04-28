@@ -249,8 +249,12 @@ const sendEmail = async ({
       }
 
       const licensesList = dataRental.licenses || dataRental.registerInfos || [];
+      
+      // Prioritize the cumulative sum of added days for the email display
+      const cumulativeDays = licensesList.reduce((acc, reg) => acc + (reg.addedDays || 0), 0);
 
       subject = `Votre facture Ferracad ${dataRental.id}`;
+      let durationDisplay = cumulativeDays > 0 ? cumulativeDays : durationFacture;
       html = `
         <div style="font-family: Arial, sans-serif; padding: 30px 20px; max-width: 700px; margin: auto; background-color: #ffffff; border: 1px solid #e5e5e5; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
     
@@ -292,8 +296,8 @@ const sendEmail = async ({
                 <td style="padding: 8px 0; font-weight: 500;">${nextBillingDateFacture ? formatDate(nextBillingDateFacture) : "N/A"}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; color: #666;">Durée:</td>
-                <td style="padding: 8px 0; font-weight: 500;">${durationFacture} jours</td>
+                <td style="padding: 8px 0; color: #666;">Durée cumulée globale :</td>
+                <td style="padding: 8px 0; font-weight: 500;">${durationDisplay} jours</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #666;">Nombre de licences:</td>

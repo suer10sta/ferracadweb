@@ -21,6 +21,7 @@ import { useEffect, useState } from 'react';
 import { IoGiftSharp } from 'react-icons/io5';
 import Loading from '../elements/Loading';
 import { useLanguage } from '@/lang/LanguageProvider';
+import LicensesClient from '../client/Rent';
 
 const DashboardClient = () => {
   const { t } = useLanguage();
@@ -116,8 +117,8 @@ const DashboardClient = () => {
         <div className='bg-white p-7 rounded-2xl transition-all duration-200 hover:shadow-lg'>
           <div className='flex justify-between items-start'>
             <div>
-              <h4 className='font-bold text-sm'>{t("dashboardClient_recentPayments")}</h4>
-              <p className='font-medium text-xs text-black/40 w-8/12'>{t("dashboardClient_recentPaymentsDescription")}</p>
+              <h4 className='font-bold text-sm'>{t("dashboard_rent_licensesRental")}</h4>
+              <p className='font-medium text-xs text-black/40 w-8/12'>{t("dashboard_rent_manageLicenses")}</p>
             </div>
             <div className='flex items-center gap-4'>
               <Link to="/tableau-de-board/paiements">
@@ -125,42 +126,9 @@ const DashboardClient = () => {
               </Link>
             </div>
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("dashboardClient_paymentId")}</TableHead>
-                <TableHead>{t("dashboardClient_paymentDate")}</TableHead>
-                <TableHead>{t("dashboardClient_paymentMethod")}</TableHead>
-                <TableHead>{t("dashboardClient_paymentStatus")}</TableHead>
-                <TableHead className='text-right'>{t("dashboardClient_paymentAmount")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {lastPayments?.slice(0, 9).map((invoice: any, index: number) => {
-                return (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{user.FacturesData.find((e: any)=> e.payId._id === invoice._id)?.factureId || ""}</TableCell>
-                    <TableCell>{formatDate(invoice.createdAt)}</TableCell>
-                    <TableCell>
-                      <span className='text-xs font-medium uppercase'>{invoice.type}</span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={`${invoice.status === 'success'? "bg-green-100 text-green-800": "bg-red-100 text-red-800"}`}>
-                        {invoice.status === "success"? t('dashboardClient_success'): t('dashboardClient_failed')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium">€ {invoice.totalPricePay}</TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell colSpan={4}>{t("dashboardClient_total")}</TableCell>
-                <TableCell className="text-right font-medium">€ {totalAmount}</TableCell>
-              </TableRow>
-            </TableFooter>
-          </Table>
+          <div className="mt-6">
+            <LicensesClient userIdn={{ id: user._id }} />
+          </div>
         </div>
       </div>
     </div>

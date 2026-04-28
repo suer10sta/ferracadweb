@@ -103,7 +103,9 @@ exports.freeTrialCommande = async (req, res) => {
         status: "pending",
         computerName: license.computerName,
         computerCode: license.identificationCode,
-        expirationDate
+        expirationDate,
+        addedDays: license.addedDays,
+        priceHT: license.priceHT
       });
   
       await registration.save();
@@ -460,7 +462,9 @@ exports.confirmPayment = async (req, res) => {
             $set: {
               rentalId: rental._id,
               expirationDate,
-              status: "pending"
+              status: "pending",
+              addedDays: license.addedDays,
+              priceHT: license.priceHT
             }
           },
           { new: true }
@@ -480,7 +484,9 @@ exports.confirmPayment = async (req, res) => {
           registration.computerName = license.computerName;
           registration.expirationDate = expirationDate;
           registration.company = user.company;
-          registration.userId = user._id || user
+          registration.userId = user._id || user;
+          registration.addedDays = license.addedDays;
+          registration.priceHT = license.priceHT;
           await registration.save();
         } else {
           // Otherwise, create a new one
@@ -493,6 +499,8 @@ exports.confirmPayment = async (req, res) => {
             computerName: license.computerName,
             computerCode: license.identificationCode,
             expirationDate,
+            addedDays: license.addedDays,
+            priceHT: license.priceHT
           });
         
           await registration.save();

@@ -141,7 +141,21 @@ const Facture = ({
     }
 
     const facturePromise = (async () => {
-      const canvas = await html2canvas(facture, { scale: 1 });
+      const canvas = await html2canvas(facture, { 
+        scale: 1,
+        useCORS: true,
+        onclone: (clonedDoc) => {
+          // Remove oklch colors that crash html2canvas
+          const elements = clonedDoc.getElementsByTagName("*");
+          for (let i = 0; i < elements.length; i++) {
+            const style = window.getComputedStyle(elements[i]);
+            if (style.color.includes("oklch") || style.backgroundColor.includes("oklch")) {
+              (elements[i] as HTMLElement).style.color = "black";
+              (elements[i] as HTMLElement).style.backgroundColor = "transparent";
+            }
+          }
+        }
+      });
       const imgData = canvas.toDataURL("image/jpeg");
 
       const pdf = new jsPDF("p", "mm", "a4");
@@ -183,7 +197,7 @@ const Facture = ({
       loading: t('dashboard_invoice_sending'),
       success: () => t('dashboard_invoice_sendSuccess'),
       error: (err) => {
-        if (err.response.data?.message === "Peppol Error") {
+        if (err.response?.data?.message === "Peppol Error") {
           return "Merci de vérifier la valeur de votre TVA - Peppol"
         }
         return err.message || t('dashboard_invoice_sendInvoiceError');
@@ -207,7 +221,20 @@ const Facture = ({
   const exportPDF = () => {
     const facture = document.getElementById("card");
     if (!facture) return;
-    html2canvas(facture, { scale: 1 }).then((canvas) => {
+    html2canvas(facture, { 
+      scale: 1,
+      useCORS: true,
+      onclone: (clonedDoc) => {
+        const elements = clonedDoc.getElementsByTagName("*");
+        for (let i = 0; i < elements.length; i++) {
+          const style = window.getComputedStyle(elements[i]);
+          if (style.color.includes("oklch") || style.backgroundColor.includes("oklch")) {
+            (elements[i] as HTMLElement).style.color = "black";
+            (elements[i] as HTMLElement).style.backgroundColor = "transparent";
+          }
+        }
+      }
+    }).then((canvas) => {
       const imgData = canvas.toDataURL("image/jpeg", 0.8); // compress
       const pdf = new jsPDF("p", "mm", "a4");
       const imgProps = pdf.getImageProperties(imgData);
@@ -381,7 +408,7 @@ const Facture = ({
                 <div className="flex justify-between">
                   <span className="font-medium">{t('dashboard_invoice_validUntil')}:</span>
                   <span className=" font-semibold">
-                    {formatDate(factureData.endAt)} ({getTotalLicenseDays(factureData.startFrom, factureData.endAt)} {t('pay_03_j')})
+                    {formatDate(factureData.endAt)} ({factureData.registerInfos?.reduce((acc: number, reg: any) => acc + (reg.addedDays || 0), 0) || getTotalLicenseDays(factureData.startFrom, factureData.endAt)} {t('pay_03_j')})
                   </span>
                 </div>
               </div>
@@ -405,18 +432,21 @@ const Facture = ({
                 </TableHeader>
                 <TableBody>
                   {factureData?.registerInfos?.map((regis: any, index: number) => {
-                    const prixUnitaireHT = (factureData.totalPricePay / factureData.registerInfos.length) / (1 + Number(factureData.tva));
-                    const tvaUnitaire = prixUnitaireHT * Number(factureData.tva);
-                    // const prixUnitaireTTC = factureData.totalPricePay / factureData.registerInfos.length;
+                    // Use the stored price if available, otherwise fallback to division
+                    const priceHT = regis.priceHT || ((factureData.totalPricePay / factureData.registerInfos.length) / (1 + Number(factureData.tva)));
+                    const tvaUnitaire = priceHT * Number(factureData.tva);
+                    const addedDays = regis.addedDays || getTotalLicenseDays(factureData.startFrom, factureData.endAt);
 
                     return (
                       <TableRow key={index} className="">
                         <TableCell className="font-medium">{index + 1}</TableCell>
-                        <TableCell className="font-medium">{regis.computerName}</TableCell>
+                        <TableCell className="font-medium">
+                          {regis.computerName} 
+                          <span className="text-[10px] text-gray-400 ml-2">({addedDays} {t("pay_03_j")})</span>
+                        </TableCell>
                         <TableCell className="font-mono text-xs">{regis.computerCode}</TableCell>
-                        <TableCell className="text-right">€ {prixUnitaireHT.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">€ {priceHT.toFixed(2)}</TableCell>
                         <TableCell className="text-right">€ {tvaUnitaire.toFixed(2)}</TableCell>
-                        {/*<TableCell className="text-right font-medium">€ {prixUnitaireTTC.toFixed(2)}</TableCell>*/}
                       </TableRow>
                     );
                   })}
