@@ -4,6 +4,8 @@ import Header from '@/components/dashboard/Header';
 import { useState } from 'react';
 import { Helmet } from "react-helmet";
 import { useLanguage } from '@/lang/LanguageProvider';
+import { getUser } from '@/utils/auth';
+import HorizontalNav from '@/components/dashboard/HorizontalNav';
 
 const index = () => {
     const { t } = useLanguage()
@@ -27,6 +29,9 @@ const index = () => {
 
     const currentPageTitle = pageTitles[location.pathname] || "Ferracad 23.14 - Logiciel pour AutoCAD®, ZWCAD®";
 
+    const user = getUser();
+    const isAdmin = user?.role === "admin";
+
     return (
         <>
             <Helmet>
@@ -34,15 +39,18 @@ const index = () => {
                 <link rel="canonical" href="https://www.ferracad.com/" />
                 <meta name="robots" content="noindex,nofollow" />
             </Helmet>
-            <div className='flex bg-[#F9F9F9]'>
-                <div
-                    className={`transition-all duration-200 max-lg:absolute top-0 left-0 ${activeSidebar ? "translate-x-[0%] w-[13%] max-lg:w-[35%] max-md:w-full max-md:z-[100]" : "w-[0%] translate-x-[-1000px]"} bg-white`}
-                >
-                    <SideBar setActiveSidebar={setActiveSidebar} activeSidebar={activeSidebar} />
-                </div>
-                <div className={`transition-all duration-200 ${activeSidebar ? "w-[85%] " : "w-full"} mx-auto px-5`}>
-                    <div className={`mx-auto`}>
+            <div className='flex bg-[#F9F9F9] min-h-screen'>
+                {isAdmin && (
+                    <div
+                        className={`transition-all duration-200 max-lg:absolute top-0 left-0 ${activeSidebar ? "translate-x-[0%] w-[13%] max-lg:w-[35%] max-md:w-full max-md:z-[100]" : "w-[0%] translate-x-[-1000px]"} bg-white`}
+                    >
+                        <SideBar setActiveSidebar={setActiveSidebar} activeSidebar={activeSidebar} />
+                    </div>
+                )}
+                <div className={`transition-all duration-200 ${isAdmin && activeSidebar ? "w-[85%] " : "w-full"} mx-auto px-5`}>
+                    <div className={`mx-auto max-w-[1600px]`}>
                         <Header setActiveSidebar={setActiveSidebar} activeSidebar={activeSidebar} />
+                        {!isAdmin && <HorizontalNav />}
                         <Outlet />
                     </div>
                 </div>

@@ -27,6 +27,8 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useLanguage } from "@/lang/LanguageProvider";
 import { BsGlobeEuropeAfrica } from "react-icons/bs";
+import { getUser } from "@/utils/auth";
+import LogoFerracad from "@/assets/ferracad-logo.png";
 
 const formatRelativeTime = (dateString: string) => {
   if (!dateString) return "";
@@ -139,14 +141,27 @@ const Header = ({ setActiveSidebar, activeSidebar }: any) => {
     }
   ]
 
+  const userIdn = getUser();
+  const isAdmin = userIdn?.role === "admin";
+
   return (
     <div className="flex justify-between items-center sticky top-0 z-50 bg-[#F9F9F9] py-5">
-      <button
-        onClick={() => setActiveSidebar(!activeSidebar)}
-        className="text-black/60 transition-all duration-200 hover:text-black/80 cursor-pointer"
-      >
-        <FiSidebar />
-      </button>
+      {isAdmin ? (
+        <button
+          onClick={() => setActiveSidebar(!activeSidebar)}
+          className="text-black/60 transition-all duration-200 hover:text-black/80 cursor-pointer"
+        >
+          <FiSidebar />
+        </button>
+      ) : (
+        <Link to="/tableau-de-board">
+          <img
+            src={LogoFerracad}
+            alt="Ferracad"
+            className="w-24 max-lg:w-18 my-auto"
+          />
+        </Link>
+      )}
       <div className="flex justify-between items-center gap-5">
         <div className="relative">
           <button onClick={()=> setLanguePopup(!languePopup)} className="cursor-pointer text-black/60 flex items-center gap-2">

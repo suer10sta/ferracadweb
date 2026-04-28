@@ -31,12 +31,6 @@ const SideBar = ({ setActiveSidebar, activeSidebar }: any) => {
       role: "admin"
     },
     {
-      icon: FiTarget,
-      title: t("sidebarLocations"),
-      path: "/tableau-de-board/locations",
-      role: "only_client"
-    },
-    {
       icon: BsCurrencyDollar,
       title: t("sidebarPayments"),
       path: "/tableau-de-board/paiements",
@@ -46,7 +40,7 @@ const SideBar = ({ setActiveSidebar, activeSidebar }: any) => {
       icon: LuBraces,
       title: t("sidebarProducts"),
       path: "/tableau-de-board/produits",
-      role: "client"
+      role: "admin"
     },
     {
       icon: AiOutlineQuestionCircle,
