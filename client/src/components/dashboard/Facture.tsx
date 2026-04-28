@@ -632,17 +632,7 @@ const Facture = ({
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-            ) : (
-              <Button
-                variant="default"
-                size="sm"
-                className="text-xs font-medium bg-stone-800 transition-all duration-200 hover:bg-stone-900 text-white flex items-center gap-2 p-2 rounded-full cursor-pointer"
-                disabled={isLoading}
-                onClick={() => sendFacture(false)}
-              >
-                <IoIosSend className="h-4 w-4" />
-              </Button>
-            )
+            ) : null
           }
 
           <button
