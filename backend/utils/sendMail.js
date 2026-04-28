@@ -234,6 +234,22 @@ const sendEmail = async ({
       const montantTVA = montantHT * tvaRate;
       const montantTTC = montantHT + montantTVA;
 
+      // Sécurisation des accès aux données
+      const rentalInfo = dataRental.rentalInfos?.[0] || {};
+      const startDateFacture = dataRental.startDate || dataRental.startFrom || rentalInfo.startDate;
+      const nextBillingDateFacture = dataRental.nextBillingDate || dataRental.endAt || rentalInfo.nextBillingDate;
+      let durationFacture = dataRental.duration || dataRental.daysUntilExpiration || rentalInfo.duration || 0;
+
+      // Calcul de secours si la durée est absente ou à 0
+      if (durationFacture <= 0 && startDateFacture && nextBillingDateFacture) {
+        const start = new Date(startDateFacture);
+        const end = new Date(nextBillingDateFacture);
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        durationFacture = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      }
+
+      const licensesList = dataRental.licenses || dataRental.registerInfos || [];
+
       subject = `Votre facture Ferracad ${dataRental.id}`;
       html = `
         <div style="font-family: Arial, sans-serif; padding: 30px 20px; max-width: 700px; margin: auto; background-color: #ffffff; border: 1px solid #e5e5e5; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
@@ -269,21 +285,15 @@ const sendEmail = async ({
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #666;">Date de commande:</td>
-                <td style="padding: 8px 0; font-weight: 500;">${formatDate(
-          dataRental.startDate || dataRental.rentalInfos[0].startDate
-        )}</td>
+                <td style="padding: 8px 0; font-weight: 500;">${startDateFacture ? formatDate(startDateFacture) : "N/A"}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #666;">Date d'expiration:</td>
-                <td style="padding: 8px 0; font-weight: 500;">${formatDate(
-          dataRental.nextBillingDate ||
-          dataRental.rentalInfos[0].nextBillingDate
-        )}</td>
+                <td style="padding: 8px 0; font-weight: 500;">${nextBillingDateFacture ? formatDate(nextBillingDateFacture) : "N/A"}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #666;">Durée:</td>
-                <td style="padding: 8px 0; font-weight: 500;">${dataRental.duration || dataRental.rentalInfos[0].duration
-        } jours</td>
+                <td style="padding: 8px 0; font-weight: 500;">${durationFacture} jours</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #666;">Nombre de licences:</td>
@@ -296,37 +306,22 @@ const sendEmail = async ({
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
             <h3 style="color: #333; margin-bottom: 15px; font-size: 18px;">Licences activées</h3>
             
-            ${dataRental.licenses
-          ? dataRental.licenses
+            ${licensesList.length > 0
+          ? licensesList
             .map(
               (license, index) => `
                   <div style="margin-bottom: 12px; padding: 12px; background: white; border-radius: 6px; border-left: 4px solid #8B0000;">
                     <strong style="color: #333;">Licence ${index + 1}:</strong>
                     <div style="font-size: 14px; color: #666; margin-top: 4px;">
-                      Utilisateur: ${license.username}<br>
-                      Poste: ${license.computerName}<br>
-                      Code d'activation: <code style="background: #f1f1f1; padding: 2px 6px; border-radius: 3px;">${license.authCode || "N/A"
-                }</code>
+                      Utilisateur: ${license.username || "N/A"}<br>
+                      Poste: ${license.computerName || "N/A"}<br>
+                      Code d'activation: <code style="background: #f1f1f1; padding: 2px 6px; border-radius: 3px;">${license.authCode || "N/A"}</code>
                     </div>
                   </div>
                 `
             )
             .join("")
-          : dataRental.registerInfos
-            .map(
-              (license, index) => `
-                  <div style="margin-bottom: 12px; padding: 12px; background: white; border-radius: 6px; border-left: 4px solid #8B0000;">
-                    <strong style="color: #333;">Licence ${index + 1}:</strong>
-                    <div style="font-size: 14px; color: #666; margin-top: 4px;">
-                      Utilisateur: ${license.username}<br>
-                      Poste: ${license.computerName}<br>
-                      Code d'activation: <code style="background: #f1f1f1; padding: 2px 6px; border-radius: 3px;">${license.authCode || "N/A"
-                }</code>
-                    </div>
-                  </div>
-                `
-            )
-            .join("")
+          : ""
         }
           </div>
     
@@ -462,6 +457,8 @@ const sendEmail = async ({
       break;
 
     case "send-invitation":
+      disableCc = true; // Désactive le CC pour les invitations (Test local)
+
       subject = `${user.name} vous invite à rejoindre Ferracad`;
 
       const trialLink = `${process.env.FRONTEND_LIEN}/enregistrement-du-logiciel?invitation=${code}`;
@@ -1359,7 +1356,7 @@ const sendEmail = async ({
     case "unified-trial-code":
       subject = "Votre essai gratuit Ferracad est prêt !";
       const loginLink = `${process.env.FRONTEND_LIEN}/connexion`;
-      
+
       html = `
         <div style="font-family: Arial, sans-serif; padding: 30px; max-width: 600px; margin: auto; border: 1px solid #e5e5e5; border-radius: 12px; background-color: #ffffff;">
           <div style="text-align: center; margin-bottom: 25px;">
@@ -1459,8 +1456,8 @@ const sendEmail = async ({
       break;
 
     case "free-trial-reminder":
-  subject = "Votre accès gratuit n'est pas encore activé";
-  html = `
+      subject = "Votre accès gratuit n'est pas encore activé";
+      html = `
     <div style="font-family: Arial, sans-serif; padding: 40px 20px;">
       <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 32px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
 
@@ -1533,15 +1530,15 @@ const sendEmail = async ({
       </div>
     </div>
   `;
-  break;
-      default:
+      break;
+    default:
       throw new Error(`Unknown email type: ${type}`);
   }
 
   // Send email
   try {
     const adminSupport = process.env.ADMIN_SUPPORT || process.env.SMTP_USER;
-    
+
     await transporter.sendMail({
       from: `"Ferracad Support " <${process.env.SMTP_USER}>`,
       to: email,

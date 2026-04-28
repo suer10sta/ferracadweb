@@ -196,6 +196,10 @@ const NewLicence = () => {
     );
   }, []);
 
+  const expiration = new Date(formData.expirationDate);
+  const diffTime = expiration.getTime() - today.getTime();
+  const daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
   const handleSubmit = async () => {
     if (!userData.company || !userData.address || !userData.country) {
       toast.warning(t("dashboardClient_orders_completeCompanyInfoFirst"))
@@ -268,12 +272,15 @@ const NewLicence = () => {
     if (formData.freeTrial) {
       setLoading(true);
       try {
-        const res = await apiClient.post("/rental/admin", formData);
+        const res = await apiClient.post("/rental/admin", {
+          ...formData,
+          daysUntilExpiration: daysUntilExpiration
+        });
 
         if (res.status === 201) {
           toast.success(t("dashboardClient_orders_paymentSuccess"));
           await localStorage.setItem("reloadCount", "0");
-          navigate('/tableau-de-board/commande', {
+          navigate('/tableau-de-board/paiements', {
             state: {
               freetrial: formData.freeTrial,
               id: res.data.id,
@@ -323,6 +330,7 @@ const NewLicence = () => {
       // Create Payment Intent
       const createIntentResponse = await apiClient.post("/rental/create-payment-intent", {
         ...formData,
+        daysUntilExpiration: daysUntilExpiration,
         paymentMethodId: paymentMethod.id,
       });
 
@@ -358,9 +366,10 @@ const NewLicence = () => {
 
       toast.success(t("dashboardClient_orders_paymentSuccess"));
       await localStorage.setItem("reloadCount", "0");
-      navigate("/tableau-de-board/commande", {
+      navigate("/tableau-de-board/paiements", {
         state: {
           id: confirmResponse.data.id,
+          isSend: true,
         },
       });
 
@@ -478,12 +487,7 @@ const NewLicence = () => {
     }));
   };
 
-  const expiration = new Date(formData.expirationDate);
-  // Calculate the difference in milliseconds
-  const diffTime = expiration.getTime() - today.getTime();
 
-  // Convert milliseconds to days
-  const daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   const [pricePerDay, setPricePerDay] = useState(5)
   useEffect(() => {

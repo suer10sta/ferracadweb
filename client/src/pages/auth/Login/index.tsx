@@ -1,4 +1,4 @@
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/lang/LanguageProvider";
 import { useEffect, useState } from "react";
@@ -6,23 +6,24 @@ import { toast } from "sonner";
 import axios from "axios";
 
 const Login = () => {
-  const { t } : any = useLanguage();
+  const { t }: any = useLanguage();
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
-  
-  useEffect(()=> {
+  const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
     const getLastDeco = localStorage.getItem('lastdeco')
     if (getLastDeco) {
       const lastDecoDate = new Date(getLastDeco);
       const today = new Date();
-  
+
       // Calculate difference in milliseconds
       const diffTime = today.getTime() - lastDecoDate.getTime();
-  
+
       // Convert to days
       const diffDays = diffTime / (1000 * 60 * 60 * 24);
-  
-      setTitle(diffDays < 30? t("connexion_title"): t("connexion_title_return"))
+
+      setTitle(diffDays < 30 ? t("connexion_title") : t("connexion_title_return"))
     } else {
       setTitle(t("connexion_title"))
     }
@@ -36,16 +37,16 @@ const Login = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, type, value, checked } = e.target;
-  
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
   };
 
-  const handleSubmit = async (e: any)=> {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    if(formData.email === "" || formData.pwd === "") {
+    if (formData.email === "" || formData.pwd === "") {
       toast.warning(t('connexion_forgetmailpwd'))
       return;
     }
@@ -61,9 +62,9 @@ const Login = () => {
           withCredentials: true,
         }
       );
-      
-      if(response.status === 200) {
-        if(response.data?.tokenFac) {
+
+      if (response.status === 200) {
+        if (response.data?.tokenFac) {
           navigate(`/connexion/two-factor/${response.data?.tokenFac}`, {
             state: { email: formData.email }
           });
@@ -124,16 +125,25 @@ const Login = () => {
               {t("connexion_forget")}
             </Link>
           </div>
-          <input
-            type="password"
-            name="pwd"
-            id="pwd"
-            placeholder="*******************"
-            value={formData.pwd}
-            onChange={handleChange}
-            className="border border-stone-300 p-2 px-6 text-sm rounded-lg"
-            required
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="pwd"
+              id="pwd"
+              placeholder="*******************"
+              value={formData.pwd}
+              onChange={handleChange}
+              className="w-full border border-stone-300 p-2 px-6 pr-10 text-sm rounded-lg"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors cursor-pointer"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </div>
         <div className="flex items-start gap-2">
           <input
@@ -149,9 +159,9 @@ const Login = () => {
           </label>
         </div>
         <button className="w-full p-2 font-bold text-sm text-white bg-primary transition-all duration-200 hover:bg-red-900 rounded-lg  cursor-pointer">{t("connexion_btn_conx")}</button>
-        <div className="flex justify-center items-center">
+        {/* <div className="flex justify-center items-center">
           <p className="text-xs font-medium">{t('connexion_haveaccount')} <Link to="/louer/register" className="underline font-semibold transition-all duration-200 hover:text-stone-900">{t('connexion_signup')}</Link></p>
-        </div>
+        </div> */}
         <Link to="/" className="flex items-center justify-center gap-1 text-xs text-stone-500 font-semibold">
           <ChevronLeft size={16} />
           {t("connexion_home_page")}

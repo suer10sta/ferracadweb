@@ -1244,7 +1244,7 @@ exports.createRental = async (req, res) => {
       startFrom: new Date(),
       endAt: expirationDate
     });
-    createFacture.save();
+    await createFacture.save();
     
     const emailSociete = await User.findOne({ mainAccount: true })
 
@@ -1307,7 +1307,13 @@ exports.createRental = async (req, res) => {
         })
       )
     );
-    return res.status(201).json({ valid: true, id: updateRental._id })
+    return res.status(201).json({
+      valid: true,
+      id: updateRental._id,
+      payId: updateRental.payId || null,
+      paymentId: payment?._id || null,
+      isFreeTrial,
+    });
   } catch (err) {
     console.error("❌ [createRental] Error:", err);
   
@@ -1377,6 +1383,12 @@ exports.createCommandByAdmin = async (req, res) => {
       sendFacture
     } = req.body;
 
+    const isFreeTrial =
+      freetrial === true ||
+      freetrial === "true" ||
+      req.body?.freeTrial === true ||
+      req.body?.freeTrial === "true";
+
     if(
       licenses < 1 || 
       users.length !== licenses || 
@@ -1392,8 +1404,11 @@ exports.createCommandByAdmin = async (req, res) => {
     // Convert milliseconds to days
     const daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    const userIdReq = userId || req.user.id
-    const user = await User.findById(userIdReq)
+    // Ensure userId is a plain string ID (not a populated object)
+    const rawUserId = typeof userId === 'object' && userId?._id ? userId._id : userId;
+    const userIdReq = rawUserId || req.user.id;
+    const user = await User.findById(userIdReq);
+    console.log('[createCommandByAdmin] userIdReq:', userIdReq, '| user.role:', user?.role, '| isFreeTrial:', isFreeTrial);
 
     // Rental
     let rental;
@@ -1529,27 +1544,44 @@ exports.createCommandByAdmin = async (req, res) => {
     }
 
     // process of payment
+    // Create a Payment whenever an admin creates a PAID order for a client.
+    // Sending the invoice email is controlled separately by `sendFacture`.
     let payment;
-    if(user.role === "client" && sendFacture) {
+    if (!isFreeTrial) {
+      const totalPricePay = Number(String(totalPayer ?? "").trim().replace(",", "."));
+      if (Number.isNaN(totalPricePay)) {
+        return res.status(400).json({
+          message: "Montant total invalide (totalPayer).",
+          totalPayer,
+        });
+      }
+
       payment = new Payment({
         operatorId: "",
         userId: userIdReq,
         couponId: id_coupon || null,
         type: userIdReq === req.user.id ? "free" : "cash",
         status: "success",
-        totalPricePay: totalPayer,
+        totalPricePay,
         paymentConfigId: id_paiement,
         currency: "€",
         stripePayId: "",
-        tva
+        tva: String(tva ?? ""),
       });
       await payment.save();
+    }
+
+    if (!isFreeTrial && !payment?._id) {
+      return res.status(500).json({
+        message: "Payment not created for paid order.",
+        debug: { userRole: user.role, isFreeTrial },
+      });
     }
 
     // update rental
     const updateRental = await Rental.findById(rental._id)
     updateRental.status = "active";
-    updateRental.payId = user.role === "client" && sendFacture ? payment._id : null;
+    updateRental.payId = !isFreeTrial ? payment?._id : null;
     updateRental.nextBillingDate = expirationDate;
     updateRental.duration = daysUntilExpiration;
     await updateRental.save();
@@ -1582,8 +1614,8 @@ exports.createCommandByAdmin = async (req, res) => {
     // Generate index (001, 002, etc.)
     const index = String(currentCount + 1).padStart(3, "0");
   
-    // Combine everything
-    if(user.role === "client" && sendFacture) {
+    // Combine everything (create invoice record for any paid order)
+    if (!isFreeTrial && payment?._id) {
       const factureId = `N°${year}${month}/${index}`;
 
       const createFacture = new Facture({
@@ -1596,7 +1628,7 @@ exports.createCommandByAdmin = async (req, res) => {
         endAt: expirationDate
       });
   
-      createFacture.save();
+      await createFacture.save();
     }
 
     const emailSociete = await User.findOne({ mainAccount: true })
@@ -1606,7 +1638,7 @@ exports.createCommandByAdmin = async (req, res) => {
       let codeAuth = await createAuthCode(license.identificationCode, expDate);
       const code = codeAuth.data.code;
       let update = {
-        status: freetrial? "freetrial" : "active",
+        status: isFreeTrial ? "freetrial" : "active",
         authCode: code,
       };
     
@@ -1624,7 +1656,7 @@ exports.createCommandByAdmin = async (req, res) => {
         code,
         data,
         user,
-        freetrial
+        freetrial: isFreeTrial
       });
 
       // if(emailSociete?.factureMail) {

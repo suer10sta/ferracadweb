@@ -1,5 +1,4 @@
 import { useLanguage } from "@/lang/LanguageProvider";
-import { Link } from "react-router-dom";
 import DownloadButton from "./DownloadButton";
 import { FaPlay } from "react-icons/fa";
 import { useEffect, useState } from "react";
@@ -21,7 +20,7 @@ const Hero = () => {
       })
     }
   }, []);
-  
+
   const playlist = [
     {
       title: "Créer un compte",
@@ -180,13 +179,13 @@ const Hero = () => {
           <div className="w-full">
             <p className="font-medium text-sm text-center text-stone-600 leading-relaxed">
               {t("hero_subtit_download")}{" "}
-              <Link
+              {/* <Link
                 to="/louer/register"
                 className="font-semibold text-primary hover:text-primary-dark underline underline-offset-2 transition-colors duration-200"
               >
                 {t("create_acc")}{" "}
                 <span className="font-bold">{t("gratuitement")}</span>
-              </Link>
+              </Link> */}
             </p>
           </div>
         </div>

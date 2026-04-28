@@ -170,6 +170,10 @@ const NewLicenceAdmin = () => {
     }
   }, [state]);
 
+  const expiration = new Date(formData.expirationDate);
+  const diffTime = expiration.getTime() - new Date(formData.startDate).getTime();
+  const daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
   // Validate form fields and send the admin rental creation/renewal request to the backend
   const handleSubmit = async () => {
     if (formData.startDate && formData.expirationDate) {
@@ -257,14 +261,17 @@ const NewLicenceAdmin = () => {
     }
     setLoading(true);
     try {
-      const res = await apiClient.post("/rental/admin", formData);
+      const res = await apiClient.post("/rental/admin", {
+        ...formData,
+        daysUntilExpiration: daysUntilExpiration
+      });
 
       if (res.status === 201) {
         toast.success(t("dashboardClient_orders_paymentSuccess"));
         await localStorage.setItem("reloadCount", "0");
-        navigate("/tableau-de-board/commande", {
+        navigate("/tableau-de-board/paiements", {
           state: {
-            freetrial: formData.freeTrial,
+            freetrial: formData.freetrial,
             id: res.data.id,
             isSend: formData.sendFacture,
           },
@@ -364,13 +371,7 @@ const NewLicenceAdmin = () => {
     }));
   };
 
-  const expiration = new Date(formData.expirationDate);
-  // Calculate the difference in milliseconds
-  const diffTime =
-    expiration.getTime() - new Date(formData.startDate).getTime();
 
-  // Convert milliseconds to days
-  const daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   const [pricePerDay, setPricePerDay] = useState(5);
   useEffect(() => {
@@ -378,7 +379,7 @@ const NewLicenceAdmin = () => {
     const priceUser =
       formData.userId && usersData && Array.isArray(usersData)
         ? usersData.find((e: any) => e._id === formData?.userId)?.basedPrice ||
-          5
+        5
         : 5;
 
     setPricePerDay(formData.freeTrial || state === "Moi-même" ? 0 : priceUser);
@@ -449,7 +450,7 @@ const NewLicenceAdmin = () => {
   useEffect(() => {
     // Fetch the applicable VAT (TVA) rate for the selected user based on country and VAT status
     const fetchTax = async () => {
-      if(!formData.userId) return
+      if (!formData.userId) return
       const getTax = await tauxTva(formData.userId);
       const tvaActive = usersData.find(
         (e: { _id: any }) => e._id === formData.userId
@@ -487,6 +488,15 @@ const NewLicenceAdmin = () => {
       tva: userObject?.nTva || "",
     });
   }, [formData.userId, usersData]);
+
+  // Auto-enable sendFacture when creating a paid order for a client
+  useEffect(() => {
+    if (state === "Client" && formData.userId && !formData.freetrial) {
+      setFormData((prev: any) => ({ ...prev, sendFacture: true }));
+    } else {
+      setFormData((prev: any) => ({ ...prev, sendFacture: false }));
+    }
+  }, [state, formData.userId, formData.freetrial]);
 
   // Handle change on billing info fields for the selected user
   const handleChangeUserForm = (e: {
@@ -562,17 +572,15 @@ const NewLicenceAdmin = () => {
       <div className="flex items-center gap-2">
         <button
           onClick={() => setState("Moi-même")}
-          className={`text-sm font-medium cursor-pointer p-2 px-4 rounded-lg transition-all duration-200 ${
-            state === "Moi-même" ? "bg-stone-800 text-white" : "bg-transparent"
-          }`}
+          className={`text-sm font-medium cursor-pointer p-2 px-4 rounded-lg transition-all duration-200 ${state === "Moi-même" ? "bg-stone-800 text-white" : "bg-transparent"
+            }`}
         >
           {t("dashboardClient_orders_myself")}
         </button>
         <button
           onClick={() => setState("Client")}
-          className={`text-sm font-medium cursor-pointer p-2 px-4 rounded-lg transition-all duration-200 ${
-            state === "Client" ? "bg-stone-800 text-white" : "bg-transparent"
-          }`}
+          className={`text-sm font-medium cursor-pointer p-2 px-4 rounded-lg transition-all duration-200 ${state === "Client" ? "bg-stone-800 text-white" : "bg-transparent"
+            }`}
         >
           {t("dashboardClient_orders_client")}
         </button>
@@ -1240,8 +1248,7 @@ const NewLicenceAdmin = () => {
             <p className="font-medium text-stone-500">
               Envoyer la facture{" "}
               {usersData &&
-                ` à ${
-                  usersData.find((e: any) => e._id === formData.userId)?.name
+                ` à ${usersData.find((e: any) => e._id === formData.userId)?.name
                 }`}
             </p>
           </label>

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -10,11 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+
 import {
   Select,
   SelectContent,
@@ -78,7 +73,7 @@ import { cn } from "@/lib/utils";
 import { FaExternalLinkAlt, FaRegClock, FaUsers } from "react-icons/fa";
 import { PiRadioactiveBold } from "react-icons/pi";
 import { HiMiniUsers } from "react-icons/hi2";
-import { MdAdminPanelSettings, MdDeleteOutline, MdKey } from "react-icons/md";
+import { MdAdminPanelSettings, MdKey } from "react-icons/md";
 import CardDetails from "@/components/dashboard/Card";
 import countries from "@/data/countries.json";
 import { AiFillEuroCircle } from "react-icons/ai";
@@ -103,10 +98,9 @@ import { getTotalLicenseDays } from "@/utils/getTotalLicenseDays";
 import FilterByType from "@/components/dashboard/FilterByType";
 import { formatDate } from "@/utils/formatDate";
 import { IoCopyOutline } from "react-icons/io5";
-import { BiSolidMessageSquareDetail } from "react-icons/bi";
+
 import NewUser from "@/components/dashboard/NewUser";
 import { RiExchangeLine } from "react-icons/ri";
-import { BsInfoCircle } from "react-icons/bs";
 
 function toDateOnlyString(dateInput: any) {
   const d = new Date(dateInput);
@@ -158,8 +152,8 @@ const Users: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  const [currentLicensePage, setCurrentLicensePage] = useState(1);
-  const licensesPerPage = 10;
+  // const [currentLicensePage, setCurrentLicensePage] = useState(1);
+  // const licensesPerPage = 10;
 
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [emailUser, setEmailUser] = useState<any>(null);
@@ -442,11 +436,13 @@ const Users: React.FC = () => {
       if (!matchesBaseFilters) return false;
 
       // License status filter
-      if (
-        licenseStatusFilter !== "all" &&
-        user.licenseStatus !== licenseStatusFilter
-      )
-        return false;
+      if (licenseStatusFilter !== "all") {
+        if (licenseStatusFilter === "with-license") {
+          if (user.licenseStatus === "none") return false;
+        } else if (user.licenseStatus !== licenseStatusFilter) {
+          return false;
+        }
+      }
 
       // Account status filter
       if (
@@ -516,10 +512,6 @@ const Users: React.FC = () => {
     currentPage * itemsPerPage
   );
 
-  useEffect(() => {
-    setCurrentLicensePage(1);
-  }, [companySelected]);
-
   const [QuickAnalytic, setQuickAnalytic] = useState<any[]>([]);
 
   useEffect(() => {
@@ -528,8 +520,6 @@ const Users: React.FC = () => {
     const currentYear = now.getFullYear();
     const lastMonthDate = new Date();
     lastMonthDate.setMonth(now.getMonth() - 1);
-    const lastMonth = lastMonthDate.getMonth();
-    const lastMonthYear = lastMonthDate.getFullYear();
 
     const getTrend = (items: any[]) => {
       const thisMonth = items.filter((i) => {
@@ -561,6 +551,19 @@ const Users: React.FC = () => {
     });
     const expiredLicensesCount = expiredLicensesItems.length;
 
+    const handleQuickFilter = (type: string, value: string) => {
+      // Reset other filters to avoid conflicts
+      setLicenseStatusFilter("all");
+      setAccountStatusFilter("all");
+      setRoleFilter("all");
+      setActivityFilter("all");
+      setSearchTerm("");
+      
+      if (type === "license") setLicenseStatusFilter(value);
+      if (type === "account") setAccountStatusFilter(value);
+      if (type === "role") setRoleFilter(value);
+    };
+
     setQuickAnalytic([
       {
         title: "Utilisateurs",
@@ -569,7 +572,13 @@ const Users: React.FC = () => {
         trend: getTrend(usersData),
         iconBg: "bg-blue-500/20",
         iconColor: "text-blue-400",
-        path: "/tableau-de-board/utilisateurs",
+        path: "#",
+        onClick: () => {
+          setLicenseStatusFilter("all");
+          setAccountStatusFilter("all");
+          setRoleFilter("all");
+          setSearchTerm("");
+        },
         isDark: true,
         parag: "Total des comptes",
       },
@@ -580,7 +589,8 @@ const Users: React.FC = () => {
         trend: getTrend(usersData.filter((u: any) => u.status === "active")),
         iconBg: "bg-emerald-500/20",
         iconColor: "text-emerald-400",
-        path: "/tableau-de-board/utilisateurs?filter=active",
+        path: "#",
+        onClick: () => handleQuickFilter("account", "active"),
         isDark: true,
         parag: "Connectés récemment",
       },
@@ -591,7 +601,8 @@ const Users: React.FC = () => {
         trend: getTrend(usersData.filter((u: any) => u.role === "client")),
         iconBg: "bg-sky-500/20",
         iconColor: "text-sky-400",
-        path: "/tableau-de-board/utilisateurs?filter=client",
+        path: "#",
+        onClick: () => handleQuickFilter("role", "client"),
         isDark: true,
         parag: "Utilisateurs standards",
       },
@@ -602,7 +613,8 @@ const Users: React.FC = () => {
         trend: getTrend(usersData.filter((u: any) => u.role === "admin")),
         iconBg: "bg-violet-500/20",
         iconColor: "text-violet-400",
-        path: "/tableau-de-board/utilisateurs?filter=admin",
+        path: "#",
+        onClick: () => handleQuickFilter("role", "admin"),
         isDark: true,
         parag: "Accès total",
       },
@@ -613,6 +625,8 @@ const Users: React.FC = () => {
         trend: getTrend(registrationData),
         iconBg: "bg-amber-500/20",
         iconColor: "text-amber-400",
+        path: "#",
+        onClick: () => handleQuickFilter("license", "with-license"),
         isDark: true,
         parag: "Total générées",
       },
@@ -623,6 +637,8 @@ const Users: React.FC = () => {
         trend: getTrend(activeLicensesItems),
         iconBg: "bg-cyan-500/20",
         iconColor: "text-cyan-400",
+        path: "#",
+        onClick: () => handleQuickFilter("license", "active"),
         isDark: true,
         parag: "Licences valides",
       },
@@ -633,6 +649,8 @@ const Users: React.FC = () => {
         trend: getTrend(trialLicensesItems),
         iconBg: "bg-indigo-500/20",
         iconColor: "text-indigo-400",
+        path: "#",
+        onClick: () => handleQuickFilter("license", "trial"),
         isDark: true,
         parag: "Périodes de test",
       },
@@ -643,11 +661,13 @@ const Users: React.FC = () => {
         trend: getTrend(expiredLicensesItems),
         iconBg: "bg-rose-500/20",
         iconColor: "text-rose-400",
+        path: "#",
+        onClick: () => handleQuickFilter("license", "expired"),
         isDark: true,
         parag: "Nécessitent renouvellement",
       },
     ]);
-  }, [usersData, registrationData]);
+  }, [usersData, registrationData, licenseStatusFilter, accountStatusFilter, roleFilter, activityFilter]);
 
   const [newFormData, setNewFormData] = useState({
     name: "",
@@ -1027,6 +1047,7 @@ const Users: React.FC = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Tous les statuts</SelectItem>
+                        <SelectItem value="with-license">Possède une licence</SelectItem>
                         <SelectItem value="active">Payante</SelectItem>
                         <SelectItem value="trial">Essai</SelectItem>
                         <SelectItem value="expired">Expirée</SelectItem>
@@ -1991,4 +2012,3 @@ const Users: React.FC = () => {
 };
 
 export default Users;
-

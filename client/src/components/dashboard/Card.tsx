@@ -9,8 +9,14 @@ const Card = ({ analytic }: any) => {
   return (
     <Link 
         to={analytic.path || "#"}
+        onClick={(e) => {
+          if (analytic.onClick) {
+            e.preventDefault();
+            analytic.onClick();
+          }
+        }}
         className={cn(
-          "flex flex-col justify-between rounded-xl p-4 transition-all duration-300 hover:shadow-2xl border bg-[#111827] border-slate-800 text-white group"
+          "flex flex-col justify-between rounded-xl p-4 transition-all duration-300 hover:shadow-2xl border bg-[#111827] border-slate-800 text-white group cursor-pointer"
         )}
     >
         <div className='flex items-center justify-between gap-2'>

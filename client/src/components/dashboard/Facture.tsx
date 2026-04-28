@@ -154,8 +154,7 @@ const Facture = ({
       const pdfBlob = pdf.output("blob");
       const formData = new FormData();
       const dataFacture = { ...payment, ...factureData };
-      const originalId = factureData.id; // "N°202601/007"
-
+      const originalId = factureData.id || "N/A"; // "N°202601/007"
       const renamedId = originalId.replace(/^N°/, '').replace('/', '-');
       formData.append(
         "facture",
@@ -216,7 +215,7 @@ const Facture = ({
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
       pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
-      const originalId = factureData.id; // "N°202601/007"
+      const originalId = factureData.id || "N/A";
       const renamedId = originalId.replace(/^N°/, '').replace('/', '-');
       pdf.save(`${renamedId}.pdf`);
     });

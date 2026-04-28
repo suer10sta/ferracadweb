@@ -14,7 +14,7 @@ const Stripe = require("stripe");
 const User = require('../models/User');
 const stripe = Stripe(
   process.env.STRIPE_SECRET_KEY_TEST ||
-    "sk_test_51SI4slB4LVww0NzzB0Ok33mLnJu3BEFBl8urO3e82If6hrGAsdqd2fHNtfVCLRazjlELcdGivZYjEyOeXqsS76vT00tolSUdNi"
+  "sk_test_51SI4slB4LVww0NzzB0Ok33mLnJu3BEFBl8urO3e82If6hrGAsdqd2fHNtfVCLRazjlELcdGivZYjEyOeXqsS76vT00tolSUdNi"
 );
 // const stripe = Stripe(
 //   process.env.STRIPE_SECRET_KEY ||
@@ -71,8 +71,9 @@ exports.createPayment = async (req, res) => {
     res.status(500).json({ message: 'Server error on create payment', valid: false });
   }
 };
+// hi there what are you doing ? 
 
-// Get all
+
 exports.getAllPayments = async (req, res) => {
   try {
     let paymentsData;

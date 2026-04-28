@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Search, CheckCircle, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -62,6 +63,7 @@ import {
 
 const PaymentsAdmin: React.FC = () => {
   const { t } = useLanguage();
+  const location = useLocation();
   const [rentalData, setRentalData] = useState<any[]>([]);
   const [registrationData, setregistrationData] = useState<any[]>([]);
   const [userData, setuserData] = useState<any[]>([]);
@@ -100,6 +102,28 @@ const PaymentsAdmin: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [methodFilter, setMethodFilter] = useState<string>("all");
   const [openFacture, setOpenFacture] = useState<any>({});
+  const [autoSendFacture, setAutoSendFacture] = useState<any>(false);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const rentalId = (location.state as any)?.id;
+    const isSend = (location.state as any)?.isSend;
+    if (!rentalId || !isSend) return;
+
+    const onceKey = `facture_autosent_${rentalId}`;
+    if (sessionStorage.getItem(onceKey) === "1") return;
+
+    const rental = rentalData.find((r) => r?._id === rentalId);
+    if (!rental?.payId) return;
+
+    const pay = paymentData.find((p) => p?._id === rental.payId);
+    if (!pay?._id) return;
+
+    sessionStorage.setItem(onceKey, "1");
+    setOpenFacture(pay);
+    setAutoSendFacture(true);
+  }, [loading, location.state, rentalData, paymentData]);
 
   const enrichedPayments = paymentData.map((payment) => {
     const facture = FacturesData.find((e) => e.payId._id === payment._id);
@@ -285,7 +309,12 @@ const PaymentsAdmin: React.FC = () => {
   return (
     <div className="space-y-6 mb-6">
       {openFacture?._id && (
-        <Facture payment={openFacture} setOpenFacture={setOpenFacture} />
+        <Facture
+          payment={openFacture}
+          setOpenFacture={setOpenFacture}
+          isHide={autoSendFacture}
+          setisHide={setAutoSendFacture}
+        />
       )}
       {/* Header */}
       <div>

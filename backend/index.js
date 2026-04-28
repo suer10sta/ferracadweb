@@ -348,7 +348,7 @@ cron.schedule("0 0 */7 * *", async () => {
       const checkRental = await Rental.find({ userId: user._id })
       if (checkRental.length <= 0) {
         sendEmail({
-          type: "rappel-order",
+          type: "free-trial-reminder",
           email: user.email,
           code: "",
           data: user,

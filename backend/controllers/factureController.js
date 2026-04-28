@@ -46,8 +46,19 @@ exports.sendFacture = async (req, res) => {
     const dataRental = JSON.parse(data);
 
     const fileName = file.path.replace(/\\/g, "/").split("/")?.pop();
-    const fileUrl = `${process.env.BACKEND_LIEN}/api/product/pdf/${fileName}`;
-    const getFacture = await Facture.findOne({ payId: (dataRental?.payId || dataRental?.facture.payId._id) });
+    const baseLien = (process.env.BACKEND_LIEN || '').replace(/\/api\/?$/, '');
+    const fileUrl = `${baseLien}/api/product/pdf/${fileName}`;
+    const payId =
+      dataRental?.payId ||
+      dataRental?._id ||
+      dataRental?.facture?.payId?._id ||
+      dataRental?.facture?.payId;
+
+    if (!payId) {
+      return res.status(400).json({ message: "Missing payId in invoice payload" });
+    }
+
+    const getFacture = await Facture.findOne({ payId });
 
     if (getUser.nTva && getUser.country === "BE" && dataRental.peppolSend) {
       // reseau peppol
@@ -65,7 +76,8 @@ exports.sendFacture = async (req, res) => {
       // Convert to Base64
       const fileBase64 = fileBuffer.toString('base64');
 
-      const orderLines = dataRental.registerInfos.map((item) => ({
+      const licensesList = dataRental.registerInfos || dataRental.licenses || [];
+      const orderLines = licensesList.map((item) => ({
         Quantity: 1,
         UnitPriceExcl:
           (dataRental.totalPricePay / (1 + dataRental.tva)) /
@@ -74,7 +86,7 @@ exports.sendFacture = async (req, res) => {
         DescriptionExtended: `Auth Code: ${item.authCode}`,
         VATPercentage: dataRental.tva * 100
       }));
-      
+
       // Add discount line only this facture
       if (getFacture.factureId === "N°202601/001") {
         orderLines.push({
@@ -160,15 +172,15 @@ exports.sendFacture = async (req, res) => {
       user: getUser,
     });
 
-    if(factureMail) {
-      await sendEmail({
-        type: "send-facture",
-        email: factureMail,
-        code: "",
-        data: { file, path: fileUrl, dataRental: dataRental },
-        user: getUser
-      })
-    }
+    /*     if(factureMail) {
+          await sendEmail({
+            type: "send-facture",
+            email: factureMail,
+            code: "",
+            data: { file, path: fileUrl, dataRental: dataRental },
+            user: getUser
+          })
+        } */
 
     const filePath = path.join(__dirname, "..", file.path);
     fs.unlink(filePath, (err) => {
