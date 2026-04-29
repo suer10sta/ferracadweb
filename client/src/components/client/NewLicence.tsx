@@ -566,21 +566,23 @@ const NewLicence = () => {
   const pricePerDay = freeTrial ? 0 : (userData.basedPrice || 5);
 
   const minExpirationDate = useMemo(() => {
-    if (selectedRegistrations.length === 0) {
-      const today = new Date();
-      today.setDate(today.getDate() + 1);
-      return today.toISOString().split("T")[0];
+    let referenceDate = new Date();
+
+    if (selectedRegistrations.length > 0) {
+      const dates = selectedRegistrations.map((id) => {
+        const reg = registrationData.find((r) => r._id === id);
+        return reg ? new Date(reg.expirationDate) : new Date();
+      });
+      referenceDate = new Date(Math.max(...dates.map((d) => d.getTime()), referenceDate.getTime()));
+    } else if (licenses && licenses.length > 0) {
+      const dates = licenses.map((l: any) => new Date(l.expirationDate));
+      referenceDate = new Date(Math.max(...dates.map((d) => d.getTime()), referenceDate.getTime()));
     }
 
-    const dates = selectedRegistrations.map((id) => {
-      const reg = registrationData.find((r) => r._id === id);
-      return reg ? new Date(reg.expirationDate) : new Date();
-    });
-
-    const maxDate = new Date(Math.max(...dates.map((d) => d.getTime())));
-    maxDate.setDate(maxDate.getDate() + 1);
-    return maxDate.toISOString().split("T")[0];
-  }, [selectedRegistrations, registrationData]);
+    const nextDay = new Date(referenceDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    return nextDay.toISOString().split("T")[0];
+  }, [selectedRegistrations, registrationData, licenses]);
 
   useEffect(() => {
     setValidateDateExp(formData.expirationDate >= minExpirationDate);
