@@ -98,7 +98,7 @@ const SettingsClient = () => {
     });
   }, [loading, userData]);
 
-  const updateSettingsData = (key: string, value: string) => {
+  const updateSettingsData = (key: string, value: any) => {
     setSettingsData((prev: any) => ({
       ...prev,
       [key]: value,

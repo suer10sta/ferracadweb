@@ -34,7 +34,7 @@ import Loading from '../elements/Loading';
 import { useLanguage } from '@/lang/LanguageProvider';
 import { FaRegClock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Info, HelpCircle } from 'lucide-react';
+import { Plus, HelpCircle } from 'lucide-react';
 import { TbReload } from 'react-icons/tb';
 
 function calculateTotalDays(histories: LicenseHistory[]): number {

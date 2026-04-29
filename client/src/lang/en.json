@@ -16,7 +16,7 @@
   "create_acc": "Create your account",
   "video_title": "Demonstration of how to use Ferracad",
   "message_send_success": "Sent successfully.",
-  "VAT_AUTO_21_2_BE": "Reverse charge – Art. 21 § 2 of the Belgian VAT Code",
+  "VAT_AUTO_21_2_BE": "Reverse charge – Article 21 §2 of the Belgian VAT Code and Article 196 of Directive 2006/112/EC",
   "and": "and",
   "read_our": "Read our",
   "hero_title": "REINFORCEMENT OF CONCRETE ELEMENTS",
@@ -298,7 +298,7 @@
   "recover_toastEmptyFields": "Please enter and confirm your password.",
   "recover_toastMismatch": "Passwords do not match.",
   "recover_toastShortPassword": "Your password must contain at least 8 characters.",
-  "sidebarDashboard": "License Management",
+  "sidebarDashboard": "Dashboard",
   "sidebarUsers": "Users",
   "sidebarOrders": "Orders",
   "sidebarLocations": "Rentals",
@@ -908,5 +908,11 @@
   "ACCESS_UPDATES": "Access to free updates",
   "PRIORITY_SUPPORT": "Priority technical support",
   "EXCLUSIVE_CONTENT": "Exclusive content and tutorials",
-  "error_generic": "An error occurred, please try again."
+  "error_generic": "An error occurred, please try again.",
+  "dashboardClient_orders_editProfile": "Edit my profile",
+  "dashboardClient_orders_cumulativeDays": "Total cumulative days",
+  "dashboardClient_orders_cumulativeDaysNote": "* Sum of days added individually for each selected computer.",
+  "dashboardClient_orders_manageFleet": "Manage your computer fleet",
+  "dashboardClient_orders_manageFleetDesc": "Select the computers you wish to renew. The system extends each license individually until the chosen date. You only pay for the added days!",
+  "dashboardClient_orders_syncNote": "Selected licenses will be automatically synchronized to the same end date."
 }

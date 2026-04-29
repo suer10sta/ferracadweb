@@ -267,7 +267,7 @@ const Facture = ({
     <div
       className={`fixed ${isHide
         ? "opacity-0 pointer-events-none z-0 bottom-[100%]"
-        : "top-0 left-0 z-50"
+        : "top-0 left-0 z-[100]"
         } bg-black/30 w-full h-screen flex justify-center items-center`}
     >
       <div className="bg-white p-3 w-[70%] rounded-lg">

@@ -42,7 +42,7 @@ import {
   FaDesktop,
   FaCheck
 } from 'react-icons/fa';
-import { User as UserIcon, Building2, Briefcase, Info, CheckCircle2, ShieldCheck } from "lucide-react";
+import { User as UserIcon, Building2, Briefcase, CheckCircle2, ShieldCheck } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -112,7 +112,6 @@ const NewLicence = () => {
         const getSettings = await settings();
         const getTax = await tauxTva();
         const getRegistrations = await registrations();
-        const checkIfItsZero = countries.find((e) => e.code === (getTax?.country || getUser?.country))?.isZero;
         
         // New VAT Logic based on Belgian seller rules
         let valueTva = getTax?.taux_tva || 0;
@@ -264,10 +263,6 @@ const NewLicence = () => {
       expDate >= today ? new Date(licenses[0].expirationDate) : new Date()
     );
   }, []);
-
-  const expiration = new Date(formData.expirationDate);
-  const diffTime = expiration.getTime() - today.getTime();
-  const daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   const handleSubmit = async () => {
     const isCompanyOrPro = userData.clientType === 'company' || userData.clientType === 'professional';
@@ -573,10 +568,10 @@ const NewLicence = () => {
         const reg = registrationData.find((r) => r._id === id);
         return reg ? new Date(reg.expirationDate) : new Date();
       });
-      referenceDate = new Date(Math.max(...dates.map((d) => d.getTime()), referenceDate.getTime()));
+      referenceDate = new Date(Math.max(...dates.map((d: any) => d.getTime()), referenceDate.getTime()));
     } else if (licenses && licenses.length > 0) {
       const dates = licenses.map((l: any) => new Date(l.expirationDate));
-      referenceDate = new Date(Math.max(...dates.map((d) => d.getTime()), referenceDate.getTime()));
+      referenceDate = new Date(Math.max(...dates.map((d: any) => d.getTime()), referenceDate.getTime()));
     }
 
     const nextDay = new Date(referenceDate);
@@ -949,7 +944,7 @@ const NewLicence = () => {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors border border-blue-100"
               >
                 <HiExternalLink className="w-3 h-3" />
-                {t("Modifier mon profil")}
+                {t("dashboardClient_orders_editProfile")}
               </Link>
             </div>
 
@@ -1098,10 +1093,10 @@ const NewLicence = () => {
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-blue-900 uppercase tracking-tight">
-                        {t("Gestion de votre parc informatique")}
+                        {t("dashboardClient_orders_manageFleet")}
                       </h4>
                       <p className="text-xs text-blue-700 mt-1.5 leading-relaxed font-medium">
-                        {t("Sélectionnez les ordinateurs que vous souhaitez renouveler. Le système prolonge chaque licence individuellement jusqu'à la date choisie. Vous ne payez que les jours ajoutés !")}
+                        {t("dashboardClient_orders_manageFleetDesc")}
                       </p>
                     </div>
                   </div>
@@ -1150,7 +1145,7 @@ const NewLicence = () => {
                 </div>
                 <p className="mt-4 text-[11px] text-slate-400 italic flex items-center gap-2">
                   <span className="w-1.5 h-1.5 bg-blue-400 rounded-full"></span>
-                  {t("Les licences sélectionnées seront automatiquement synchronisées sur la même date de fin.")}
+                  {t("dashboardClient_orders_syncNote")}
                 </p>
               </div>
             )}
@@ -1445,13 +1440,13 @@ const NewLicence = () => {
 
             <div className="flex flex-col mb-4 border-b border-gray-100 pb-4">
               <div className="flex justify-between items-center mb-1">
-                <span className="text-sm font-semibold text-gray-700">{t("Cumul total des jours")}</span>
+                <span className="text-sm font-semibold text-gray-700">{t("dashboardClient_orders_cumulativeDays")}</span>
                 <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-sm">
                   {formData.daysUntilExpiration} {t("pay_03_j")}
                 </span>
               </div>
               <p className="text-[10px] text-slate-400 italic leading-tight">
-                {t("* Somme des jours ajoutés individuellement pour chaque ordinateur sélectionné.")}
+                {t("dashboardClient_orders_cumulativeDaysNote")}
               </p>
             </div>
 

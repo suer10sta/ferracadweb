@@ -20,6 +20,9 @@ import Loading from "../elements/Loading";
 import { Building, MapPin, Home, FileText } from "lucide-react";
 import countries from "@/data/countries.json";
 import NewUser from "../dashboard/NewUser";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const NewLicenceAdmin = () => {
   const [userData, setuserData] = useState<any>({});
@@ -100,6 +103,8 @@ const NewLicenceAdmin = () => {
 
   const [_, setMinDate] = useState("");
   const [state, setState] = useState("Client");
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [openUserSelect, setOpenUserSelect] = useState(false);
 
   useEffect(() => {
     // Initialize default start and expiration dates when creating a new license
@@ -607,40 +612,82 @@ const NewLicenceAdmin = () => {
                     </Label>
                     <NewUser type="icon" />
                   </div>
-                  <Select
-                    value={formData.userId}
-                    onValueChange={(value) =>
-                      setFormData((prev: any) => ({ ...prev, userId: value }))
-                    }
-                  >
-                    <SelectTrigger className="w-full py-6 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-colors">
-                      <SelectValue
-                        placeholder={t(
-                          "dashboardClient_orders_selectUserLabel"
-                        )}
-                      />
-                    </SelectTrigger>
-                    <SelectContent className="border-gray-200 shadow-lg">
-                      {usersData
-                        .filter((e: any) => e.role !== "admin")
-                        .map((user: any, i: number) => (
-                          <SelectItem
-                            key={i}
-                            value={user._id}
-                            className="text-sm hover:bg-gray-50 cursor-pointer"
-                          >
-                            <div className="flex flex-col items-start">
-                              <span className="font-medium text-gray-900">
-                                {user.name}
-                              </span>
-                              <span className="text-gray-500 text-xs">
-                                {user.company}
-                              </span>
+                  <Popover open={openUserSelect} onOpenChange={setOpenUserSelect}>
+                    <PopoverTrigger asChild>
+                      <button
+                        role="combobox"
+                        aria-expanded={openUserSelect}
+                        className="flex h-12 w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+                      >
+                        <span className="truncate">
+                          {formData.userId
+                            ? usersData.find((u: any) => u._id === formData.userId)?.name
+                            : t("dashboardClient_orders_selectUserLabel")}
+                        </span>
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[450px] max-w-[90vw] p-0" align="start">
+                      <div className="flex items-center border-b px-3 pb-2 pt-3">
+                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                        <input
+                          className="flex h-8 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-gray-500 disabled:cursor-not-allowed disabled:opacity-50"
+                          placeholder={t("dashboardClient_orders_search_placeholder")}
+                          value={userSearchTerm}
+                          onChange={(e) => setUserSearchTerm(e.target.value)}
+                        />
+                      </div>
+                      <div className="max-h-[300px] overflow-y-auto p-1">
+                        {usersData
+                          .filter((e: any) => e.role !== "admin")
+                          .filter((u: any) => 
+                            !userSearchTerm || 
+                            u.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                            u.company?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                            u.email?.toLowerCase().includes(userSearchTerm.toLowerCase())
+                          )
+                          .map((user: any) => (
+                            <div
+                              key={user._id}
+                              className={cn(
+                                "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none hover:bg-gray-100",
+                                formData.userId === user._id && "bg-gray-100"
+                              )}
+                              onClick={() => {
+                                setFormData((prev: any) => ({ ...prev, userId: user._id }));
+                                setOpenUserSelect(false);
+                                setUserSearchTerm("");
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  formData.userId === user._id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <div className="flex flex-col items-start overflow-hidden">
+                                <span className="font-medium text-gray-900 truncate w-full">
+                                  {user.name}
+                                </span>
+                                <span className="text-gray-500 text-xs truncate w-full">
+                                  {user.company} • {user.email}
+                                </span>
+                              </div>
                             </div>
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                          ))}
+                        {usersData.filter((e: any) => e.role !== "admin").filter((u: any) => 
+                          !userSearchTerm || 
+                          u.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                          u.company?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                          u.email?.toLowerCase().includes(userSearchTerm.toLowerCase())
+                        ).length === 0 && (
+                          <div className="py-6 text-center text-sm text-gray-500">
+                            {t("dashboardAdmin_users_noResults") || "Aucun utilisateur trouvé."}
+                          </div>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="grid gap-3">

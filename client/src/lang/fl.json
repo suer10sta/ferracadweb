@@ -15,7 +15,7 @@
   "create_acc": "Maak uw account aan",
   "video_title": "Demonstratie van het gebruik van Ferracad",
   "message_send_success": "Succesvol verzonden.",
-  "VAT_AUTO_21_2_BE": "Zelfbelasting – Art. 21 § 2 van het Belgische btw-wetboek",
+  "VAT_AUTO_21_2_BE": "Verlegging van heffing – Artikel 21 §2 van het Belgische btw-wetboek en artikel 196 van Richtlijn 2006/112/EG",
   "and": "en",
   "read_our": "Lees onze",
   "hero_title": "WAPENING VAN BETONELEMENTEN",
@@ -297,7 +297,7 @@
   "recover_toastEmptyFields": "Voer en bevestig je wachtwoord in.",
   "recover_toastMismatch": "Wachtwoorden komen niet overeen.",
   "recover_toastShortPassword": "Je wachtwoord moet minimaal 8 tekens bevatten.",
-  "sidebarDashboard": "Licentiebeheer",
+  "sidebarDashboard": "Dashboard",
   "sidebarUsers": "Gebruikers",
   "sidebarOrders": "Bestellingen",
   "sidebarLocations": "Locaties",
@@ -907,5 +907,11 @@
   "ACCESS_UPDATES": "Toegang tot gratis updates",
   "PRIORITY_SUPPORT": "Prioritaire technische ondersteuning",
   "EXCLUSIVE_CONTENT": "Exclusieve inhoud en tutorials",
-  "error_generic": "Er is een fout opgetreden, probeer het opnieuw."
+  "error_generic": "Er is een fout opgetreden, probeer het opnieuw.",
+  "dashboardClient_orders_editProfile": "Mijn profiel bewerken",
+  "dashboardClient_orders_cumulativeDays": "Totaal gecumuleerde dagen",
+  "dashboardClient_orders_cumulativeDaysNote": "* Som van de dagen die individueel zijn toegevoegd voor elke geselecteerde computer.",
+  "dashboardClient_orders_manageFleet": "Beheer van uw computerpark",
+  "dashboardClient_orders_manageFleetDesc": "Selecteer de computers die u wilt vernieuwen. Het systeem verlengt elke licentie individueel tot de gekozen datum. U betaalt alleen voor de toegevoegde dagen!",
+  "dashboardClient_orders_syncNote": "Geselecteerde licenties worden automatisch gesynchroniseerd naar dezelfde einddatum."
 }

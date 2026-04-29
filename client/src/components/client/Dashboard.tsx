@@ -1,23 +1,12 @@
 import Card from '@/components/dashboard/Card';
-import { FiExternalLink } from 'react-icons/fi';
+
 import { HiExternalLink } from 'react-icons/hi';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useNavigate } from 'react-router-dom';
 import { MdKey, MdVpnKeyOff } from 'react-icons/md';
 import { enrichedUser } from '@/data/dataUser';
 import { TbLicense } from 'react-icons/tb';
-import { PiContactlessPaymentBold } from 'react-icons/pi';
-import { formatDate } from '@/utils/formatDate';
-import { Badge } from '../ui/badge';
-import { useEffect, useMemo, useState } from 'react';
+
+import {  useMemo, useState } from 'react';
 import { IoGiftSharp } from 'react-icons/io5';
 import Loading from '../elements/Loading';
 import { useLanguage } from '@/lang/LanguageProvider';
@@ -34,7 +23,6 @@ const DashboardClient = () => {
     const getStatus = (reg: any) => {
       const expDate = reg.expirationDate ? new Date(reg.expirationDate) : null;
       const isExpired = expDate ? expDate < now : false;
-      const daysUntil = expDate ? Math.ceil((expDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0;
       
       if (isExpired) return "expired";
       if (reg.status === "freetrial") return "freetrial";
@@ -89,9 +77,6 @@ const DashboardClient = () => {
       }
     ];
   }, [user.registrationData, t, statusFilter]);
-
-  const lastPayments = user.paymentData;
-  const totalAmount = lastPayments?.reduce((curr: any, arr: { totalPricePay: any; }) => curr + arr.totalPricePay, 0).toFixed(2) || 0;
 
   const handleGetFreeTrial = () => {
     if (user.rentalData.length > 0) return;

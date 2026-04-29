@@ -3,11 +3,11 @@ import axios from 'axios'
 import { AiOutlineQuestionCircle } from 'react-icons/ai'
 import { BsCurrencyDollar } from 'react-icons/bs'
 import { FaUsers, FaSlackHash } from 'react-icons/fa'
-import { FiTarget } from 'react-icons/fi'
+
 import { IoIosMail, IoMdLogOut } from 'react-icons/io'
 import { IoAppsOutline, IoSettings } from 'react-icons/io5'
 import { LuBraces } from 'react-icons/lu'
-import { TbLicense } from 'react-icons/tb'
+
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import LogoFerracad from "@/assets/ferracad-logo.png"
 import { FiSidebar } from "react-icons/fi";

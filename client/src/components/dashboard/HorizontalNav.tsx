@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Link, useLocation } from 'react-router-dom';
 import { IoAppsOutline, IoSettings } from 'react-icons/io5';
 import { BsCurrencyDollar } from 'react-icons/bs';
@@ -13,7 +13,7 @@ const HorizontalNav = ({ className }: { className?: string }) => {
   const menuItems = [
     {
       icon: IoAppsOutline,
-      title: t("sidebarDashboard"),
+      title: "Gestion des licences",
       path: "/tableau-de-board",
     },
     {

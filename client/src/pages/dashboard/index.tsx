@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { Helmet } from "react-helmet";
 import { useLanguage } from '@/lang/LanguageProvider';
 import { getUser } from '@/utils/auth';
-import HorizontalNav from '@/components/dashboard/HorizontalNav';
 
 const index = () => {
     const { t } = useLanguage()

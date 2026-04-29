@@ -1,150 +1,139 @@
 {
- "title": "Ferracad 23.14 - Logiciel pour AutoCAD®, ZWCAD®",
- "checkout_processing": "Traitement...",
- "dashboardClient_orders_transferred": "Transférée",
- "description": "Ferracad permet de réaliser des plans de ferraillage avec une précision exceptionnelle et une rapidité accrue. Optimisez vos projets de construction grâce à une solution intelligente, fiable et adaptée aux professionnels du bâtiment.",
-
- "Accueil": "Accueil",
- "Docs": "Docs",
- "Fonctionnalites": "Fonctionnalités & formation",
- "Louer": "Louer",
- "Contact": "Contacts",
- "aide": "Besoin de l’aide ?",
- "contact": "Contactez-nous !",
- "telechargement": "Téléchargement",
- "Langue": "Langue",
- "gratuitement": "Gratuitement",
- "create_acc": "Créer votre compte",
- "video_title": "Démonstration de l'utilisation de Ferracad",
- "message_send_success": "Envoyé avec succès.",
-
- "VAT_AUTO_21_2_BE": "Autoliquidation – Art. 21 § 2 du Code TVA belge",
-
- "and": "et",
- "read_our": "Lisez notre",
-
- "hero_title": "FERRAILLAGE DES ELEMENTS BETON",
- "hero_description": "Ferracad est un complément pour <span class='font-bold'>AutoCAD®</span>, <span class='font-bold'>ZWCAD®</span>, permettant de concevoir facilement vos plans d’armatures.",
- "hero_download_free": "Télécharger gratuitement",
- "hero_subtit_download": "Démonstration limitée à 30 jours",
- "hero_how_it_works": "Découvrir la plateforme",
-
- "presentation_desc": "Ferracad est un logiciel complémentaire à <span class='font-bold'>AutoCAD®</span>, <span class='font-bold'>ZWCAD®</span>, qui permet de réaliser des plans de ferraillage de façon plus rapide, précise et conforme aux normes, tout en éliminant le dessin manuel.",
-
- "feature_title1": "Dessin et ferraillage plus rapides",
- "feature_description1": "Créez vos barres, cadres et cerclages en quelques clics.",
- "feature_title2": "Gain de temps et réduction des erreurs manuelles",
- "feature_description2": "Automatisez les calculs, les repères et les mises à jour.",
- "feature_title3": "Génération de bordereaux Excel en un clic",
- "feature_description3": "Exportez les nomenclatures complètes avec schémas et quantités.",
- "feature_title4": "Centralisation des données projet et dessin",
- "feature_description4": "Optimisez votre flux de travail avec des outils dédiés au béton armé.",
- "feature_title5": "Entièrement paramétrable",
- "feature_description5": "Adaptez Ferracad à vos besoins : pas, enrobage, échelles, cartouches, etc.",
- "feature_title6": "Facile à prendre en main, puissant à utiliser",
- "feature_description6": "Interface intuitive avec palette dédiée et commandes claires.",
-
- "work_title": "Compatibilité avec vos outils préférés",
- "work_description": "Ferracad s’intègre parfaitement dans votre environnement de travail, en prenant en charge les principales plateformes de CAO utilisées dans la conception de structures.",
- "work_play": "Comment ça marche ?",
-
- "whyus_title": "Pourquoi choisir Ferracad plutôt qu’un autre outil ?",
- "whyus_description": "Alliant prise en main rapide, facilité d’usage et performance, Ferracad booste la production tout en répondant aux exigences techniques des pros du béton armé.",
- "whyus_question": "Vous avez une question ? ",
- "whyus_contact": "Contactez-nous dès maintenant",
- "whyus_feature_title1": "Spécialisation et expertise sectorielle",
- "whyus_feature_title2": "Qualité constante des plans de ferraillage",
- "whyus_feature_title3": "Traçabilité complète des modifications",
- "whyus_feature_title4": "Simplicité d’apprentissage et accompagnement personnalisé",
- "whyus_feature_description1": "Ferracad est conçu pour les bureaux d'études en construction, les entreprises et surtout pour soulager le travail des projeteurs en ferraillage.",
- "whyus_feature_description2": "Grâce à l'automatisation des repères, des schémas et des bordereaux, les plans produits sont cohérents, précis et conformes aux normes techniques.",
- "whyus_feature_description3": "Chaque modification de barre ou de repère est suivie et contrôlable, ce qui facilite les révisions, les validations et le suivi de projet.",
- "whyus_feature_description4": "Prise en main rapide et assistance dédiée pour garantir une utilisation optimale dès les premiers projets.",
-
- "funtion_title": "Fonctionnalités Clés de Ferracad",
- "funtion_description": "Des outils puissants pour automatiser, structurer et fiabiliser vos plans de ferraillage",
- "funtion_more": "Afficher plus",
- "funtion_title1": "Insertion de repères (indices)",
- "funtion_description1": "Automatise l’identification de chaque barre avec un repère unique, généré selon sa forme et sa position, assurant une traçabilité totale dans les plans et les nomenclatures.",
- "funtion_title2": "Alignement des repères en colonnes",
- "funtion_description2": "Met en forme les repères de manière propre et ordonnée dans le plan, facilitant la lecture et la validation par les différents intervenants.",
- "funtion_title3": "Dessin des barres (fers)",
- "funtion_description3": "Permet de tracer avec précision des barres d’armature selon les paramètres du projet directement dans AutoCAD, Zwcad, avec une parfaite maîtrise des dimensions et des formes.",
-
- "questions": [
-   {
-    "q": "Qu’est-ce que Ferracad ?",
-    "a": "Ferracad est un complément (plugin) pour AutoCAD qui permet de concevoir des plans d’armatures. Il facilite le dessin de barres, l’insertion de repères, et la génération automatique de bordereaux d'acier au format Excel."
-   },
-   {
-    "q": "Comment obtenir mon code d’autorisation Ferracad ?",
-    "a": "Après l’installation, lancez AutoCAD et ouvrez la palette Ferracad. Un message s’affiche indiquant que le code d’autorisation n’est pas valide. Cliquez sur OK, puis rendez-vous sur http://ferracad.com/enregistrement pour vous enregistrer. Un code vous sera envoyé par e-mail. Attention, vérifiez vos spams."
-   },
-   {
-    "q": "Quelle est la configuration minimale requise pour utiliser Ferracad ?",
-    "a": "Ferracad fonctionne avec AutoCAD versions 2021 à 2023 et Microsoft Excel. Assurez-vous que ces logiciels sont installés sur votre poste avant d’installer Ferracad."
-   },
-   {
-    "q": "Ferracad est-il compatible avec toutes les versions d’AutoCAD ?",
-    "a": "Non, Ferracad est uniquement compatible avec certaines versions spécifiques d’AutoCAD. La version actuelle est compatible avec AutoCAD 2021 à 2023. Les versions antérieures ou ultérieures ne sont pas garanties compatibles."
-   },
-   {
-    "q": "Que faire si mes repères ne s’affichent pas correctement ?",
-    "a": "Vérifiez que la barre à laquelle vous appliquez le repère est une polyligne 2D (LWPOLYLINE) et qu’elle se trouve sur le calque nommé 'acier'. Assurez-vous également que la palette Ferracad est bien configurée."
-   },
-   {
-    "q": "Ferracad est-il gratuit ?",
-    "a": "Non, Ferracad nécessite un code d’autorisation qui est obtenu via enregistrement. Ce code est généralement délivré après l'achat ou la demande d'une licence."
-   },
-   {
-    "q": "Sur quelles versions d’AutoCAD et Excel Ferracad fonctionne-t-il ?",
-    "a": "Ferracad fonctionne avec AutoCAD versions 2021 à 2023 et Microsoft Excel. Les autres versions ne sont pas officiellement prises en charge."
-   },
-   {
-    "q": "Comment installer Ferracad ?",
-    "a": "Lancez le programme d’installation de Ferracad et suivez les instructions. Une fois l’installation terminée, ouvrez AutoCAD et accédez à la palette Ferracad. Vous devrez alors entrer un code d’autorisation pour activer le logiciel."
-   },
-   {
-    "q": "Comment accéder à la palette d’utilisation de Ferracad ?",
-    "a": "Une fois AutoCAD lancé, cliquez sur le bouton d’ouverture de la palette Ferracad. Cette palette vous permettra d’entrer les paramètres des barres, des repères, des échelles, etc."
-   },
-   {
-    "q": "À quoi servent les fichiers profil WMF ?",
-    "a": "Les fichiers WMF (Windows Metafile) contiennent les schémas des barres utilisés dans le bordereau Excel. Ils permettent de représenter visuellement la forme d’une barre dans le tableau, sans lier les dimensions réelles."
-   },
-   {
-    "q": "Quelle est la différence entre AutoCAD et Ferracad ?",
-    "a": "AutoCAD est un logiciel de dessin assisté par ordinateur (DAO), tandis que Ferracad est un complément qui ajoute des fonctionnalités spécialisées pour le dessin et le repérage des armatures en béton armé, ainsi que l’export vers Excel."
-   },
-   {
-    "q": "Ferracad fonctionne-t-il sur macOS ?",
-    "a": "Non, Ferracad est conçu pour fonctionner uniquement sur Windows, en raison de sa dépendance à AutoCAD pour Windows et à Microsoft Excel."
-   },
-   {
-    "q": "Où se trouvent les fichiers de configuration de Ferracad ?",
-    "a": "Les fichiers de configuration (comme le modèle Excel template) sont généralement installés dans le répertoire d’installation de Ferracad. Vous pouvez spécifier ou modifier le chemin du fichier template Excel via la boîte de dialogue des propriétés du projet."
-   },
-   {
-    "q": "Peut-on regrouper les barres identiques ?",
-    "a": "Oui, Ferracad permet de regrouper les barres ayant les mêmes caractéristiques (diamètre, longueur, forme) à l’aide de la fonction de groupe dans la palette. Cela facilite la gestion des quantités dans le bordereau."
-   },
-   {
-    "q": "L’export Excel ne fonctionne pas, que faire ?",
-    "a": "Vérifiez que le fichier Excel template est correctement renseigné dans les propriétés du projet, et qu’il contient bien les trois feuilles nommées 'GARDE', 'BORD' et 'RECAP'. Assurez-vous également que les cellules nécessaires sont bien nommées et qu’Excel est installé sur votre poste."
-   }
+  "title": "Ferracad 23.14 - Logiciel pour AutoCAD®, ZWCAD®",
+  "checkout_processing": "Traitement...",
+  "dashboardClient_orders_transferred": "Transférée",
+  "description": "Ferracad permet de réaliser des plans de ferraillage avec une précision exceptionnelle et une rapidité accrue. Optimisez vos projets de construction grâce à une solution intelligente, fiable et adaptée aux professionnels du bâtiment.",
+  "Accueil": "Accueil",
+  "Docs": "Docs",
+  "Fonctionnalites": "Fonctionnalités & formation",
+  "Louer": "Louer",
+  "Contact": "Contacts",
+  "aide": "Besoin de l’aide ?",
+  "contact": "Contactez-nous !",
+  "telechargement": "Téléchargement",
+  "Langue": "Langue",
+  "gratuitement": "Gratuitement",
+  "create_acc": "Créer votre compte",
+  "video_title": "Démonstration de l'utilisation de Ferracad",
+  "message_send_success": "Envoyé avec succès.",
+  "VAT_AUTO_21_2_BE": "Autoliquidation – Art. 21 § 2 du Code TVA belge et article 196 de la directive 2006/112/CE",
+  "and": "et",
+  "read_our": "Lisez notre",
+  "hero_title": "FERRAILLAGE DES ELEMENTS BETON",
+  "hero_description": "Ferracad est un complément pour <span class='font-bold'>AutoCAD®</span>, <span class='font-bold'>ZWCAD®</span>, permettant de concevoir facilement vos plans d’armatures.",
+  "hero_download_free": "Télécharger gratuitement",
+  "hero_subtit_download": "Démonstration limitée à 30 jours",
+  "hero_how_it_works": "Découvrir la plateforme",
+  "presentation_desc": "Ferracad est un logiciel complémentaire à <span class='font-bold'>AutoCAD®</span>, <span class='font-bold'>ZWCAD®</span>, qui permet de réaliser des plans de ferraillage de façon plus rapide, précise et conforme aux normes, tout en éliminant le dessin manuel.",
+  "feature_title1": "Dessin et ferraillage plus rapides",
+  "feature_description1": "Créez vos barres, cadres et cerclages en quelques clics.",
+  "feature_title2": "Gain de temps et réduction des erreurs manuelles",
+  "feature_description2": "Automatisez les calculs, les repères et les mises à jour.",
+  "feature_title3": "Génération de bordereaux Excel en un clic",
+  "feature_description3": "Exportez les nomenclatures complètes avec schémas et quantités.",
+  "feature_title4": "Centralisation des données projet et dessin",
+  "feature_description4": "Optimisez votre flux de travail avec des outils dédiés au béton armé.",
+  "feature_title5": "Entièrement paramétrable",
+  "feature_description5": "Adaptez Ferracad à vos besoins : pas, enrobage, échelles, cartouches, etc.",
+  "feature_title6": "Facile à prendre en main, puissant à utiliser",
+  "feature_description6": "Interface intuitive avec palette dédiée et commandes claires.",
+  "work_title": "Compatibilité avec vos outils préférés",
+  "work_description": "Ferracad s’intègre parfaitement dans votre environnement de travail, en prenant en charge les principales plateformes de CAO utilisées dans la conception de structures.",
+  "work_play": "Comment ça marche ?",
+  "whyus_title": "Pourquoi choisir Ferracad plutôt qu’un autre outil ?",
+  "whyus_description": "Alliant prise en main rapide, facilité d’usage et performance, Ferracad booste la production tout en répondant aux exigences techniques des pros du béton armé.",
+  "whyus_question": "Vous avez une question ? ",
+  "whyus_contact": "Contactez-nous dès maintenant",
+  "whyus_feature_title1": "Spécialisation et expertise sectorielle",
+  "whyus_feature_title2": "Qualité constante des plans de ferraillage",
+  "whyus_feature_title3": "Traçabilité complète des modifications",
+  "whyus_feature_title4": "Simplicité d’apprentissage et accompagnement personnalisé",
+  "whyus_feature_description1": "Ferracad est conçu pour les bureaux d'études en construction, les entreprises et surtout pour soulager le travail des projeteurs en ferraillage.",
+  "whyus_feature_description2": "Grâce à l'automatisation des repères, des schémas et des bordereaux, les plans produits sont cohérents, précis et conformes aux normes techniques.",
+  "whyus_feature_description3": "Chaque modification de barre ou de repère est suivie et contrôlable, ce qui facilite les révisions, les validations et le suivi de projet.",
+  "whyus_feature_description4": "Prise en main rapide et assistance dédiée pour garantir une utilisation optimale dès les premiers projets.",
+  "funtion_title": "Fonctionnalités Clés de Ferracad",
+  "funtion_description": "Des outils puissants pour automatiser, structurer et fiabiliser vos plans de ferraillage",
+  "funtion_more": "Afficher plus",
+  "funtion_title1": "Insertion de repères (indices)",
+  "funtion_description1": "Automatise l’identification de chaque barre avec un repère unique, généré selon sa forme et sa position, assurant une traçabilité totale dans les plans et les nomenclatures.",
+  "funtion_title2": "Alignement des repères en colonnes",
+  "funtion_description2": "Met en forme les repères de manière propre et ordonnée dans le plan, facilitant la lecture et la validation par les différents intervenants.",
+  "funtion_title3": "Dessin des barres (fers)",
+  "funtion_description3": "Permet de tracer avec précision des barres d’armature selon les paramètres du projet directement dans AutoCAD, Zwcad, avec une parfaite maîtrise des dimensions et des formes.",
+  "questions": [
+    {
+      "q": "Qu’est-ce que Ferracad ?",
+      "a": "Ferracad est un complément (plugin) pour AutoCAD qui permet de concevoir des plans d’armatures. Il facilite le dessin de barres, l’insertion de repères, et la génération automatique de bordereaux d'acier au format Excel."
+    },
+    {
+      "q": "Comment obtenir mon code d’autorisation Ferracad ?",
+      "a": "Après l’installation, lancez AutoCAD et ouvrez la palette Ferracad. Un message s’affiche indiquant que le code d’autorisation n’est pas valide. Cliquez sur OK, puis rendez-vous sur http://ferracad.com/enregistrement pour vous enregistrer. Un code vous sera envoyé par e-mail. Attention, vérifiez vos spams."
+    },
+    {
+      "q": "Quelle est la configuration minimale requise pour utiliser Ferracad ?",
+      "a": "Ferracad fonctionne avec AutoCAD versions 2021 à 2023 et Microsoft Excel. Assurez-vous que ces logiciels sont installés sur votre poste avant d’installer Ferracad."
+    },
+    {
+      "q": "Ferracad est-il compatible avec toutes les versions d’AutoCAD ?",
+      "a": "Non, Ferracad est uniquement compatible avec certaines versions spécifiques d’AutoCAD. La version actuelle est compatible avec AutoCAD 2021 à 2023. Les versions antérieures ou ultérieures ne sont pas garanties compatibles."
+    },
+    {
+      "q": "Que faire si mes repères ne s’affichent pas correctement ?",
+      "a": "Vérifiez que la barre à laquelle vous appliquez le repère est une polyligne 2D (LWPOLYLINE) et qu’elle se trouve sur le calque nommé 'acier'. Assurez-vous également que la palette Ferracad est bien configurée."
+    },
+    {
+      "q": "Ferracad est-il gratuit ?",
+      "a": "Non, Ferracad nécessite un code d’autorisation qui est obtenu via enregistrement. Ce code est généralement délivré après l'achat ou la demande d'une licence."
+    },
+    {
+      "q": "Sur quelles versions d’AutoCAD et Excel Ferracad fonctionne-t-il ?",
+      "a": "Ferracad fonctionne avec AutoCAD versions 2021 à 2023 et Microsoft Excel. Les autres versions ne sont pas officiellement prises en charge."
+    },
+    {
+      "q": "Comment installer Ferracad ?",
+      "a": "Lancez le programme d’installation de Ferracad et suivez les instructions. Une fois l’installation terminée, ouvrez AutoCAD et accédez à la palette Ferracad. Vous devrez alors entrer un code d’autorisation pour activer le logiciel."
+    },
+    {
+      "q": "Comment accéder à la palette d’utilisation de Ferracad ?",
+      "a": "Une fois AutoCAD lancé, cliquez sur le bouton d’ouverture de la palette Ferracad. Cette palette vous permettra d’entrer les paramètres des barres, des repères, des échelles, etc."
+    },
+    {
+      "q": "À quoi servent les fichiers profil WMF ?",
+      "a": "Les fichiers WMF (Windows Metafile) contiennent les schémas des barres utilisés dans le bordereau Excel. Ils permettent de représenter visuellement la forme d’une barre dans le tableau, sans lier les dimensions réelles."
+    },
+    {
+      "q": "Quelle est la différence entre AutoCAD et Ferracad ?",
+      "a": "AutoCAD est un logiciel de dessin assisté par ordinateur (DAO), tandis que Ferracad est un complément qui ajoute des fonctionnalités spécialisées pour le dessin et le repérage des armatures en béton armé, ainsi que l’export vers Excel."
+    },
+    {
+      "q": "Ferracad fonctionne-t-il sur macOS ?",
+      "a": "Non, Ferracad est conçu pour fonctionner uniquement sur Windows, en raison de sa dépendance à AutoCAD pour Windows et à Microsoft Excel."
+    },
+    {
+      "q": "Où se trouvent les fichiers de configuration de Ferracad ?",
+      "a": "Les fichiers de configuration (comme le modèle Excel template) sont généralement installés dans le répertoire d’installation de Ferracad. Vous pouvez spécifier ou modifier le chemin du fichier template Excel via la boîte de dialogue des propriétés du projet."
+    },
+    {
+      "q": "Peut-on regrouper les barres identiques ?",
+      "a": "Oui, Ferracad permet de regrouper les barres ayant les mêmes caractéristiques (diamètre, longueur, forme) à l’aide de la fonction de groupe dans la palette. Cela facilite la gestion des quantités dans le bordereau."
+    },
+    {
+      "q": "L’export Excel ne fonctionne pas, que faire ?",
+      "a": "Vérifiez que le fichier Excel template est correctement renseigné dans les propriétés du projet, et qu’il contient bien les trois feuilles nommées 'GARDE', 'BORD' et 'RECAP'. Assurez-vous également que les cellules nécessaires sont bien nommées et qu’Excel est installé sur votre poste."
+    }
   ],
-  "faq_title": "Questions fréquentes", 
-  "faq_description": "Toutes les réponses aux questions que vous vous posez sur Ferracad.", 
+  "faq_title": "Questions fréquentes",
+  "faq_description": "Toutes les réponses aux questions que vous vous posez sur Ferracad.",
   "faq_see_more": "Voir toutes les FAQ",
-
   "newsletter_title": "Restez informé avec notre newsletter Ferracad",
-  "newsletter_description": "Recevez par e-mail les dernières actualités Ferracad : mises à jour, astuces, tutoriels, promos et nouveautés pour <span class='font-bold'>AutoCAD®</span>, <span class='font-bold'>ZWCAD®</span> !", "newsletter_btn": "Je m’inscris",
+  "newsletter_description": "Recevez par e-mail les dernières actualités Ferracad : mises à jour, astuces, tutoriels, promos et nouveautés pour <span class='font-bold'>AutoCAD®</span>, <span class='font-bold'>ZWCAD®</span> !",
+  "newsletter_btn": "Je m’inscris",
   "newsletter_ps": "Ne vous inquiétez pas, vous avez le droit de vous désinscrire à tout moment.",
   "newsletter_warning": "Veuillez entrer votre adresse e-mail.",
   "newsletter_success": "Vous êtes maintenant abonné à notre newsletter !",
   "newsletter_warning_request": "Adresse e-mail déjà abonnée.",
   "newsletter_error": "Une erreur est survenue. Veuillez réessayer plus tard.",
-
   "features_title": "Fonctionnalités clés de Ferracad",
   "features_description": "Tout ce dont vous avez besoin pour gérer, partager et sécuriser vos propriétés avec efficacité.",
   "features_list_title1": "Dessiner des fers (barres)",
@@ -177,16 +166,13 @@
   "features_moin": "Afficher moins",
   "features_title_demo": "Découvrez Ferracad en action",
   "features_description_demo": "Regardez cette courte vidéo pour faire vos premiers pas avec Ferracad et maîtriser les bases en quelques minutes.",
-
   "call_title": "Faites une visite de Vesto",
   "call_btn": "Obtenir une démo",
   "call_title1": "Gagnez du Temps avec Ferracad — Louez-le à la Journée",
   "call_description": "Accédez à toute la puissance du Ferracad pour seulement <span style='font-weight: bold' class='font-bold'>5 €/jour</span>. Une solution rapide, flexible et sans engagement pour produire vos plans d’armatures directement dans AutoCAD.",
   "call_btn2": "Obtenir votre licence",
-
   "louer_title": "Louer Ferracad",
   "louer_description": "Accédez à toutes les fonctionnalités de Ferracad, en location flexible dès 7 jours, au mois ou à l’année.",
-
   "contact_title": "Contactez-nous",
   "contact_description": "Pour toute question technique ou liée à votre commande ou question générale. Merci de ne pas envoyer de messages à but <span class='font-bold underline'>commercial ou promotionnel</span>.",
   "contact_require": "* Champs obligatoires",
@@ -199,10 +185,8 @@
   "contact_condition": "Restez informé des mises à jour de produits, des nouvelles de l’industrie et des offres promotionnelles.",
   "contact_send": "Envoyer",
   "contact_response": "Merci pour votre message. Notre équipe vous répondra dans les plus brefs délais, généralement sous 24 à 48 heures.",
-
   "pay_title": "Complétez vos informations de facturation",
   "pay_description": "Saisissez vos informations de facturation pour accéder à votre licence ou service Ferracad et profiter de toutes nos fonctionnalités avancées.",
-
   "pay_01_title": "Création de votre compte",
   "pay_01_description": "Merci de vous être inscrit. Veuillez vérifier votre adresse e-mail pour finaliser l’activation de votre compte.",
   "pay_01_prenom": "Prénom",
@@ -217,7 +201,6 @@
   "pay_01_address": "Adresse",
   "pay_01_save_address": "J'ai lu et j'accepte les <a href='/conditions-generales' class='underline' target='_blank'>conditions générales</a> et la <a href='/privacy' class='underline' target='_blank'>politique de confidentialité</a>.",
   "pay_01_save": "enregistrer",
-
   "pay_02_title": "Informations de Licence",
   "pay_02_description": "Entrez votre numéro de licence Ferracad pour activer votre location. Vous pouvez également ajouter une remarque si nécessaire.",
   "pay_02_num_ferracad": "Numéro de licence Ferracad",
@@ -230,7 +213,6 @@
   "pay_02_date_start": "Date de début de location",
   "pay_02_date_fin": "Date de fin de location",
   "pay_02_auto_ren": "Renouvellement automatique",
-
   "pay_03_title": "Récapitulatif des informations",
   "pay_03_description": "Vérifiez les informations saisies avant de finaliser votre demande. Vous pouvez revenir en arrière pour les modifier si nécessaire.",
   "pay_03_fullname": "Nom complet",
@@ -241,7 +223,6 @@
   "pay_03_j": "jours",
   "pay_03_send": "Confirmer",
   "pay_03_title_licence": "Information de licence",
-
   "pay_04_title": "Méthode de paiement",
   "pay_04_description": "Choisissez votre moyen de paiement préféré pour finaliser votre commande en toute sécurité.",
   "pay_04_cart": "Carte Bancaire",
@@ -252,7 +233,6 @@
   "pay_04_ccv_num": "3 chiffres au dos",
   "pay_04_way_store_title": "Vos données sont protégées",
   "pay_04_way_store_subtitle": "Le paiement est traité directement par Stripe. Nous ne stockons jamais les informations de votre carte bancaire sur nos serveurs.",
-
   "checkout_title": "Récapitulatif de facturation",
   "checkout_price_j": "Prix par jour",
   "checkout_sous_total": "Sous-total",
@@ -266,14 +246,12 @@
   "checkout_security_pau": "Paiement sécurisé",
   "checkout_tva": "TVA",
   "checkout_licence": "Licence",
-
   "download_desc": "Vous hésitez encore ? Essayez ! Vous ne pourrez plus vous en passer.",
   "telechargement2": "Installer Maintenant",
   "rules": "Mentions légales",
   "policy": "Politique de confidentialité",
   "conditions": "Conditions Générales de Mise en Location de Ferracad",
   "descriptionfooter": "AutoCAD sont des marques déposées d'Autodesk, Inc. – ZWCAD est une marque déposée de ZWSOFT Co., Ltd. – Excel et Microsoft sont des marques déposées de Microsoft Corporation.",
-
   "connexion_title": "Bonjour!",
   "connexion_title_return": "Bon retour parmi nous",
   "connexion_description": "Entrez vos identifiants pour accéder à votre compte",
@@ -287,22 +265,18 @@
   "connexion_haveaccount": "Vous n'avez pas de compte ?",
   "connexion_signup": "Inscrivez-vous maintenant",
   "connexion_forgetmailpwd": "E-mail et mot de passe est obligatoires",
-
   "forget_title": "Récupération de mot de passe",
   "forget_description": "Entrez votre adresse e-mail pour recevoir votre mot de passe.",
   "forget_btn": "Récupérer mon mot de passe",
   "forget_returnlink": "Retour à la page d'connexion",
-
   "register_show": "Inscription réussie",
   "register_desc": "Le lien d'activation de votre compte a été envoyé à votre adresse e-mail.",
-
   "form_01_error_incomplete": "Il y a quelques entrées à remplir !",
   "form_02_error_password_mismatch": "Les mots de passe ne correspondent pas",
   "form_02_error_accept": "Veuillez accepter les conditions générales et la politique de confidentialité.",
   "form_02_error_send": "Sending ...",
   "form_02_error_eight_car": "* Veuillez saisir au moins 8 caractères",
   "form_02_error_atless_eight": "Le mot de passe doit contenir au moins 8 caractères.",
-
   "twofactors_title": "Vérification en deux étapes",
   "twofactors_verifyButton": "Vérifier",
   "twofactors_resendButton": "Renvoyer le code",
@@ -313,7 +287,6 @@
   "twofactors_verify": "Vérifiez votre email",
   "twofactors_verifycomplete": "pour obtenir le code de vérification",
   "twofactors_send": "Renvoyer dans",
-
   "recover_title": "Réinitialisation du mot de passe",
   "recover_description": "Définissez un nouveau mot de passe pour sécuriser votre compte.",
   "recover_labelNewPassword": "Nouveau mot de passe",
@@ -325,8 +298,7 @@
   "recover_toastEmptyFields": "Merci de saisir et confirmer votre mot de passe.",
   "recover_toastMismatch": "Les mots de passe ne correspondent pas.",
   "recover_toastShortPassword": "Votre mot de passe doit contenir au moins 8 caractères.",
-
-  "sidebarDashboard": "Gestion des Licences",
+  "sidebarDashboard": "Tableau de bord",
   "sidebarUsers": "Utilisateurs",
   "sidebarOrders": "Commandes",
   "sidebarLocations": "Locations",
@@ -337,13 +309,11 @@
   "sidebarLogs": "Logs",
   "sidebarSettings": "Facturation & Compte",
   "sidebarLogout": "Déconnecté",
-
   "headerNotificationError": "Une erreur est survenue lors de la mise à jour de la notification.",
   "headerMarkAllAsRead": "Faire tout comme lu",
   "headerNoNotification": "Aucune notification.",
   "headerLoadMore": "Charger plus",
   "headerMyAccount": "Mon compte",
-
   "pagetitle_dashboard": "Tableau de bord - Ferracad",
   "pagetitle_users": "Utilisateurs - Tableau de bord | Ferracad",
   "pagetitle_orders": "Commandes - Tableau de bord | Ferracad",
@@ -356,7 +326,6 @@
   "pagetitle_marketingCreate": "Créer une campagne - Tableau de bord | Ferracad",
   "pagetitle_logs": "Logs système - Tableau de bord | Ferracad",
   "pagetitle_settings": "Profil & Facturation - Tableau de bord | Ferracad",
-
   "dashboardClient_totalActiveLicenses": "Nombre total de licences actives",
   "dashboardClient_nextRecurringPayment": "Paiement récurrent prévu",
   "dashboardClient_currentPlan": "Plan en cours pour ce compte",
@@ -376,9 +345,8 @@
   "dashboardClient_expiredLicenses": "Licences expirées",
   "dashboardClient_totalLicenses": "Total de licences",
   "dashboardClient_autoPayment": "Auto-paiement actif",
-
   "dashboardAdmin_totalUsers": "Total utilisateurs",
-  "dashboardAdmin_totalUsers_client": "Total des utilisateurs clients",  
+  "dashboardAdmin_totalUsers_client": "Total des utilisateurs clients",
   "dashboardAdmin_totalActiveUsers": "Nombre total d’utilisateurs actifs excluant les administrateurs",
   "dashboardAdmin_monthlyRevenue": "Revenus ce mois-ci",
   "dashboardAdmin_totalAmountThisMonth": "Montant total généré ce mois-ci",
@@ -406,7 +374,6 @@
   "dashboardClient_addNewVersion": "Ajouter une nouvelle Version de FerraCAD",
   "dashboardClient_createNewCampaign": "Créer un nouveau Campagne",
   "dashboardClient_createNewFAQ": "Créer un nouveau FAQ",
-
   "dashboardAdmin_users_totalUsers": "Total des utilisateurs (Administrateurs et Clients)",
   "dashboardAdmin_users_totalUsersDescription": "Nombre total d’utilisateurs enregistrés sur la plateforme.",
   "dashboardAdmin_users_active": "Actifs",
@@ -464,7 +431,6 @@
   "dashboardAdmin_users_status_pending": "Le compte n'est pas actif",
   "dashboardAdmin_users_status_inactive": "Inactif",
   "dashboardAdmin_users_status_new": "Nouveau",
-
   "dashboardClient_orders_expired": "Expiré",
   "dashboardClient_orders_expiring_soon": "Expire bientôt",
   "dashboardClient_orders_active": "Actif",
@@ -510,7 +476,6 @@
   "dashboardClient_orders_updateInfo": "Mettez à jour les informations associées à cette commande utilisateur.",
   "dashboardClient_orders_autoRenewal": "Auto-Renouvellement",
   "dashboardClient_orders_autoRenewal_desc": "Pour activer le paiement automatique, vous devez d'abord souscrire à un forfait et effectuer le paiement via Stripe depuis votre compte personnel.",
-
   "dashboardClient_orders_acceptTerms": "Veuillez accepter les conditions générales et politique de confidentialité pour continuer.",
   "dashboardClient_orders_selectUser": "Veuillez sélectionner un utilisateur.",
   "dashboardClient_orders_usernameRequired": "le nom d'utilisateur est requis",
@@ -564,7 +529,6 @@
   "dashboardClient_orders_subtitle": "Ces informations apparaîtront sur votre facture. Pour toute modification, modifiez vos informations dans la rubrique Facturation & Compte.",
   "dashboardClient_orders_subtitle_licence": "Configuration des licences et utilisateurs",
   "dashboardClient_orders_cvc": "CVC",
-
   "dashboard_rent_registeredLicenses": "Licences enregistrées",
   "dashboard_rent_active": "Actives",
   "dashboard_rent_activeDescription": "En cours de validité",
@@ -605,7 +569,6 @@
   "dashboard_rent_edit": "Modifier",
   "dashboard_rent_license": "Licence",
   "dashboard_rent_user": "Utilisateur",
-
   "dashboard_payment_free": "Gratuit",
   "dashboard_payment_cash": "Cash",
   "dashboard_payment_totalRevenue": "Revenus totaux",
@@ -631,7 +594,6 @@
   "dashboard_payment_action": "Action",
   "dashboard_payment_invoiceRestriction": "La facture ne peut être générée que pour les paiements réussis.",
   "dashboard_payment_totalAmountInvested": "Montant total investi dans Ferracad",
-
   "dashboard_invoice_sendError": "Erreur lors de l'envoi",
   "dashboard_invoice_sending": "Envoi de la facture...",
   "dashboard_invoice_sendSuccess": "Envoyée avec succès",
@@ -675,7 +637,6 @@
   "dashboard_invoice_one_time": "Paiement unique",
   "dashboard_invoice_website": "Site web",
   "dashboard_invoice_invoice": "FACTURE",
-
   "dashboard_product_title": "Produits",
   "dashboard_product_description": "Gestion des plugins Ferracad pour différentes plateformes",
   "dashboard_product_latestVersion": "dernière version",
@@ -714,7 +675,6 @@
   "dashboard_product_confirmDeleteDesc": "Cette action est irréversible. Le produit sera définitivement supprimé, ainsi que le fichier associé.",
   "dashboard_product_delete": "Supprimer",
   "dashboard_product_selectPlatform": "Sélectionnez une plateforme",
-
   "dashboard_faq_deleted": "FAQ supprimée",
   "dashboard_faq_updated": "FAQ mise à jour",
   "dashboard_faq_total": "Total FAQ",
@@ -746,7 +706,6 @@
   "dashboard_faq_cancel": "Annuler",
   "dashboard_faq_delete": "Supprimer",
   "dashboard_faq_save": "Sauvegarder",
-
   "dashboard_logs_totalActivities": "Activités totales",
   "dashboard_logs_recordedActions": "Actions enregistrées",
   "dashboard_logs_logins": "Connexions",
@@ -779,7 +738,6 @@
   "dashboard_logs_location": "Localisation",
   "dashboard_logs_localNetwork": "Réseau local",
   "dashboard_logs_external": "Externe",
-
   "dashboard_settings_passwordMinLength": "Le mot de passe doit être supérieur à 8 caractères",
   "dashboard_settings_passwordUpdated": "Mot de passe mis à jour avec succès.",
   "dashboard_settings_title": "Paramètres",
@@ -845,24 +803,19 @@
   "dashboard_settings_invid_email_label": "Emails",
   "dashboard_settings_invid_email_loading": "Envoi",
   "dashboard_settings_invid_email_btn": "Envoyer des invitations",
-
   "error_page_title": "Oups ! Page introuvable",
   "error_page_description": "La page que vous recherchez a peut-être été supprimée, déplacée ou n’a jamais existé.",
   "error_page_backHome": "Retour à l’accueil",
-
   "global_loading_text": "Chargement en cours...",
-
   "pagetitle_software_registration": "Enregistrement du logiciel",
   "pagetitle_rental_registration": "Inscription",
   "pagetitle_activation_error": "Erreur d’activation",
   "pagetitle_privacy_policy": "Politique de confidentialité",
   "pagetitle_legal_notice": "Mentions légales",
-
   "cookie_title": "Nous utilisons des cookies essentiels pour offrir une meilleure expérience utilisateur. En cliquant sur « Accepter », vous acceptez notre utilisation des cookies.",
   "cookie_decline": "Refuser",
   "cookie_ignore": "Ignorer",
   "cookie_accept": "Accepter",
-
   "comparaisonFerracad_1_tache": "Dessin des barres",
   "comparaisonFerracad_1_avant": "Dessiner manuellement chaque barre avec des polylignes et ajouter les cotes à la main. Risque d’erreurs sur les longueurs et les formes.",
   "comparaisonFerracad_1_apres": "Dessin point par point avec calcul automatique de la longueur et de la forme selon les paramètres saisis.",
@@ -893,7 +846,6 @@
   "comparaisonFerracad_10_tache": "Schéma des barres (DWG)",
   "comparaisonFerracad_10_avant": "Profils enregistrés manuellement, souvent de manière incohérente.",
   "comparaisonFerracad_10_apres": "Fichier DWG centralisé avec les profils modifiables et réutilisables.",
-
   "avantagesFerracad_1_title": "Gain de temps",
   "avantagesFerracad_1_description": "Processus de dessin et d’annotation 80 % plus rapide",
   "avantagesFerracad_2_title": "Moins d'erreurs",
@@ -902,17 +854,14 @@
   "avantagesFerracad_3_description": "Lien automatique entre le dessin et la nomenclature Excel",
   "avantagesFerracad_4_title": "Qualité professionnelle",
   "avantagesFerracad_4_description": "Production de plans professionnels pour le ferraillage et la construction",
-
   "policy_page": "<div class='max-w-4xl mx-auto px-5 py-10 text-gray-800'> <h1 class='text-3xl font-bold mb-6 text-[#8B0000]'> Politique de confidentialité </h1> <p class='text-sm text-gray-500 mb-10'> Dernière mise à jour : 15-05-2025 </p> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>1. Introduction</h2> <p class='leading-relaxed'> Dans le cadre de son activité, le site <strong>Ferracad</strong> collecte et traite des données à caractère personnel. La présente politique de confidentialité vise à informer les utilisateurs sur la nature des données collectées, l&apos;usage qui en est fait et les droits dont ils disposent. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>2. Données collectées</h2> <p class='leading-relaxed mb-2'> Les données suivantes peuvent être collectées lors de votre utilisation du site : </p> <ul class='list-disc ml-6 space-y-1'> <li>Nom, prénom</li> <li>Adresse e-mail</li> <li>Numéro de téléphone</li> <li>Informations liées à une réservation ou à une demande de contact</li> <li>Données de navigation (cookies, adresse IP)</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>3. Finalités du traitement</h2> <p class='leading-relaxed mb-2'>Ces données sont collectées pour :</p> <ul class='list-disc ml-6 space-y-1'> <li>Répondre à vos demandes de contact ou de réservation</li> <li>Gérer et améliorer notre site</li> <li>Vous envoyer des communications si vous y avez consenti</li> <li>Respecter nos obligations légales</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>4. Base légale du traitement</h2> <ul class='list-disc ml-6 space-y-1'> <li>Votre consentement (formulaires, newsletter)</li> <li>L&apos;exécution d&apos;un contrat (réservations)</li> <li>Nos obligations légales</li> <li>Notre intérêt légitime (amélioration du site)</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>5. Durée de conservation</h2> <ul class='list-disc ml-6 space-y-1'> <li>Données de contact : 3 ans à compter du dernier contact</li> <li>Données de réservation : 5 ans (durée légale)</li> <li>Cookies : 13 mois maximum</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>6. Destinataires des données</h2> <p class='leading-relaxed'> Les données sont destinées exclusivement à <strong>Ferracad</strong> et ne sont en aucun cas revendues. Elles peuvent être partagées avec des prestataires techniques (hébergeur, outil de gestion de formulaire) sous contrat de confidentialité. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>7. Vos droits</h2> <p class='leading-relaxed mb-2'> Conformément au RGPD, vous disposez des droits suivants : </p> <ul class='list-disc ml-6 space-y-1'> <li>Droit d&apos;accès</li> <li>Droit de rectification</li> <li>Droit d&apos;opposition</li> <li>Droit à l&apos;effacement</li> <li>Droit à la limitation du traitement</li> <li>Droit à la portabilité des données</li> </ul> <p class='leading-relaxed mt-2'> Vous pouvez exercer ces droits en nous contactant à : <a href='mailto:support@ferracad.com' class='text-[#8B0000] font-medium underline' > support@ferracad.com </a> . </p> <p class='leading-relaxed mt-2'> Vous avez également le droit d&apos;introduire une réclamation auprès de la CNIL. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>8. Cookies</h2> <p class='leading-relaxed'> Lors de votre navigation, des cookies peuvent être déposés sur votre terminal. Vous pouvez à tout moment modifier vos préférences en matière de cookies via le bandeau de gestion prévu à cet effet. </p> </section> </div>",
   "LegalMentions_page": "<div class='max-w-4xl mx-auto px-5 py-10 text-gray-800'> <h1 class='text-3xl font-bold mb-6 text-[#8B0000]'> Mentions légales </h1> <section class='mb-6'> <h2 class='text-xl mb-2'>Informations sur l&apos;éditeur</h2> <p class='leading-relaxed mb-2'> L&apos;éditeur des sites ferracad.be et ferracad.com est la société BME. </p> <p class='leading-relaxed'> Le siège social est situé au 127-129 rue Colonel Bourg à  Bruxelles (1140 - Belgique). </p> </section></div>",
   "cgv_page": " <div class='max-w-4xl mx-auto py-6 rounded-md'> <h1 class='text-3xl font-bold mb-6'>Conditions Générales de Mise en Location de Ferracad</h1> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>1. Objet</h2> <p> Les présentes Conditions Générales de Mise en Location (ci-après « CGML ») ont pour objet de définir les droits et obligations des utilisateurs et de la plateforme Ferracad dans le cadre de la location en ligne de l’extension logicielle Ferracad, destinée aux logiciels CAD. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>2. Définitions</h2> <p><strong>Plateforme Ferracad :</strong> le site web ou l’application Ferracad, permettant la location, le téléchargement et la gestion de licences logicielles.</p> <p><strong>Ferracad (logiciel) :</strong> extension logicielle développée pour fonctionner avec les logiciels CAD, mise à disposition temporairement via la plateforme.</p> <p><strong>Éditeur :</strong> BMe développeur propriétaire du logiciel Ferracad propose à la location.</p> <p><strong>Utilisateur / Locataire :</strong> toute personne physique ou morale ayant créé un compte sur la plateforme et souscrit à la location du logiciel Ferracad.</p> <p><strong>Licence :</strong> droit d’utilisation temporaire, personnel, non exclusif et non transférable de Ferracad.</p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>3. Accès au service</h2> <ul class='list-disc list-inside space-y-1'> <li>La location et l’utilisation de Ferracad nécessitent la création d’un compte utilisateur sur la plateforme Ferracad.</li> <li>L’utilisateur doit disposer d’une version légale et compatible d’un logiciel CAD.</li> <li>L’accès au logiciel Ferracad est conditionné au paiement préalable de la période de location et à la validation de la licence sur le compte de l’utilisateur.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>4. Modalités de location</h2> <ul class='list-disc list-inside space-y-1'> <li>La location est conclue pour une durée minimum de 7 jours spécifiée lors de la commande.</li> <li>La licence est activée automatiquement dès la confirmation du paiement et reste valable jusqu’à la fin de la période souscrite.</li> <li>À l’expiration de la période, l’accès au logiciel est automatiquement suspendu, sauf renouvellement par l’utilisateur.</li> <li>Aucun remboursement n’est possible après activation, sauf défaillance technique imputable à la plateforme ou à l’éditeur.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>5. Utilisation de Ferracad</h2> <ul class='list-disc list-inside space-y-1'> <li>L’utilisateur s’engage à utiliser Ferracad conformément à sa destination, dans le respect de la législation en vigueur et des droits de propriété intellectuelle.</li> <li>Toute copie, distribution, revente, location secondaire, décompilation ou modification du logiciel est strictement interdite.</li> <li>Ferracad ne doit pas être utilisé dans un environnement illégal ou pour contourner des licences CAD.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>6. Tarification et paiement</h2> <ul class='list-disc list-inside space-y-1'> <li>Les prix de location sont indiqués en ligne sur la plateforme et peuvent varier selon la durée, la version et les options choisies.</li> <li>Les paiements sont effectués via les moyens sécurisés proposés sur la plateforme (carte bancaire, virement, portefeuille électronique, etc.).</li> <li>La facture est disponible dans l’espace utilisateur dès validation de la commande.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>7. Support et mises à jour</h2> <ul class='list-disc list-inside space-y-1'> <li>La plateforme Ferracad assure un support technique de base par messagerie électronique ou formulaire de contact pendant la durée de la location.</li> <li>Les mises à jour correctives peuvent être fournies automatiquement.</li> <li>Les mises à jour majeures peuvent nécessiter une nouvelle souscription ou une licence distincte.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>8. Responsabilité</h2> <ul class='list-disc list-inside space-y-1'> <li>L’utilisateur est seul responsable de la compatibilité de son matériel, de sa version de logiciel CAD et de la sécurité de ses fichiers.</li> <li>La plateforme et l’éditeur ne peuvent être tenus responsables de pertes de données, dommages indirects ou interruptions de service liés à l’utilisation de Ferracad.</li> <li>En cas de dysfonctionnement avéré imputable à Ferracad, la responsabilité de la plateforme est limitée au montant de la période de location concernée.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>9. Propriété intellectuelle</h2> <p> Le logiciel Ferracad reste la propriété exclusive de son éditeur. La location n’entraîne aucun transfert de propriété. L’utilisateur reconnaît que tous les droits liés à Ferracad (code source, interface, documentation, logo, etc.) sont protégés par le droit d’auteur et les conventions internationales. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>10. Données personnelles et confidentialité</h2> <p> Les données collectées via la plateforme sont utilisées uniquement pour la gestion du compte utilisateur, de la licence et de la facturation. Ferracad s’engage à respecter la réglementation européenne RGPD et la législation belge sur la protection des données personnelles, garantissant la sécurité et la confidentialité des informations des utilisateurs. Les données ne sont en aucun cas cédées à des tiers sans consentement préalable. L’utilisateur dispose des droits d’accès, de rectification, d’effacement, de limitation, de portabilité et d’opposition conformément à la RGPD et aux lois belges applicables. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>11. Résiliation et suspension</h2> <ul class='list-disc list-inside space-y-1'> <li>En cas de non-respect des présentes CGML (notamment usage illicite, contournement de licence, impayé), la plateforme se réserve le droit de suspendre ou résilier immédiatement la licence sans remboursement.</li> <li>L’utilisateur peut demander la suppression de son compte à tout moment via son espace personnel ou par contact direct.</li> </ul> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>12. Droit applicable et juridiction compétente</h2> <p> Les présentes conditions sont régies par le droit belge et, le cas échéant, par la réglementation européenne. Tout litige relatif à leur interprétation ou exécution relève des tribunaux compétents du ressort du siège social de Ferracad en Belgique. </p> </section> <section class='mb-6'> <h2 class='text-xl font-semibold mb-2'>13. Acceptation</h2> <p> En validant la commande sur la plateforme Ferracad, l’utilisateur reconnaît avoir lu et accepté sans réserve les présentes Conditions Générales de Mise en Location de Ferracad. </p> </section> </div>",
-
   "active_account_title": "Vérifiez votre adresse e-mail",
   "active_account_sub": "Nous avons envoyé un lien de vérification à",
   "active_account_description": "Veuillez vérifier votre boîte de réception (et le dossier spam) et cliquer sur le lien pour activer votre compte. Le lien expirera dans 24 heures.",
   "active_account_resend": "Renvoyer l’e-mail",
   "active_account_login": "Aller à la connexion",
-
   "free_trial_success": "Le code a été généré avec succès.",
   "free_trial_title": "Votre code d’activation",
   "free_trial_description": "Voici votre code d’activation unique. Vous pouvez le copier en cliquant sur le bouton ci-dessous.",
@@ -928,7 +877,6 @@
   "free_trial_form_incomplete": "Formulaire incomplet",
   "free_trial_form_incomplete_description": "Veuillez remplir tous les champs obligatoires avant de soumettre.",
   "free_trial_both": "Les deux",
-
   "formation_titre": "Centre de Formation Ferracad",
   "formation_description": "Maîtrisez Ferracad grâce à nos tutoriels vidéo complets.",
   "formation_cours_1_title": "Comment démarrer Ferracad ?",
@@ -948,12 +896,10 @@
   "tutoriels_title": "Tutoriels",
   "tutoriels_description": "Description",
   "en_cours_de_lecture": "En cours de lecture",
-
   "how_it_works_zwcad": "Comment ça marche dans ZWCAD ?",
   "how_it_works_autocad": "Comment ça marche dans AutoCAD ?",
   "presentation_ferracad_zwcad": "Présentation de Ferracad pour ZWCAD",
   "new_ferracad_zwcad": "Nouveau Ferracad pour ZWCAD",
-
   "ALMOST_DONE": "Presque terminé !",
   "DOWNLOAD": "Télécharger",
   "LAST_STEP": "Un dernier pas avant d'accéder à votre fichier",
@@ -962,6 +908,11 @@
   "ACCESS_UPDATES": "Accès aux mises à jour gratuites",
   "PRIORITY_SUPPORT": "Support technique prioritaire",
   "EXCLUSIVE_CONTENT": "Contenu exclusif et tutoriels",
-
-  "error_generic": "Une erreur s'est produite, veuillez réessayer."
+  "error_generic": "Une erreur s'est produite, veuillez réessayer.",
+  "dashboardClient_orders_editProfile": "Modifier mon profil",
+  "dashboardClient_orders_cumulativeDays": "Cumul total des jours",
+  "dashboardClient_orders_cumulativeDaysNote": "* Somme des jours ajoutés individuellement pour chaque ordinateur sélectionné.",
+  "dashboardClient_orders_manageFleet": "Gestion de votre parc informatique",
+  "dashboardClient_orders_manageFleetDesc": "Sélectionnez les ordinateurs que vous souhaitez renouveler. Le système prolonge chaque licence individuellement jusqu'à la date choisie. Vous ne payez que les jours ajoutés !",
+  "dashboardClient_orders_syncNote": "Les licences sélectionnées seront automatiquement synchronisées sur la même date de fin."
 }
