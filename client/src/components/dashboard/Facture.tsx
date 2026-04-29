@@ -406,12 +406,6 @@ const Facture = ({
                     {factureData?.registerInfos?.length} {t('checkout_licence')}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">{t('dashboard_invoice_validUntil')}:</span>
-                  <span className=" font-semibold">
-                    {formatDate(factureData.endAt)} ({factureData.registerInfos?.reduce((acc: number, reg: any) => acc + (reg.addedDays || 0), 0) || factureData.totalDays || getTotalLicenseDays(factureData.startFrom, factureData.endAt)} {t('pay_03_j')})
-                  </span>
-                </div>
               </div>
             </div>
 
@@ -426,6 +420,7 @@ const Facture = ({
                     <TableHead className="font-semibold w-12">#</TableHead>
                     <TableHead className="font-semibold">{t('dashboard_invoice_computerName')}</TableHead>
                     <TableHead className="font-semibold">{t('dashboard_invoice_identificationCode')}</TableHead>
+                    <TableHead className="font-semibold">{t('pay_01_exp_date')}</TableHead>
                     <TableHead className="font-semibold text-right w-24">Prix HT</TableHead>
                     <TableHead className="font-semibold text-right w-24">{t('checkout_tva')}</TableHead>
                     {/*<TableHead className="font-semibold text-right w-24">{t('dashboard_invoice_total')}</TableHead>*/}
@@ -446,6 +441,9 @@ const Facture = ({
                           <span className="text-[10px] text-gray-400 ml-2">({addedDays} {t("pay_03_j")})</span>
                         </TableCell>
                         <TableCell className="font-mono text-xs">{regis.computerCode}</TableCell>
+                        <TableCell className="font-medium text-xs">
+                          {formatDate(regis.expirationDate || factureData.endAt)}
+                        </TableCell>
                         <TableCell className="text-right">€ {priceHT.toFixed(2)}</TableCell>
                         <TableCell className="text-right">€ {tvaUnitaire.toFixed(2)}</TableCell>
                       </TableRow>

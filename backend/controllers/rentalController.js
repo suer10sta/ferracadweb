@@ -1485,7 +1485,9 @@ exports.createCommandByAdmin = async (req, res) => {
     for (const license of users) {
       let registration;
       let licenseHistory;
-    
+      
+      const currentLicenseExpDate = license.expirationDate ? new Date(license.expirationDate) : expirationDate;
+
       if (license.id) {
         // Update existing registration
         registration = await Registration.findOneAndUpdate(
@@ -1498,7 +1500,7 @@ exports.createCommandByAdmin = async (req, res) => {
               userId: user._id || user,
               computerCode: license.identificationCode,
               rentalId: rental._id,
-              expirationDate,
+              expirationDate: currentLicenseExpDate,
               status: "pending",
               addedDays: license.addedDays,
               priceHT: license.priceHT
@@ -1521,7 +1523,7 @@ exports.createCommandByAdmin = async (req, res) => {
           registration.status = "pending";
           registration.username = license.username;
           registration.computerName = license.computerName;
-          registration.expirationDate = expirationDate;
+          registration.expirationDate = currentLicenseExpDate;
           registration.userId = user._id || user;
           registration.company = user.company;
           registration.addedDays = license.addedDays;
@@ -1537,7 +1539,7 @@ exports.createCommandByAdmin = async (req, res) => {
             status: "pending",
             computerName: license.computerName,
             computerCode: license.identificationCode,
-            expirationDate,
+            expirationDate: currentLicenseExpDate,
             addedDays: license.addedDays,
             priceHT: license.priceHT,
           });
@@ -1552,7 +1554,7 @@ exports.createCommandByAdmin = async (req, res) => {
       licenseHistory = new LicenseHistory({
         registerId: registration._id,
         startAt: new Date(),
-        expirationDate
+        expirationDate: currentLicenseExpDate
       });
 
       await licenseHistory.save();
