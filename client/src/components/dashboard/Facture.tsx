@@ -103,6 +103,7 @@ const Facture = ({
           isPaymentSuccess: dataTarget.payId.status === "success",
           isPaymentOnline: dataTarget.payId.type === "stripe",
           isAutoPay: dataTarget.registrationIds[0].rentalId.deductionAuto,
+          totalDays: dataTarget.registrationIds[0].rentalId.duration,
         });
       } catch (error) {
         // console.error('Failed to fetch facture:', error);
@@ -408,7 +409,7 @@ const Facture = ({
                 <div className="flex justify-between">
                   <span className="font-medium">{t('dashboard_invoice_validUntil')}:</span>
                   <span className=" font-semibold">
-                    {formatDate(factureData.endAt)} ({factureData.registerInfos?.reduce((acc: number, reg: any) => acc + (reg.addedDays || 0), 0) || getTotalLicenseDays(factureData.startFrom, factureData.endAt)} {t('pay_03_j')})
+                    {formatDate(factureData.endAt)} ({factureData.registerInfos?.reduce((acc: number, reg: any) => acc + (reg.addedDays || 0), 0) || factureData.totalDays || getTotalLicenseDays(factureData.startFrom, factureData.endAt)} {t('pay_03_j')})
                   </span>
                 </div>
               </div>
@@ -473,11 +474,7 @@ const Facture = ({
                 <div className="flex justify-between items-center border-b pb-2 mb-2">
                   <span className="font-semibold">Total TTC :</span>
                   <span className="font-semibold">
-                    € {
-                      (
-                        (factureData.totalPricePay) - ((factureData.totalPricePay) / (1 + Number(factureData.tva))) + (factureData.totalPricePay / (1 + Number(factureData.tva))
-                        )
-                      ).toFixed(2)}
+                    € {factureData.totalPricePay.toFixed(2)}
                   </span>
                 </div>
                 {

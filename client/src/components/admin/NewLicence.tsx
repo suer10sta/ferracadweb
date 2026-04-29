@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { useLanguage } from "@/lang/LanguageProvider";
 import { Lock, User } from "lucide-react";
 import { getUser } from "@/utils/auth";
-import { coupon, user, users, settings, tauxTva } from "@/data/mockData";
+import { coupon, user, users, settings, tauxTva, registrations } from "@/data/mockData";
 import { toast } from "sonner";
 import apiClient from "@/services/api";
 import { useLocation } from "react-router-dom";
@@ -28,6 +28,7 @@ const NewLicenceAdmin = () => {
   const [userData, setuserData] = useState<any>({});
   const [ValidateDateExp, setValidateDateExp] = useState(false);
   const [usersData, setusersData] = useState<any>([]);
+  const [registrationData, setregistrationData] = useState<any[]>([]);
   const [couponData, setCoupon] = useState<any[]>([]);
   const [SettingsData, setSettings] = useState<any>({});
   const [loading, setLoading] = useState(true);
@@ -75,12 +76,14 @@ const NewLicenceAdmin = () => {
       try {
         const getUser = await user();
         const getUsers = await users();
+        const getRegistrations = await registrations();
         const getCoupon = await coupon();
         const getSettings = await settings();
 
         setuserData(getUser);
         setCoupon(getCoupon);
         setusersData(getUsers);
+        setregistrationData(getRegistrations);
         setSettings(getSettings);
       } catch (error) {
         // console.error('Failed to fetch rentals:', error);
@@ -171,13 +174,43 @@ const NewLicenceAdmin = () => {
       setFormData((prev: any) => ({
         ...prev,
         userId: "",
+        licenses: 1,
+        users: [{
+          username: "",
+          email: userData.email || "",
+          computerName: "",
+          identificationCode: "",
+          startFromDate: null,
+          excluded: false,
+        }]
       }));
     }
   }, [state]);
 
-  const expiration = new Date(formData.expirationDate);
-  const diffTime = expiration.getTime() - new Date(formData.startDate).getTime();
-  const daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const calculateAddedDays = (reg: any) => {
+    const targetExp = new Date(formData.expirationDate);
+    let currentExp = new Date(formData.startDate);
+
+    if (reg && reg.expirationDate) {
+      const regExp = new Date(reg.expirationDate);
+      // If the license is still valid, we start adding days from its current expiration
+      if (regExp > new Date()) {
+        currentExp = regExp;
+      }
+    }
+    const diffTime = targetExp.getTime() - currentExp.getTime();
+    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  };
+
+  const daysUntilExpiration = formData.users
+    .filter((u: any) => !u.excluded)
+    .reduce((acc: number, user: any) => {
+      const reg = registrationData.find(r =>
+        (user.id && r._id === user.id) ||
+        (user.identificationCode && r.computerCode === user.identificationCode)
+      );
+      return acc + calculateAddedDays(reg);
+    }, 0);
 
   // Validate form fields and send the admin rental creation/renewal request to the backend
   const handleSubmit = async () => {
@@ -223,8 +256,8 @@ const NewLicenceAdmin = () => {
       return;
     }
 
-    // Validate licences
-    formData.users.forEach(
+    // Validate only included licences
+    formData.users.filter((u: any) => !u.excluded).forEach(
       (
         user: {
           username: string;
@@ -268,6 +301,10 @@ const NewLicenceAdmin = () => {
     try {
       const res = await apiClient.post("/rental/admin", {
         ...formData,
+        // Ensure we only send the included users to the backend for the invoice
+        users: formData.detailedUsers,
+        detailedUsers: formData.detailedUsers, // Already filtered in the useEffect
+        licenses: includedLicensesCount,
         daysUntilExpiration: daysUntilExpiration
       });
 
@@ -395,10 +432,10 @@ const NewLicenceAdmin = () => {
   const discountValue =
     discountType === "percent" ? CouponValue.value / 100 : CouponValue.value;
   const discountSup =
-    formData.licenses > (SettingsData?.licenseThresholdForDiscount || 4)
+    formData.users.filter((u: any) => !u.excluded).length > (SettingsData?.licenseThresholdForDiscount || 4)
       ? 0.1
       : 0;
-  const basedPrice = daysUntilExpiration * formData.licenses * pricePerDay;
+  const basedPrice = daysUntilExpiration * pricePerDay;
 
   const totalHT =
     discountType === "percent"
@@ -410,13 +447,36 @@ const NewLicenceAdmin = () => {
   let totalPayer = (totalHT * tva + totalHT).toFixed(2);
 
   useEffect(() => {
+    // Pre-calculate individual details for each user/license, excluding those not checked
+    const usersWithDetails = formData.users
+      .filter((u: any) => !u.excluded)
+      .map((user: any) => {
+        const reg = registrationData.find(r =>
+          (user.id && r._id === user.id) ||
+          (user.identificationCode && r.computerCode === user.identificationCode)
+        );
+
+        const diffDays = calculateAddedDays(reg);
+
+        return {
+          ...user,
+          addedDays: diffDays,
+          priceHT: diffDays * pricePerDay
+        };
+      });
+
     setFormData((prev: any) => ({
       ...prev,
       totalPayer: totalPayer,
+      daysUntilExpiration: daysUntilExpiration,
+      detailedUsers: usersWithDetails,
+      licenses: usersWithDetails.length, // Synchronize the count of active licenses
     }));
-  }, [totalPayer]);
+  }, [totalPayer, daysUntilExpiration, formData.users, registrationData, pricePerDay]);
 
   const navigate = useNavigate();
+
+  const includedLicensesCount = formData.users.filter((u: any) => !u.excluded).length;
 
   const handleQuickDate = (months: number) => {
     if (formData.freeTrial) return;
@@ -640,8 +700,8 @@ const NewLicenceAdmin = () => {
                       <div className="max-h-[300px] overflow-y-auto p-1">
                         {usersData
                           .filter((e: any) => e.role !== "admin")
-                          .filter((u: any) => 
-                            !userSearchTerm || 
+                          .filter((u: any) =>
+                            !userSearchTerm ||
                             u.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
                             u.company?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
                             u.email?.toLowerCase().includes(userSearchTerm.toLowerCase())
@@ -654,7 +714,32 @@ const NewLicenceAdmin = () => {
                                 formData.userId === user._id && "bg-gray-100"
                               )}
                               onClick={() => {
-                                setFormData((prev: any) => ({ ...prev, userId: user._id }));
+                                const userRegistrations = registrationData.filter(r => r.userId === user._id);
+                                const newUsers = userRegistrations.length > 0
+                                  ? userRegistrations.map(r => ({
+                                    id: r._id,
+                                    username: r.username || "",
+                                    email: user.email || "",
+                                    computerName: r.computerName || "",
+                                    identificationCode: r.computerCode || "",
+                                    startFromDate: r.expirationDate,
+                                    excluded: false,
+                                  }))
+                                  : [{
+                                    username: "",
+                                    email: user.email || "",
+                                    computerName: "",
+                                    identificationCode: "",
+                                    startFromDate: null,
+                                    excluded: false,
+                                  }];
+
+                                setFormData((prev: any) => ({
+                                  ...prev,
+                                  userId: user._id,
+                                  licenses: newUsers.length,
+                                  users: newUsers
+                                }));
                                 setOpenUserSelect(false);
                                 setUserSearchTerm("");
                               }}
@@ -675,19 +760,21 @@ const NewLicenceAdmin = () => {
                               </div>
                             </div>
                           ))}
-                        {usersData.filter((e: any) => e.role !== "admin").filter((u: any) => 
-                          !userSearchTerm || 
+                        {usersData.filter((e: any) => e.role !== "admin").filter((u: any) =>
+                          !userSearchTerm ||
                           u.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
                           u.company?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
                           u.email?.toLowerCase().includes(userSearchTerm.toLowerCase())
                         ).length === 0 && (
-                          <div className="py-6 text-center text-sm text-gray-500">
-                            {t("dashboardAdmin_users_noResults") || "Aucun utilisateur trouvé."}
-                          </div>
-                        )}
+                            <div className="py-6 text-center text-sm text-gray-500">
+                              {t("dashboardAdmin_users_noResults") || "Aucun utilisateur trouvé."}
+                            </div>
+                          )}
                       </div>
                     </PopoverContent>
                   </Popover>
+
+
                 </div>
 
                 <div className="grid gap-3">
@@ -872,116 +959,158 @@ const NewLicenceAdmin = () => {
                     <h5 className="font-semibold text-gray-900 text-lg">
                       {t("dashboardClient_orders_license1")} {index + 1}
                     </h5>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Username */}
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor={`username-${index}`}
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        {t("dashboardClient_orders_username")}
-                      </Label>
-                      <Input
-                        id={`username-${index}`}
-                        name="username"
-                        placeholder={t("dashboardClient_orders_username")}
-                        value={user.username}
-                        onChange={(e) => handleUserChange(index, e)}
-                        // readOnly={licenses?.length > 0}
-                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      />
-                    </div>
-
-                    {/* Email */}
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor={`email-${index}`}
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        {t("dashboardClient_orders_email")}
-                      </Label>
-                      <div className="relative">
-                        <Input
-                          id={`email-${index}`}
-                          name="email"
-                          type="email"
-                          placeholder=""
-                          value={user.email}
-                          onChange={(e) => handleUserChange(index, e)}
-                          // readOnly={licenses?.length > 0}
-                          className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 pl-10"
+                    <div className="ml-auto flex items-center gap-2">
+                      <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm hover:border-blue-300 transition-all">
+                        <input
+                          type="checkbox"
+                          checked={!user.excluded}
+                          onChange={(e) => {
+                            const users = [...formData.users];
+                            users[index] = { ...users[index], excluded: !e.target.checked };
+                            setFormData((prev: any) => ({ ...prev, users }));
+                          }}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                         />
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <svg
-                            className="h-5 w-5 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                      </div>
-                      <p className="text-xs text-blue-600 font-medium">
-                        {t("dashboardClient_orders_authCodeSent")}
-                      </p>
+                        <span className="text-xs font-bold text-gray-700 uppercase tracking-tight">
+                          Inclure
+                        </span>
+                      </label>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-                    {/* Computer Name */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
+                  <div className={cn("transition-opacity duration-200", user.excluded && "opacity-40 grayscale pointer-events-none")}>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Username */}
+                      <div className="space-y-2">
                         <Label
-                          htmlFor={`computerName-${index}`}
+                          htmlFor={`username-${index}`}
                           className="text-sm font-medium text-gray-700"
                         >
-                          {t("dashboardClient_orders_computerName")}
+                          {t("dashboardClient_orders_username")}
                         </Label>
+                        <Input
+                          id={`username-${index}`}
+                          name="username"
+                          placeholder={t("dashboardClient_orders_username")}
+                          value={user.username}
+                          onChange={(e) => handleUserChange(index, e)}
+                          // readOnly={licenses?.length > 0}
+                          className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        />
                       </div>
-                      <Input
-                        id={`computerName-${index}`}
-                        name="computerName"
-                        placeholder="Nom de votre ordinateur"
-                        value={user.computerName}
-                        onChange={(e) => handleUserChange(index, e)}
-                        // readOnly={licenses?.length > 0}
-                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      />
-                      <p className="text-xs text-gray-500">
-                        {t("dashboardClient_orders_computerNameHint")}
-                      </p>
+
+                      {/* Email */}
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor={`email-${index}`}
+                          className="text-sm font-medium text-gray-700"
+                        >
+                          {t("dashboardClient_orders_email")}
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id={`email-${index}`}
+                            name="email"
+                            type="email"
+                            placeholder=""
+                            value={user.email}
+                            onChange={(e) => handleUserChange(index, e)}
+                            // readOnly={licenses?.length > 0}
+                            className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 pl-10"
+                          />
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg
+                              className="h-5 w-5 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <p className="text-xs text-blue-600 font-medium">
+                          {t("dashboardClient_orders_authCodeSent")}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Identification Code */}
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor={`identificationCode-${index}`}
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        {t("dashboardClient_orders_idCode")}
-                      </Label>
-                      <Input
-                        id={`identificationCode-${index}`}
-                        name="identificationCode"
-                        placeholder="Code d'identification unique"
-                        value={user.identificationCode}
-                        onChange={(e) => handleUserChange(index, e)}
-                        // readOnly={licenses?.length > 0}
-                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 font-mono"
-                      />
-                      <p className="text-xs text-gray-500">
-                        {t("dashboardClient_orders_idCodeHint")}
-                      </p>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                      {/* Computer Name */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label
+                            htmlFor={`computerName-${index}`}
+                            className="text-sm font-medium text-gray-700"
+                          >
+                            {t("dashboardClient_orders_computerName")}
+                          </Label>
+                        </div>
+                        <Input
+                          id={`computerName-${index}`}
+                          name="computerName"
+                          placeholder="Nom de votre ordinateur"
+                          value={user.computerName}
+                          onChange={(e) => handleUserChange(index, e)}
+                          // readOnly={licenses?.length > 0}
+                          className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        />
+                        <p className="text-xs text-gray-500">
+                          {t("dashboardClient_orders_computerNameHint")}
+                        </p>
+                      </div>
+
+                      {/* Identification Code */}
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor={`identificationCode-${index}`}
+                          className="text-sm font-medium text-gray-700"
+                        >
+                          {t("dashboardClient_orders_idCode")}
+                        </Label>
+                        <Input
+                          id={`identificationCode-${index}`}
+                          name="identificationCode"
+                          placeholder="Code d'identification unique"
+                          value={user.identificationCode}
+                          onChange={(e) => handleUserChange(index, e)}
+                          // readOnly={licenses?.length > 0}
+                          className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 font-mono"
+                        />
+                        <p className="text-xs text-gray-500">
+                          {t("dashboardClient_orders_idCodeHint")}
+                        </p>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Individual Added Days Status */}
+                  {!user.excluded && (
+                    <div className="mt-4 pt-4 border-t border-dashed border-gray-200 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                        <span className="text-xs font-medium text-gray-500 italic">
+                          Calcul de la durée ajoutée :
+                        </span>
+                      </div>
+                      <div className="bg-blue-50 px-4 py-1.5 rounded-lg border border-blue-100 flex items-center gap-2 shadow-sm">
+                        <span className="text-sm font-bold text-blue-700">
+                          +{calculateAddedDays(registrationData.find(r =>
+                            (user.id && r._id === user.id) ||
+                            (user.identificationCode && r.computerCode === user.identificationCode)
+                          ))}
+                        </span>
+                        <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">
+                          Jours
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -1166,11 +1295,11 @@ const NewLicenceAdmin = () => {
           </h4>
           <div className="flex justify-between mb-2">
             <span className="text-sm font-medium">
-              {t("checkout_price_j")} ({formData.licenses}{" "}
+              {t("checkout_price_j")} ({includedLicensesCount}{" "}
               {t("checkout_licence")})
             </span>
             <span className="font-bold text-sm">
-              {formData.licenses * pricePerDay} €
+              {includedLicensesCount * pricePerDay} €
             </span>
           </div>
 
@@ -1180,6 +1309,9 @@ const NewLicenceAdmin = () => {
               {daysUntilExpiration} {t("pay_03_j")}
             </span>
           </div>
+          <p className="text-[10px] text-gray-400 italic mb-4 leading-tight">
+            {t("dashboardClient_orders_cumulativeDaysNote")}
+          </p>
 
           <div className="flex justify-between mb-2">
             <span className="text-sm font-medium">
@@ -1220,7 +1352,7 @@ const NewLicenceAdmin = () => {
           <div className="flex justify-between items-end font-bold text-sm pt-4 border-t border-gray-300 mb-6">
             <span>{t("checkout_total")}</span>
             <div className="flex flex-col items-end">
-              {(CouponValue.value > 0 || formData.licenses > 4) && (
+              {(CouponValue.value > 0 || includedLicensesCount > 4) && (
                 <small className="line-through text-red-800">
                   {basedPrice * (1 + tva)} € TTC
                 </small>

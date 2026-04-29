@@ -1388,7 +1388,8 @@ exports.createCommandByAdmin = async (req, res) => {
       tva,
       freetrial,
       startDate = new Date(),
-      sendFacture
+      sendFacture,
+      daysUntilExpiration: daysUntilExpirationBody
     } = req.body;
 
     const isFreeTrial =
@@ -1410,7 +1411,7 @@ exports.createCommandByAdmin = async (req, res) => {
     // Calculate the difference in milliseconds
     const diffTime = expiration.getTime() - today.getTime();
     // Convert milliseconds to days
-    const daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const daysUntilExpiration = daysUntilExpirationBody || Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     // Ensure userId is a plain string ID (not a populated object)
     const rawUserId = typeof userId === 'object' && userId?._id ? userId._id : userId;
@@ -1492,13 +1493,15 @@ exports.createCommandByAdmin = async (req, res) => {
           {
             $set: {
               username: license.username,
-              computerName: license.username,
+              computerName: license.computerName,
               email: license.email,
               userId: user._id || user,
               computerCode: license.identificationCode,
               rentalId: rental._id,
               expirationDate,
-              status: "pending"
+              status: "pending",
+              addedDays: license.addedDays,
+              priceHT: license.priceHT
             }
           },
           { new: true }
@@ -1521,6 +1524,8 @@ exports.createCommandByAdmin = async (req, res) => {
           registration.expirationDate = expirationDate;
           registration.userId = user._id || user;
           registration.company = user.company;
+          registration.addedDays = license.addedDays;
+          registration.priceHT = license.priceHT;
           await registration.save();
         } else {
           // Otherwise, create a new one
@@ -1533,6 +1538,8 @@ exports.createCommandByAdmin = async (req, res) => {
             computerName: license.computerName,
             computerCode: license.identificationCode,
             expirationDate,
+            addedDays: license.addedDays,
+            priceHT: license.priceHT,
           });
         
           await registration.save();
