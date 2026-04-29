@@ -42,6 +42,7 @@ import {
   FaDesktop,
   FaCheck
 } from 'react-icons/fa';
+import { User as UserIcon, Building2, Briefcase, Info, CheckCircle2, ShieldCheck } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -111,8 +112,20 @@ const NewLicence = () => {
         const getSettings = await settings();
         const getTax = await tauxTva();
         const getRegistrations = await registrations();
-        const checkIfItsZero = countries.find((e) => e.code === getTax.country)?.isZero;
-        const valueTva = getUser.nTva ? checkIfItsZero ? 0 : getTax.taux_tva : getTax.taux_tva;
+        const checkIfItsZero = countries.find((e) => e.code === (getTax?.country || getUser?.country))?.isZero;
+        
+        // New VAT Logic based on Belgian seller rules
+        let valueTva = getTax?.taux_tva || 0;
+        const userCountry = getUser?.country || '';
+        const isOutsideBelgium = userCountry !== 'Belgique' && userCountry !== 'BE';
+        
+        if (isOutsideBelgium) {
+          if (getUser?.clientType === 'company' && getUser?.nTva) {
+            valueTva = 0;
+          } else if (getUser?.clientType === 'professional' && getUser?.isVatSubject && getUser?.nTva) {
+            valueTva = 0;
+          }
+        }
 
         setFormData((prev: any) => ({
           ...prev,
@@ -129,9 +142,8 @@ const NewLicence = () => {
         setLoading(false);
       }
     };
-
     getData();
-  }, [loading]);
+  }, []); // Changed from [loading] to [] to prevent infinite loops and fix navigation issues
 
   useEffect(() => {
     if (selectedRegistrations.length === 0) {
@@ -258,7 +270,11 @@ const NewLicence = () => {
   const daysUntilExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
   const handleSubmit = async () => {
-    if (!userData.company || !userData.address || !userData.country) {
+    const isCompanyOrPro = userData.clientType === 'company' || userData.clientType === 'professional';
+    const isNameMissing = !userData.name && !isCompanyOrPro;
+    const isCompanyMissing = !userData.company && isCompanyOrPro;
+
+    if (isNameMissing || isCompanyMissing || !userData.address || !userData.country) {
       toast.warning(t("dashboardClient_orders_completeCompanyInfoFirst"))
       return;
     }
@@ -917,7 +933,7 @@ const NewLicence = () => {
         <div className="w-[65%] max-lg:w-full flex flex-col gap-5">
           <div className="bg-white p-8 rounded-xl shadow-sm">
             {/* En-tête avec icône */}
-            <div className="flex items-center gap-3 mb-3 pb-4 border-b border-gray-100">
+            <div className="flex items-center justify-between mb-3 pb-4 border-b border-gray-100">
               <div>
                 <h4 className="font-semibold text-gray-900 text-lg">
                   {t("dashboardClient_orders_billingInfo")}
@@ -926,31 +942,40 @@ const NewLicence = () => {
                   {t('dashboardClient_orders_info_fac')}
                 </p>
               </div>
+              <Link 
+                to="/tableau-de-board/parametres" 
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors border border-blue-100"
+              >
+                <HiExternalLink className="w-3 h-3" />
+                {t("Modifier mon profil")}
+              </Link>
             </div>
 
             {/* Grille des informations */}
             <div className="space-y-6">
-              {/* Ligne 1 - Société et Adresse */}
+              {/* Ligne 1 - Société/Nom et Adresse */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="company" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    {t("dashboardClient_orders_companyName")}
+                    {userData.clientType === 'company' ? <Building2 className="w-4 h-4 text-gray-400" /> : 
+                     userData.clientType === 'professional' ? <Briefcase className="w-4 h-4" /> : 
+                     <UserIcon className="w-4 h-4 text-gray-400" />}
+                    {userData.clientType === 'company' ? t("dashboardClient_orders_companyName") : 
+                     userData.clientType === 'professional' ? "Nom complet (ou nom commercial)" : 
+                     "Nom complet"}
                   </Label>
                   <div className="relative">
                     <Input
                       id="company"
                       name="company"
-                      value={userData.company}
+                      value={userData.clientType === 'individual' ? userData.name : userData.company}
                       readOnly
                       className="bg-gray-50 border-gray-200 text-gray-700 pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all"
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
+                      {userData.clientType === 'company' ? <Building2 className="h-5 w-5 text-gray-400" /> : 
+                       userData.clientType === 'professional' ? <Briefcase className="h-5 w-5 text-gray-400" /> : 
+                       <UserIcon className="h-5 w-5 text-gray-400" />}
                     </div>
                   </div>
                 </div>
@@ -993,7 +1018,7 @@ const NewLicence = () => {
                     <Input
                       id="pays"
                       name="pays"
-                      value={countries.find((e) => e.code === userData.country)?.name}
+                      value={countries.find((e) => e.code === userData.country)?.name || userData.country}
                       readOnly
                       className="bg-gray-50 border-gray-200 text-gray-700 pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all"
                     />
@@ -1007,23 +1032,19 @@ const NewLicence = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="tvanum" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
-                    </svg>
+                    <CheckCircle2 className="w-4 h-4 text-gray-400" />
                     {t("pay_01_tva")}
                   </Label>
                   <div className="relative">
                     <Input
                       id="tvanum"
                       name="tvanum"
-                      value={userData.nTva}
+                      value={userData.nTva || "Non renseigné"}
                       readOnly
                       className="bg-gray-50 border-gray-200 text-gray-700 pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all font-mono text-sm"
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
+                      <ShieldCheck className="h-5 w-5 text-gray-400" />
                     </div>
                   </div>
                 </div>
@@ -1470,15 +1491,16 @@ const NewLicence = () => {
               </span>
             </div>
 
-            <div className="flex justify-between items-end font-bold text-sm pt-4 border-t border-gray-300 mb-6">
-              <span>{t("checkout_total")}</span>
+            <div className="flex justify-between items-end pt-4 border-t border-gray-100 mb-6 bg-gradient-to-r from-transparent to-primary/5 -mx-10 px-10 py-4">
+              <span className="font-bold text-gray-900">{t("checkout_total")}</span>
               <div className="flex flex-col items-end">
                 {(CouponValue.value > 0 || formData.licenses > 4) && (
-                  <small className="line-through text-red-800">
-                    {basedPrice * (1 + tva)} € TTC
-                  </small>
+                  <span className="line-through text-red-500 text-[10px] font-medium">
+                    {(basedPrice * (1 + tva)).toFixed(2)} € TTC
+                  </span>
                 )}
-                <span>{totalPayer} € TTC</span>
+                <span className="text-xl font-black text-primary leading-none">{totalPayer} €</span>
+                <span className="text-[10px] text-muted-foreground font-medium mt-1">TVA Incluse ({formData.tva}%)</span>
               </div>
             </div>
 

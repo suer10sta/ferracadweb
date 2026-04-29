@@ -98,7 +98,9 @@ exports.createUser = async (req, res) => {
         address,
         basedPrice,
         role,
-        platform
+        platform,
+        clientType,
+        isVatSubject
       } = req.body;
 
       const roleUser = req.user.role;
@@ -146,7 +148,9 @@ exports.createUser = async (req, res) => {
           role: roleUser === 'admin' ? role : "client",
           ...(roleUser === 'admin' && { basedPrice }),
           ipAdresse: req.realIp,
-          ...(platform && { platform })
+          ...(platform && { platform }),
+          clientType: clientType || 'individual',
+          isVatSubject: isVatSubject || false
       });
 
       res.status(201).json({
@@ -186,7 +190,9 @@ exports.updateUser = async (req, res) => {
       iban,
       factureMail,
       role,
-      platform
+      platform,
+      clientType,
+      isVatSubject
     } = req.body;
 
     const roleUser = req.user.role;
@@ -232,7 +238,9 @@ exports.updateUser = async (req, res) => {
       ...(roleUser === 'admin' && { basedPrice }),
       ...(roleUser === 'admin' && { iban }),
       ...(roleUser === 'admin' && { role }),
-      ...(platform && { platform })
+      ...(platform && { platform }),
+      clientType,
+      isVatSubject
     };    
 
     const updateUser = await User.findByIdAndUpdate(
@@ -379,7 +387,7 @@ exports.updateUserByAdmin = async (req, res) => {
       return res.status(401).json({ message: "Accès non autorisé." });
     }
 
-    const { name, tva, country, company, adresse } = req.body;
+    const { name, tva, country, company, adresse, clientType, isVatSubject } = req.body;
 
     // Basic required-field validation
     if (!name || !country || !adresse) {
@@ -404,6 +412,8 @@ exports.updateUserByAdmin = async (req, res) => {
     user.address = adresse;
     user.country = country;
     user.nTva = tva;
+    if (clientType) user.clientType = clientType;
+    if (typeof isVatSubject !== 'undefined') user.isVatSubject = isVatSubject;
 
     await user.save();
 

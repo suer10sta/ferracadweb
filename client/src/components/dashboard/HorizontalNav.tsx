@@ -5,7 +5,7 @@ import { BsCurrencyDollar } from 'react-icons/bs';
 import { useLanguage } from '@/lang/LanguageProvider';
 import { cn } from '@/lib/utils';
 
-const HorizontalNav = () => {
+const HorizontalNav = ({ className }: { className?: string }) => {
   const { t } = useLanguage();
   const location = useLocation();
   const subpath = location.pathname;
@@ -29,7 +29,7 @@ const HorizontalNav = () => {
   ];
 
   return (
-    <div className="flex items-center gap-2 mb-6 bg-white p-1.5 rounded-2xl border border-stone-100 shadow-sm w-fit">
+    <div className={cn("flex items-center gap-2 bg-white p-1 rounded-xl border border-stone-100 shadow-sm w-fit", className)}>
       {menuItems.map((item) => {
         const isActive = item.path === subpath;
         return (

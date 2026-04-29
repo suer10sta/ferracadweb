@@ -278,7 +278,9 @@ exports.inscription = async (req, res) => {
             ville,
             adresse,
             isAdmin,
-            platform
+            platform,
+            clientType,
+            isVatSubject
         } = req.body;
 
         if (!name || !prenom || !email || !pwd || !reppwd || !pays || !number || !platform) {
@@ -328,6 +330,8 @@ exports.inscription = async (req, res) => {
             source: isAdmin ? "Formulaire de l'admin" : "Formulaire d’inscription",
             platform: platform,
             ipAdresse: req.realIp,
+            clientType: clientType || 'individual',
+            isVatSubject: isVatSubject || false,
         });
 
         await newUser.save()

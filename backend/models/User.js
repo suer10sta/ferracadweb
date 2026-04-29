@@ -27,7 +27,9 @@ const userSchema = new Schema({
     source: String,
     verificationCode: String,
     verificationCodeExpires: Date,
-    isEmailVerified: { type: Boolean, default: false }
+    isEmailVerified: { type: Boolean, default: false },
+    clientType: { type: String, enum: ['individual', 'company', 'professional'], default: 'individual' },
+    isVatSubject: { type: Boolean, default: false }
 }, { timestamps: true });
   
 const User = mongoose.model('User', userSchema);

@@ -17,7 +17,7 @@ import { TbLicense } from 'react-icons/tb';
 import { PiContactlessPaymentBold } from 'react-icons/pi';
 import { formatDate } from '@/utils/formatDate';
 import { Badge } from '../ui/badge';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IoGiftSharp } from 'react-icons/io5';
 import Loading from '../elements/Loading';
 import { useLanguage } from '@/lang/LanguageProvider';
@@ -27,18 +27,9 @@ import { FaRegClock } from 'react-icons/fa';
 const DashboardClient = () => {
   const { t } = useLanguage();
   const user: any = enrichedUser();
-  const [cardsAnalytics, setcardsAnalytics] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (loading) return;
-
-    if (user._id) {
-      setLoading(true)
-    }
-
+  const cardsAnalytics = useMemo(() => {
     const now = new Date();
     const getStatus = (reg: any) => {
       const expDate = reg.expirationDate ? new Date(reg.expirationDate) : null;
@@ -47,11 +38,10 @@ const DashboardClient = () => {
       
       if (isExpired) return "expired";
       if (reg.status === "freetrial") return "freetrial";
-      if (daysUntil <= 30) return "active"; // expiring is counted as active for the card
       return "active";
     };
 
-    setcardsAnalytics([
+    return [
       {
         title: t("dashboardClient_activeLicenses"),
         value: user.registrationData?.filter((e: any) => getStatus(e) === "active").length || 0,
@@ -97,8 +87,8 @@ const DashboardClient = () => {
         onClick: () => setStatusFilter("all"),
         parag: t("dashboardClient_currentPlan")
       }
-    ])
-  }, [user, loading, t, statusFilter]);
+    ];
+  }, [user.registrationData, t, statusFilter]);
 
   const lastPayments = user.paymentData;
   const totalAmount = lastPayments?.reduce((curr: any, arr: { totalPricePay: any; }) => curr + arr.totalPricePay, 0).toFixed(2) || 0;

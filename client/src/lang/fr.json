@@ -335,7 +335,7 @@
   "sidebarFaq": "FAQ",
   "sidebarMarketing": "Marketing / Newsletters",
   "sidebarLogs": "Logs",
-  "sidebarSettings": "Paramètres",
+  "sidebarSettings": "Facturation & Compte",
   "sidebarLogout": "Déconnecté",
 
   "headerNotificationError": "Une erreur est survenue lors de la mise à jour de la notification.",
@@ -355,7 +355,7 @@
   "pagetitle_marketing": "Marketing - Tableau de bord | Ferracad",
   "pagetitle_marketingCreate": "Créer une campagne - Tableau de bord | Ferracad",
   "pagetitle_logs": "Logs système - Tableau de bord | Ferracad",
-  "pagetitle_settings": "Paramètres - Tableau de bord | Ferracad",
+  "pagetitle_settings": "Profil & Facturation - Tableau de bord | Ferracad",
 
   "dashboardClient_totalActiveLicenses": "Nombre total de licences actives",
   "dashboardClient_nextRecurringPayment": "Paiement récurrent prévu",
@@ -561,7 +561,7 @@
   "dashboardClient_orders_expiration": "Expiration *",
   "dashboardClient_orders_info_fac": "Informations de facturation pour votre abonnement",
   "dashboardClient_orders_fac_title": "Facturation professionnelle",
-  "dashboardClient_orders_subtitle": "Ces informations apparaîtront sur votre facture. Pour toute modification, modifiez vos informations dans la rubrique Paramètres.",
+  "dashboardClient_orders_subtitle": "Ces informations apparaîtront sur votre facture. Pour toute modification, modifiez vos informations dans la rubrique Facturation & Compte.",
   "dashboardClient_orders_subtitle_licence": "Configuration des licences et utilisateurs",
   "dashboardClient_orders_cvc": "CVC",
 

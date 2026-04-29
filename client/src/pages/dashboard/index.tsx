@@ -49,8 +49,9 @@ const index = () => {
                 )}
                 <div className={`transition-all duration-200 ${isAdmin && activeSidebar ? "w-[85%] " : "w-full"} mx-auto px-5`}>
                     <div className={`mx-auto max-w-[1600px]`}>
-                        <Header setActiveSidebar={setActiveSidebar} activeSidebar={activeSidebar} />
-                        {!isAdmin && <HorizontalNav />}
+                        <div className="sticky top-0 z-[100] bg-[#F9F9F9]">
+                            <Header setActiveSidebar={setActiveSidebar} activeSidebar={activeSidebar} />
+                        </div>
                         <Outlet />
                     </div>
                 </div>
