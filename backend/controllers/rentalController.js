@@ -103,7 +103,7 @@ exports.freeTrialCommande = async (req, res) => {
         status: "pending",
         computerName: license.computerName,
         computerCode: license.identificationCode,
-        expirationDate,
+        expirationDate: license.expirationDate || expirationDate,
         addedDays: license.addedDays,
         priceHT: license.priceHT
       });
@@ -115,7 +115,7 @@ exports.freeTrialCommande = async (req, res) => {
       let licenseHistory = new LicenseHistory({
         registerId: registration._id,
         startAt: new Date(),
-        expirationDate
+        expirationDate: license.expirationDate || expirationDate
       });
     
       await licenseHistory.save();
@@ -146,13 +146,17 @@ exports.freeTrialCommande = async (req, res) => {
 
     const emailSociete = await User.findOne({ mainAccount: true })
     for (const license of users) {
-      let expDate = new Date(expirationDate);
+      let expDate = new Date(license.expirationDate || expirationDate);
       let codeAuth = await createAuthCode(license.identificationCode, expDate);
       const code = codeAuth.data.code;
 
       let update = {
         status: "freetrial",
         authCode: code,
+        expirationDate: expDate,
+        addedDays: license.addedDays,
+        priceHT: license.priceHT,
+        rentalId: rental._id
       };
     
       let result = await Registration.updateOne(
@@ -422,7 +426,7 @@ exports.confirmPayment = async (req, res) => {
         newSub = false;
         rental = await Rental.findOneAndUpdate(
           { _id: idRental },
-          { $set: { expirationDate, status: "pending" } },
+          { $set: { nextBillingDate: expirationDate, status: "pending" } },
           { new: true }
         );
       }
@@ -461,7 +465,7 @@ exports.confirmPayment = async (req, res) => {
           {
             $set: {
               rentalId: rental._id,
-              expirationDate,
+              expirationDate: license.expirationDate || expirationDate,
               status: "pending",
               addedDays: license.addedDays,
               priceHT: license.priceHT
@@ -482,7 +486,7 @@ exports.confirmPayment = async (req, res) => {
           registration.status = "pending";
           registration.username = license.username;
           registration.computerName = license.computerName;
-          registration.expirationDate = expirationDate;
+          registration.expirationDate = license.expirationDate || expirationDate;
           registration.company = user.company;
           registration.userId = user._id || user;
           registration.addedDays = license.addedDays;
@@ -498,7 +502,7 @@ exports.confirmPayment = async (req, res) => {
             status: "pending",
             computerName: license.computerName,
             computerCode: license.identificationCode,
-            expirationDate,
+            expirationDate: license.expirationDate || expirationDate,
             addedDays: license.addedDays,
             priceHT: license.priceHT
           });
@@ -513,7 +517,7 @@ exports.confirmPayment = async (req, res) => {
       const licenseHistory = new LicenseHistory({
         registerId: registration._id,
         startAt: new Date(),
-        expirationDate
+        expirationDate: license.expirationDate || expirationDate
       });
       await licenseHistory.save();
     }
@@ -721,7 +725,7 @@ exports.confirmPayment = async (req, res) => {
     const emailSociete = await User.findOne({ mainAccount: true })
     // Activer les licences
     for (const license of users) {
-      let expDate = new Date(expirationDate);
+      let expDate = new Date(license.expirationDate || expirationDate);
       let codeAuth = await createAuthCode(license.identificationCode, expDate);
       let code = codeAuth.data.code;
       
@@ -732,6 +736,10 @@ exports.confirmPayment = async (req, res) => {
           $set: {
             status: freeTrial? "freetrial" : "active",
             authCode: code,
+            expirationDate: expDate,
+            addedDays: license.addedDays,
+            priceHT: license.priceHT,
+            rentalId: rental._id
           }
         }
       );
@@ -978,6 +986,8 @@ exports.createRental = async (req, res) => {
     for (const license of users) {
       let registration;
       let licenseHistory;
+      const licenseExpDate = license.expirationDate || expirationDate;
+
       if (license.email) {
         license.email = license.email.trim().toLowerCase();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -993,7 +1003,9 @@ exports.createRental = async (req, res) => {
           {
             $set: {
               rentalId: rental._id,
-              expirationDate,
+              expirationDate: licenseExpDate,
+              addedDays: license.addedDays,
+              priceHT: license.priceHT,
               status: "pending"
             }
           },
@@ -1012,7 +1024,9 @@ exports.createRental = async (req, res) => {
           status: "pending",
           computerName: license.computerName,
           computerCode: license.identificationCode,
-          expirationDate
+          expirationDate: licenseExpDate,
+          addedDays: license.addedDays,
+          priceHT: license.priceHT
         });
     
         await registration.save();
@@ -1023,7 +1037,7 @@ exports.createRental = async (req, res) => {
       licenseHistory = new LicenseHistory({
         registerId: registration._id,
         startAt: new Date(),
-        expirationDate
+        expirationDate: licenseExpDate
       });
     
       await licenseHistory.save();
@@ -1258,12 +1272,16 @@ exports.createRental = async (req, res) => {
 
     // active License:
     for (const license of users) {
-      let expDate = new Date(expirationDate);
+      let expDate = new Date(license.expirationDate || expirationDate);
       let codeAuth = await createAuthCode(license.identificationCode, expDate);
       let code = codeAuth.data.code;
       let update = {
         status: "active",
         authCode: code,
+        expirationDate: expDate,
+        addedDays: license.addedDays,
+        priceHT: license.priceHT,
+        rentalId: rental._id
       };
     
       await Registration.updateOne(
@@ -1651,15 +1669,18 @@ exports.createCommandByAdmin = async (req, res) => {
     const emailSociete = await User.findOne({ mainAccount: true })
 
     for (const license of users) {
-      let expDate = new Date(expirationDate);
+      let expDate = new Date(license.expirationDate || expirationDate);
       let codeAuth = await createAuthCode(license.identificationCode, expDate);
       const code = codeAuth.data.code;
       let update = {
         status: isFreeTrial ? "freetrial" : "active",
         authCode: code,
+        expirationDate: expDate,
+        addedDays: license.addedDays,
+        priceHT: license.priceHT,
+        rentalId: rental._id
       };
     
-      console.log(license)
       await Registration.updateOne(
         { computerName: license.computerName, computerCode: license.identificationCode },
         { $set: update }

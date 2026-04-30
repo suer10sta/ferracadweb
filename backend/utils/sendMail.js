@@ -292,10 +292,6 @@ const sendEmail = async ({
                 <td style="padding: 8px 0; font-weight: 500;">${startDateFacture ? formatDate(startDateFacture) : "N/A"}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; color: #666;">Date d'expiration:</td>
-                <td style="padding: 8px 0; font-weight: 500;">${nextBillingDateFacture ? formatDate(nextBillingDateFacture) : "N/A"}</td>
-              </tr>
-              <tr>
                 <td style="padding: 8px 0; color: #666;">Durée cumulée globale :</td>
                 <td style="padding: 8px 0; font-weight: 500;">${durationDisplay} jours</td>
               </tr>

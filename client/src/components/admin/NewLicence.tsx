@@ -184,23 +184,23 @@ const NewLicenceAdmin = () => {
           email: userData.email || "",
           computerName: "",
           identificationCode: "",
-          startFromDate: null,
+          startDate: new Date().toISOString().split("T")[0],
           excluded: false,
         }]
       }));
     }
   }, [state]);
 
-  const calculateAddedDays = (reg: any, userIndex?: number) => {
+  const calculateAddedDays = (reg: any, user?: any) => {
     const targetExpStr =
-      !formData.isUniformExpiration && userIndex !== undefined && formData.users[userIndex].expirationDate
-        ? formData.users[userIndex].expirationDate
+      !formData.isUniformExpiration && user?.expirationDate
+        ? user.expirationDate
         : formData.expirationDate;
 
     const startExpStr =
-      !formData.isUniformExpiration && userIndex !== undefined && formData.users[userIndex].startDate
-        ? formData.users[userIndex].startDate
-        : formData.startDate;
+      !formData.isUniformExpiration && user?.startDate
+        ? user.startDate
+        : (formData.startDate || new Date().toISOString().split("T")[0]);
 
     if (!targetExpStr || !startExpStr) return 0;
 
@@ -219,12 +219,12 @@ const NewLicenceAdmin = () => {
 
   const daysUntilExpiration = formData.users
     .filter((u: any) => !u.excluded)
-    .reduce((acc: number, user: any, index: number) => {
+    .reduce((acc: number, user: any) => {
       const reg = registrationData.find(r =>
         (user.id && r._id === user.id) ||
         (user.identificationCode && r.computerCode === user.identificationCode)
       );
-      return acc + calculateAddedDays(reg, index);
+      return acc + calculateAddedDays(reg, user);
     }, 0);
 
   // Validate form fields and send the admin rental creation/renewal request to the backend
@@ -402,7 +402,7 @@ const NewLicenceAdmin = () => {
     const licenses = Number(e.target.value);
     if (licenses < 1) return; // prevent zero or negative licenses
 
-    setFormData((prev: { users: any }) => {
+    setFormData((prev: any) => {
       const users = [...prev.users];
       if (licenses > users.length) {
         // add empty user objects
@@ -412,6 +412,9 @@ const NewLicenceAdmin = () => {
             email: "",
             computerName: "",
             identificationCode: "",
+            startDate: prev.startDate || new Date().toISOString().split("T")[0],
+            expirationDate: prev.expirationDate,
+            excluded: false,
           });
         }
       } else if (licenses < users.length) {
@@ -485,18 +488,21 @@ const NewLicenceAdmin = () => {
     // Pre-calculate individual details for each user/license, excluding those not checked
     const usersWithDetails = formData.users
       .filter((u: any) => !u.excluded)
-      .map((user: any, index: number) => {
+      .map((user: any) => {
         const reg = registrationData.find(r =>
           (user.id && r._id === user.id) ||
           (user.identificationCode && r.computerCode === user.identificationCode)
         );
 
-        const diffDays = calculateAddedDays(reg, index);
+        const diffDays = calculateAddedDays(reg, user);
 
         return {
           ...user,
           addedDays: diffDays,
-          priceHT: diffDays * pricePerDay
+          priceHT: diffDays * pricePerDay,
+          // In uniform mode, always use the global date. In individual mode, use user date or fallback to global.
+          expirationDate: formData.isUniformExpiration ? formData.expirationDate : (user.expirationDate || formData.expirationDate),
+          startDate: formData.isUniformExpiration ? (formData.startDate || new Date().toISOString().split('T')[0]) : (user.startDate || formData.startDate || new Date().toISOString().split('T')[0]),
         };
       });
 
@@ -507,7 +513,7 @@ const NewLicenceAdmin = () => {
       detailedUsers: usersWithDetails,
       licenses: usersWithDetails.length, // Synchronize the count of active licenses
     }));
-  }, [totalPayer, daysUntilExpiration, formData.users, registrationData, pricePerDay]);
+  }, [totalPayer, daysUntilExpiration, formData.users, registrationData, pricePerDay, formData.isUniformExpiration, formData.expirationDate, formData.startDate]);
 
   const navigate = useNavigate();
 
@@ -757,7 +763,8 @@ const NewLicenceAdmin = () => {
                                     email: user.email || "",
                                     computerName: r.computerName || "",
                                     identificationCode: r.computerCode || "",
-                                    startFromDate: r.expirationDate,
+                                    startDate: r.expirationDate ? new Date(r.expirationDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                                    expirationDate: r.expirationDate ? new Date(r.expirationDate).toISOString().split('T')[0] : formData.expirationDate,
                                     excluded: false,
                                   }))
                                   : [{
@@ -765,7 +772,8 @@ const NewLicenceAdmin = () => {
                                     email: user.email || "",
                                     computerName: "",
                                     identificationCode: "",
-                                    startFromDate: null,
+                                    startDate: new Date().toISOString().split('T')[0],
+                                    expirationDate: formData.expirationDate,
                                     excluded: false,
                                   }];
 
@@ -948,15 +956,15 @@ const NewLicenceAdmin = () => {
               </Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Individual Card */}
-                <div 
+                <div
                   onClick={() => {
                     setFormData((prev: any) => ({ ...prev, isUniformExpiration: false }));
                     setValidateDateExp(true);
                   }}
                   className={cn(
                     "relative p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 group",
-                    !formData.isUniformExpiration 
-                      ? "border-blue-600 bg-blue-50/50 shadow-md ring-4 ring-blue-50" 
+                    !formData.isUniformExpiration
+                      ? "border-blue-600 bg-blue-50/50 shadow-md ring-4 ring-blue-50"
                       : "border-slate-100 bg-white hover:border-blue-200 hover:bg-slate-50/50"
                   )}
                 >
@@ -987,15 +995,15 @@ const NewLicenceAdmin = () => {
                 </div>
 
                 {/* Uniform Card */}
-                <div 
+                <div
                   onClick={() => {
                     setFormData((prev: any) => ({ ...prev, isUniformExpiration: true }));
                     setValidateDateExp(false);
                   }}
                   className={cn(
                     "relative p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 group",
-                    formData.isUniformExpiration 
-                      ? "border-blue-600 bg-blue-50/50 shadow-md ring-4 ring-blue-50" 
+                    formData.isUniformExpiration
+                      ? "border-blue-600 bg-blue-50/50 shadow-md ring-4 ring-blue-50"
                       : "border-slate-100 bg-white hover:border-blue-200 hover:bg-slate-50/50"
                   )}
                 >
@@ -1107,7 +1115,7 @@ const NewLicenceAdmin = () => {
                       className={cn(
                         "transition-opacity duration-200",
                         licenseItem.excluded &&
-                          "opacity-40 grayscale pointer-events-none"
+                        "opacity-40 grayscale pointer-events-none"
                       )}
                     >
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -1248,9 +1256,9 @@ const NewLicenceAdmin = () => {
                                       r._id === licenseItem.id) ||
                                     (licenseItem.identificationCode &&
                                       r.computerCode ===
-                                        licenseItem.identificationCode)
+                                      licenseItem.identificationCode)
                                 ),
-                                index
+                                licenseItem
                               )}`}
                             </span>
                             <span className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">
@@ -1394,33 +1402,33 @@ const NewLicenceAdmin = () => {
                 </div>
               </div>
             )}
-                {/* Hint Text */}
-                <p className="text-xs text-gray-500 leading-relaxed">
-                  {t("dashboardClient_orders_expirationDateHint")}
-                </p>
+            {/* Hint Text */}
+            <p className="text-xs text-gray-500 leading-relaxed">
+              {t("dashboardClient_orders_expirationDateHint")}
+            </p>
 
-                {/* Validation Status */}
-                {ValidateDateExp && (
-                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <svg
-                      className="h-4 w-4 text-green-600 flex-shrink-0"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span className="text-sm text-green-700 font-medium">
-                      Date validée avec succès
-                    </span>
-                  </div>
-                )}
+            {/* Validation Status */}
+            {ValidateDateExp && (
+              <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <svg
+                  className="h-4 w-4 text-green-600 flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="text-sm text-green-700 font-medium">
+                  Date validée avec succès
+                </span>
               </div>
+            )}
+          </div>
 
-              {/* Auto Renewal 
+          {/* Auto Renewal 
               {!freeTrial && (
                 <div className="flex items-center gap-3 mt-4 p-3 bg-white rounded-lg border border-gray-200">
                   <input
@@ -1439,7 +1447,7 @@ const NewLicenceAdmin = () => {
                   </div>
                 </div>
               )} */}
-            </div>
+        </div>
         <div className="bg-white p-10 w-[35%] max-lg:w-full rounded-lg sticky top-5 z-50">
           <h4 className="text-sm font-bold mb-6">
             {t("dashboardClient_orders_billingSummary")}

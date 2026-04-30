@@ -42,7 +42,7 @@ import {
   FaDesktop,
   FaCheck
 } from 'react-icons/fa';
-import { User as UserIcon, Building2, Briefcase, CheckCircle2, ShieldCheck } from "lucide-react";
+import { User as UserIcon, Building2, Briefcase, CheckCircle2, ShieldCheck, Users, Calendar, Check } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -50,6 +50,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { formatDate } from "@/utils/formatDate";
 
 const ELEMENT_OPTIONS = {
   style: {
@@ -84,18 +86,22 @@ const NewLicence = () => {
   const [formData, setFormData] = useState<any>({
     licenses: 1,
     idRental: null,
+    isUniformExpiration: true,
     users: [
       {
         username: "",
         email: "",
         computerName: "",
         identificationCode: "",
-        startFromDate: null,
+        startDate: "",
+        expirationDate: "",
+        excluded: false,
       },
     ],
     id_coupon: "",
     totalPayer: "",
     message: "",
+    startDate: "",
     expirationDate: "",
     autoRenewal: false,
     id_paiement: "68de5ca745ef19db9415a248",
@@ -224,8 +230,7 @@ const NewLicence = () => {
       minDate.setDate(minDate.getDate() + 1);
       formattedMinDate = minDate.toISOString().split("T")[0];
 
-      // Default target is +30 days
-      expDate.setDate(expDate.getDate() + 30);
+      // Default target is the same day (no automatic +30 days)
       formattedDate = expDate.toISOString().split("T")[0];
     } else {
       // Minimum is still +1 day
@@ -233,28 +238,27 @@ const NewLicence = () => {
       minDate.setDate(minDate.getDate() + 1);
       formattedMinDate = minDate.toISOString().split("T")[0];
 
-      // Default target is +30 days
+      // Default target is +30 days only if expired
       dateToday.setDate(dateToday.getDate() + 30);
       formattedDate = dateToday.toISOString().split("T")[0];
     }
 
     setMinDate(formattedMinDate);
 
-    const users: any[] = [];
-    for (const license of licenses) {
-      users.push({
+    setFormData((prev: any) => ({
+      ...prev,
+      licenses: licenses?.length,
+      idRental,
+      users: licenses.map((license: any) => ({
         id: license?._id,
         username: license?.username,
         email: license?.email || "",
         computerName: license?.computerName,
         identificationCode: license?.computerCode,
-      });
-    }
-    setFormData((prev: any) => ({
-      ...prev,
-      licenses: licenses?.length,
-      idRental,
-      users,
+        startDate: "",
+        expirationDate: license?.expirationDate ? new Date(license.expirationDate).toISOString().split('T')[0] : formattedDate,
+        excluded: false,
+      })),
       expirationDate: formattedDate,
       freeTrial,
     }));
@@ -294,9 +298,12 @@ const NewLicence = () => {
           username: string;
           computerName: string;
           identificationCode: string;
+          excluded: boolean;
         },
         index: number
       ) => {
+        if (user.excluded) return;
+
         if (!user.username.trim()) {
           toast.warning(
             `${t("dashboardClient_orders_license1")} ${index + 1}: ${t(
@@ -511,7 +518,7 @@ const NewLicence = () => {
     const licenses = Number(e.target.value);
     if (licenses < 1) return; // prevent zero or negative licenses
 
-    setFormData((prev: { users: any }) => {
+    setFormData((prev: any) => {
       const users = [...prev.users];
       if (licenses > users.length) {
         // add empty user objects
@@ -521,6 +528,9 @@ const NewLicence = () => {
             email: "",
             computerName: "",
             identificationCode: "",
+            startDate: prev.startDate || "",
+            expirationDate: prev.expirationDate || "",
+            excluded: false,
           });
         }
       } else if (licenses < users.length) {
@@ -537,7 +547,7 @@ const NewLicence = () => {
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev: { users: any }) => {
+    setFormData((prev: any) => {
       const users = [...prev.users];
       users[index] = { ...users[index], [name]: value };
       return { ...prev, users };
@@ -583,12 +593,16 @@ const NewLicence = () => {
     setValidateDateExp(formData.expirationDate >= minExpirationDate);
   }, [formData.expirationDate, minExpirationDate]);
 
-  const calculateAddedDays = (reg: any) => {
-    if (!reg) return 0;
-    const targetExp = new Date(formData.expirationDate);
+  const calculateAddedDays = (reg: any, index?: number) => {
+    const targetDateStr = (formData.isUniformExpiration || index === undefined)
+      ? formData.expirationDate
+      : formData.users[index]?.expirationDate;
+
+    if (!targetDateStr) return 0;
+    const targetExp = new Date(targetDateStr);
     let currentExp = new Date();
-    
-    if (reg.expirationDate) {
+
+    if (reg?.expirationDate) {
       const regExp = new Date(reg.expirationDate);
       if (regExp > currentExp) currentExp = regExp;
     }
@@ -596,20 +610,25 @@ const NewLicence = () => {
     return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
   };
 
-  const totalAdditionalDays = formData.users.reduce((acc: number, user: any) => {
+  const totalAdditionalDays = formData.users.reduce((acc: number, user: any, index: number) => {
+    if (user.excluded) return acc;
     const reg = registrationData.find(r => 
       (user.id && r._id === user.id) || 
       (user.identificationCode && r.computerCode === user.identificationCode)
     );
 
-    return acc + calculateAddedDays(reg);
+    return acc + calculateAddedDays(reg, index);
   }, 0);
+
+  const includedLicensesCount = useMemo(() => {
+    return formData.users.filter((u: any) => !u.excluded).length;
+  }, [formData.users]);
 
   const discountType: any = "percent";
   const discountValue =
     discountType === "percent" ? CouponValue.value / 100 : CouponValue.value;
   const discountSup =
-    formData.licenses > (SettingsData?.licenseThresholdForDiscount || 4)
+    includedLicensesCount > (SettingsData?.licenseThresholdForDiscount || 4)
       ? 0.1
       : 0;
 
@@ -627,28 +646,53 @@ const NewLicence = () => {
 
   useEffect(() => {
     // Pre-calculate individual details for each user
-    const usersWithDetails = formData.users.map((user: any) => {
+    const usersWithDetails = formData.users.map((user: any, index: number) => {
       const reg = registrationData.find(r => 
         (user.id && r._id === user.id) || 
         (user.identificationCode && r.computerCode === user.identificationCode)
       );
 
-      const diffDays = calculateAddedDays(reg);
+      const diffDays = calculateAddedDays(reg, index);
       
       return {
         ...user,
         addedDays: diffDays,
-        priceHT: diffDays * pricePerDay
+        priceHT: diffDays * pricePerDay,
+        // In uniform mode, always use the global date (user may have changed it after initialization)
+        expirationDate: formData.isUniformExpiration ? formData.expirationDate : (user.expirationDate || formData.expirationDate),
+        startDate: formData.isUniformExpiration ? (formData.startDate || new Date().toISOString().split('T')[0]) : (user.startDate || formData.startDate || new Date().toISOString().split('T')[0]),
       };
     });
 
-    setFormData((prev: any) => ({
-      ...prev,
-      totalPayer: totalPayer,
-      daysUntilExpiration: totalAdditionalDays,
-      detailedUsers: usersWithDetails // We'll send this to the backend
-    }));
-  }, [totalPayer, totalAdditionalDays]);
+    // Sync calculated values to formData
+    const activeDates = formData.users
+      .filter((u: any) => !u.excluded && u.expirationDate)
+      .map((u: any) => u.expirationDate);
+
+    const currentMaxDate = (!formData.isUniformExpiration && activeDates.length > 0)
+      ? activeDates.reduce((a: string, b: string) => (a > b ? a : b))
+      : formData.expirationDate;
+
+    setFormData((prev: any) => {
+      // Only update if values actually changed to avoid infinite loops
+      if (
+        prev.totalPayer === totalPayer &&
+        prev.daysUntilExpiration === totalAdditionalDays &&
+        prev.expirationDate === currentMaxDate &&
+        JSON.stringify(prev.detailedUsers) === JSON.stringify(usersWithDetails)
+      ) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        totalPayer: totalPayer,
+        daysUntilExpiration: totalAdditionalDays,
+        expirationDate: currentMaxDate,
+        detailedUsers: usersWithDetails
+      };
+    });
+  }, [totalPayer, totalAdditionalDays, formData.users, registrationData, pricePerDay, formData.isUniformExpiration]);
 
   const navigate = useNavigate();
 
@@ -749,6 +793,9 @@ const NewLicence = () => {
           email: selectedReg.email || "",
           computerName: selectedReg.computerName || "",
           identificationCode: selectedReg.computerCode || "",
+          startDate: formData.startDate || new Date().toISOString().split('T')[0],
+          expirationDate: formData.expirationDate,
+          excluded: false,
         };
       }
       return { ...prev, users };
@@ -797,18 +844,21 @@ const NewLicence = () => {
           email: reg.email || "",
           computerName: reg.computerName || "",
           identificationCode: reg.computerCode || "",
+          startDate: prev.startDate || new Date().toISOString().split('T')[0],
+          expirationDate: prev.expirationDate,
+          excluded: false,
         });
 
-        // AUTO-ADJUST DATE: If the new computer expires after or near the current target date,
-        // move the target date to new computer expiry + 30 days
+        // Only move the global expiration date if the newly added workstation already expires later than our target
         const regExp = new Date(reg.expirationDate);
         const currentTarget = new Date(prev.expirationDate);
         let newExpirationDate = prev.expirationDate;
 
         if (regExp >= currentTarget) {
-          const recommendedDate = new Date(regExp);
-          recommendedDate.setMonth(recommendedDate.getMonth() + 1);
-          newExpirationDate = recommendedDate.toISOString().split('T')[0];
+          // Set to next day after current expiry to ensure at least 1 day is added
+          const nextDay = new Date(regExp);
+          nextDay.setDate(nextDay.getDate() + 1);
+          newExpirationDate = nextDay.toISOString().split('T')[0];
         }
 
         return { 
@@ -834,7 +884,8 @@ const NewLicence = () => {
   }
 
   return (
-    <div className="space-y-6 mb-6">
+    <>
+      <div className="space-y-6 mb-6">
       {/* popup for tell user how to find name of compter */}
       <Dialog open={popupOs} onOpenChange={setPopupOs}>
         <DialogContent className="max-w-md">
@@ -1132,11 +1183,7 @@ const NewLicence = () => {
                             }`}>
                               {isExpired ? "Expiré" : `Expire le ${new Date(reg.expirationDate).toLocaleDateString()}`}
                             </span>
-                            {isSelected && (
-                              <span className="text-[10px] font-black text-blue-500 animate-pulse">
-                                + {calculateAddedDays(reg)} j
-                              </span>
-                            )}
+
                           </div>
                         </div>
                       </div>
@@ -1174,6 +1221,90 @@ const NewLicence = () => {
               </div>
             </div>
 
+            {/* Expiration Logic Selector (From Admin) */}
+            <div className="mb-8">
+              <Label className="text-sm font-semibold text-gray-700 mb-4 block">
+                Mode d'expiration
+              </Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div 
+                  onClick={() => {
+                    setFormData((prev: any) => ({ ...prev, isUniformExpiration: false }));
+                    setValidateDateExp(true);
+                  }}
+                  className={cn(
+                    "relative p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 group",
+                    !formData.isUniformExpiration 
+                      ? "border-blue-600 bg-blue-50/50 shadow-md ring-4 ring-blue-50" 
+                      : "border-slate-100 bg-white hover:border-blue-200 hover:bg-slate-50/50"
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={cn(
+                      "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
+                      !formData.isUniformExpiration ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500"
+                    )}>
+                      <Users className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h6 className={cn(
+                        "font-bold text-sm",
+                        !formData.isUniformExpiration ? "text-blue-900" : "text-slate-700"
+                      )}>
+                        Individuelle
+                      </h6>
+                      <p className="text-[11px] text-slate-500 leading-tight mt-0.5">
+                        Une date spécifique pour chaque licence
+                      </p>
+                    </div>
+                    {!formData.isUniformExpiration && (
+                      <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div 
+                  onClick={() => {
+                    setFormData((prev: any) => ({ ...prev, isUniformExpiration: true }));
+                    setValidateDateExp(false);
+                  }}
+                  className={cn(
+                    "relative p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 group",
+                    formData.isUniformExpiration 
+                      ? "border-blue-600 bg-blue-50/50 shadow-md ring-4 ring-blue-50" 
+                      : "border-slate-100 bg-white hover:border-blue-200 hover:bg-slate-50/50"
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={cn(
+                      "w-12 h-12 rounded-xl flex items-center justify-center transition-colors",
+                      formData.isUniformExpiration ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-500"
+                    )}>
+                      <Calendar className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h6 className={cn(
+                        "font-bold text-sm",
+                        formData.isUniformExpiration ? "text-blue-900" : "text-slate-700"
+                      )}>
+                        Uniforme
+                      </h6>
+                      <p className="text-[11px] text-slate-500 leading-tight mt-0.5">
+                        Une seule date pour toutes les licences
+                      </p>
+                    </div>
+                    {formData.isUniformExpiration && (
+                      <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* User Licenses */}
             <div className="space-y-4">
               {formData.users.map((user: any, index: number) => (
@@ -1188,220 +1319,290 @@ const NewLicence = () => {
                     <h5 className="font-semibold text-gray-900 text-lg">
                       {t("dashboardClient_orders_license1")} {index + 1}
                     </h5>
-                  </div>
-                  {
-                    !formData.freeTrial && (
-                      <div className="grid grid-cols-1 gap-2 mb-4">
-                        <Label htmlFor={`username-${index}`} className="text-sm font-medium text-gray-700">
-                          Licences de période d'essai
-                        </Label>
-                        <Select
-                          onValueChange={(value) => handleRegistrationSelect(index, value)}
-                          value={selectedRegistrations[index] || ""}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Sélectionnez une licence non liée" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {registrationData.filter((reg) => !selectedRegistrations.includes(reg._id) || selectedRegistrations[index] === reg._id).map((reg) => (
-                              <SelectItem key={reg._id} value={reg._id}>
-                                <span className="text-sm font-medium">{reg.username} ({reg.computerName})</span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )
-                  }
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Username */}
-                    <div className="space-y-2">
-                      <Label htmlFor={`username-${index}`} className="text-sm font-medium text-gray-700">
-                        {t("dashboardClient_orders_username")}
-                      </Label>
-                      <Input
-                        id={`username-${index}`}
-                        name="username"
-                        placeholder={t("dashboardClient_orders_username")}
-                        value={user.username}
-                        onChange={(e) => handleUserChange(index, e)}
-                        readOnly={licenses?.length > 0}
-                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      />
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "text-[10px] font-black px-2 py-0.5 rounded-full border transition-all duration-300",
+                        user.excluded 
+                          ? "bg-slate-100 text-slate-400 border-slate-200" 
+                          : "bg-blue-50 text-blue-600 border-blue-100"
+                      )}>
+                        + {calculateAddedDays(registrationData.find(r => 
+                          (user.id && r._id === user.id) || 
+                          (user.identificationCode && r.computerCode === user.identificationCode)
+                        ), index)} j
+                      </span>
+                      {!user.excluded && (
+                        <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                          Expire le: {formatDate(formData.isUniformExpiration ? formData.expirationDate : (user.expirationDate || formData.expirationDate))}
+                        </span>
+                      )}
                     </div>
+                    <div className="ml-auto flex items-center gap-2">
+                      <label className="flex items-center gap-2 cursor-pointer bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm hover:border-blue-300 transition-all">
+                        <input
+                          type="checkbox"
+                          checked={!user.excluded}
+                          onChange={(e) => {
+                            const users = [...formData.users];
+                            users[index] = { ...users[index], excluded: !e.target.checked };
+                            setFormData((prev: any) => ({ ...prev, users }));
+                          }}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-xs font-bold text-gray-700 uppercase tracking-tight">
+                          Inclure
+                        </span>
+                      </label>
+                    </div>
+                  </div>
 
-                    {/* Email */}
-                    <div className="space-y-2">
-                      <Label htmlFor={`email-${index}`} className="text-sm font-medium text-gray-700">
-                        {t("dashboardClient_orders_email")}
-                      </Label>
-                      <div className="relative">
+                  <div className={cn("transition-opacity duration-200", user.excluded && "opacity-40 grayscale pointer-events-none")}>
+                    {
+                      !formData.freeTrial && (
+                        <div className="grid grid-cols-1 gap-2 mb-4">
+                          <Label htmlFor={`username-${index}`} className="text-sm font-medium text-gray-700">
+                            Licences de période d'essai
+                          </Label>
+                          <Select
+                            onValueChange={(value) => handleRegistrationSelect(index, value)}
+                            value={selectedRegistrations[index] || ""}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Sélectionnez une licence non liée" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {registrationData.filter((reg) => !selectedRegistrations.includes(reg._id) || selectedRegistrations[index] === reg._id).map((reg) => (
+                                <SelectItem key={reg._id} value={reg._id}>
+                                  <span className="text-sm font-medium">{reg.username} ({reg.computerName})</span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )
+                    }
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Username */}
+                      <div className="space-y-2">
+                        <Label htmlFor={`username-${index}`} className="text-sm font-medium text-gray-700">
+                          {t("dashboardClient_orders_username")}
+                        </Label>
                         <Input
-                          id={`email-${index}`}
-                          name="email"
-                          type="email"
-                          placeholder="support@ferracad.com"
-                          value={user.email}
+                          id={`username-${index}`}
+                          name="username"
+                          placeholder={t("dashboardClient_orders_username")}
+                          value={user.username}
                           onChange={(e) => handleUserChange(index, e)}
                           readOnly={licenses?.length > 0}
-                          className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 pl-10"
+                          className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                         />
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                          </svg>
+                      </div>
+
+                      {/* Email */}
+                      <div className="space-y-2">
+                        <Label htmlFor={`email-${index}`} className="text-sm font-medium text-gray-700">
+                          {t("dashboardClient_orders_email")}
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id={`email-${index}`}
+                            name="email"
+                            type="email"
+                            placeholder="support@ferracad.com"
+                            value={user.email}
+                            onChange={(e) => handleUserChange(index, e)}
+                            readOnly={licenses?.length > 0}
+                            className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 pl-10"
+                          />
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                        </div>
+                        <p className="text-xs text-blue-600 font-medium">
+                          {t("dashboardClient_orders_authCodeSent")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                      {/* Computer Name */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor={`computerName-${index}`} className="text-sm font-medium text-gray-700">
+                            {t("dashboardClient_orders_computerName")}
+                          </Label>
+                        </div>
+                        <Input
+                          id={`computerName-${index}`}
+                          name="computerName"
+                          placeholder="Nom de votre ordinateur"
+                          value={user.computerName}
+                          onChange={(e) => handleUserChange(index, e)}
+                          readOnly={licenses?.length > 0}
+                          className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        />
+                        <button
+                          onClick={handleClick}
+                          className="cursor-pointer text-xs text-blue-600 hover:text-blue-800 font-semibold underline transition-colors"
+                        >
+                          {t('dashboardClient_orders_computerNameRequired_how')}
+                        </button>
+                        <p className="text-xs text-gray-500">
+                          {t("dashboardClient_orders_computerNameHint")}
+                        </p>
+                      </div>
+
+                      {/* Identification Code */}
+                      <div className="space-y-2">
+                        <Label htmlFor={`identificationCode-${index}`} className="text-sm font-medium text-gray-700">
+                          {t("dashboardClient_orders_idCode")}
+                        </Label>
+                        <Input
+                          id={`identificationCode-${index}`}
+                          name="identificationCode"
+                          placeholder="Code d'identification unique"
+                          value={user.identificationCode}
+                          onChange={(e) => handleUserChange(index, e)}
+                          readOnly={licenses?.length > 0}
+                          className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 font-mono"
+                        />
+                        <p className="text-xs text-gray-500">
+                          {t("dashboardClient_orders_idCodeHint")}
+                        </p>
+                      </div>
+                    </div>
+
+                    {!formData.isUniformExpiration && (
+                      <div className="mt-6 p-4 bg-blue-50/30 rounded-lg border border-blue-100 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-semibold text-blue-800">
+                            Date de début (Poste {index + 1})
+                          </Label>
+                          <Input
+                            type="date"
+                            name="startDate"
+                            value={user.startDate || ""}
+                            onChange={(e) => handleUserChange(index, e)}
+                            className="h-9 text-sm bg-white border-blue-200 focus:border-blue-500"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-semibold text-blue-800">
+                            Date d'expiration (Poste {index + 1})
+                          </Label>
+                          <Input
+                            type="date"
+                            name="expirationDate"
+                            value={user.expirationDate || ""}
+                            onChange={(e) => handleUserChange(index, e)}
+                            className="h-9 text-sm bg-white border-blue-200 focus:border-blue-500"
+                          />
                         </div>
                       </div>
-                      <p className="text-xs text-blue-600 font-medium">
-                        {t("dashboardClient_orders_authCodeSent")}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-                    {/* Computer Name */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor={`computerName-${index}`} className="text-sm font-medium text-gray-700">
-                          {t("dashboardClient_orders_computerName")}
-                        </Label>
-                      </div>
-                      <Input
-                        id={`computerName-${index}`}
-                        name="computerName"
-                        placeholder="Nom de votre ordinateur"
-                        value={user.computerName}
-                        onChange={(e) => handleUserChange(index, e)}
-                        readOnly={licenses?.length > 0}
-                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                      />
-                      <button
-                        onClick={handleClick}
-                        className="cursor-pointer text-xs text-blue-600 hover:text-blue-800 font-semibold underline transition-colors"
-                      >
-                        {t('dashboardClient_orders_computerNameRequired_how')}
-                      </button>
-                      <p className="text-xs text-gray-500">
-                        {t("dashboardClient_orders_computerNameHint")}
-                      </p>
-                    </div>
-
-                    {/* Identification Code */}
-                    <div className="space-y-2">
-                      <Label htmlFor={`identificationCode-${index}`} className="text-sm font-medium text-gray-700">
-                        {t("dashboardClient_orders_idCode")}
-                      </Label>
-                      <Input
-                        id={`identificationCode-${index}`}
-                        name="identificationCode"
-                        placeholder="Code d'identification unique"
-                        value={user.identificationCode}
-                        onChange={(e) => handleUserChange(index, e)}
-                        readOnly={licenses?.length > 0}
-                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 font-mono"
-                      />
-                      <p className="text-xs text-gray-500">
-                        {t("dashboardClient_orders_idCodeHint")}
-                      </p>
-                    </div>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Expiration Date */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="grid gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="expirationDate" className="text-sm font-semibold text-gray-800">
-                    {t("dashboardClient_orders_expirationDate")}
-                  </Label>
+            {/* Expiration Date Section (Uniform only) */}
+            {formData.isUniformExpiration && (
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="grid gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="expirationDate" className="text-sm font-semibold text-gray-800">
+                      {t("dashboardClient_orders_expirationDate")}
+                    </Label>
 
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    {/* Date Input with Icon */}
-                    <div className="relative flex-1">
-                      <Input
-                        id="expirationDate"
-                        name="expirationDate"
-                        type="date"
-                        min={minDate}
-                        value={formData.expirationDate}
-                        onChange={handleOtherChange}
-                        readOnly={freeTrial}
-                        className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 pl-10 pr-4 py-2.5 h-11 transition-colors"
-                      />
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      {/* Date Input with Icon */}
+                      <div className="relative flex-1">
+                        <Input
+                          id="expirationDate"
+                          name="expirationDate"
+                          type="date"
+                          min={minDate}
+                          value={formData.expirationDate}
+                          onChange={handleOtherChange}
+                          readOnly={freeTrial}
+                          className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 pl-10 pr-4 py-2.5 h-11 transition-colors"
+                        />
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      {/* Validation Button */}
+                      <button
+                        type="button"
+                        onClick={() => setValidateDateExp(true)}
+                        disabled={!formData.expirationDate || freeTrial}
+                        className="px-6 py-2.5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border border-transparent rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 shadow-sm hover:shadow-md"
+                      >
+                        {"Validate Date"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Quick Date Selection */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleQuickDate(2)}
+                          disabled={formData.freeTrial}
+                          className="px-4 py-2 text-xs font-medium bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                        >
+                          2 mois
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleQuickDate(3)}
+                          disabled={formData.freeTrial}
+                          className="px-4 py-2 text-xs font-medium bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                        >
+                          3 mois
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleQuickDate(6)}
+                          disabled={formData.freeTrial}
+                          className="px-4 py-2 text-xs font-medium bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow"
+                        >
+                          6 mois
+                        </button>
                       </div>
                     </div>
-
-                    {/* Validation Button */}
-                    <button
-                      type="button"
-                      onClick={() => setValidateDateExp(true)}
-                      disabled={!formData.expirationDate || freeTrial}
-                      className="px-6 py-2.5 h-11 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border border-transparent rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 shadow-sm hover:shadow-md"
-                    >
-                      {"Validate Date"}
-                    </button>
                   </div>
-                </div>
 
-                {/* Quick Date Selection */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleQuickDate(2)}
-                        disabled={formData.freeTrial}
-                        className="px-4 py-2 text-xs font-medium bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow"
-                      >
-                        2 mois
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleQuickDate(3)}
-                        disabled={formData.freeTrial}
-                        className="px-4 py-2 text-xs font-medium bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow"
-                      >
-                        3 mois
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleQuickDate(6)}
-                        disabled={formData.freeTrial}
-                        className="px-4 py-2 text-xs font-medium bg-white hover:bg-gray-50 border border-gray-300 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm hover:shadow"
-                      >
-                        6 mois
-                      </button>
+                  {/* Dynamic Hint Text */}
+                  <p className="text-xs text-blue-600 leading-relaxed font-medium bg-blue-50/50 p-2 rounded border border-blue-100">
+                    <FaInfoCircle className="inline mr-1 mb-0.5" />
+                    {selectedRegistrations.length > 0 || (licenses && licenses.length > 0)
+                      ? `Date minimale requise : ${new Date(minExpirationDate).toLocaleDateString()} (pour prolonger vos licences sélectionnées).`
+                      : t("dashboardClient_orders_expirationDateHint") || "La date à laquelle la licence expirera (minimum 1 jour)."}
+                  </p>
+
+                  {/* Validation Status */}
+                  {ValidateDateExp && (
+                    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <svg className="h-4 w-4 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-sm text-green-700 font-medium">Date validée avec succès</span>
                     </div>
-                  </div>
+                  )}
                 </div>
-
-                {/* Dynamic Hint Text */}
-                <p className="text-xs text-blue-600 leading-relaxed font-medium bg-blue-50/50 p-2 rounded border border-blue-100">
-                  <FaInfoCircle className="inline mr-1 mb-0.5" />
-                  {selectedRegistrations.length > 0 || (licenses && licenses.length > 0)
-                    ? `Date minimale requise : ${new Date(minExpirationDate).toLocaleDateString()} (pour prolonger vos licences sélectionnées).`
-                    : t("dashboardClient_orders_expirationDateHint") || "La date à laquelle la licence expirera (minimum 1 jour)."}
-                </p>
-
-                {/* Validation Status */}
-                {ValidateDateExp && (
-                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <svg className="h-4 w-4 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-sm text-green-700 font-medium">Date validée avec succès</span>
-                  </div>
-                )}
               </div>
+            )}
 
-              {/* Auto Renewal 
+            {/* Auto Renewal 
               {!freeTrial && (
                 <div className="flex items-center gap-3 mt-4 p-3 bg-white rounded-lg border border-gray-200">
                   <input
@@ -1422,7 +1623,6 @@ const NewLicence = () => {
               )*/}
             </div>
           </div>
-        </div>
         <div className="flex flex-col gap-5 w-[35%] max-lg:w-full sticky top-5">
           <div className="bg-white p-10 rounded-lg z-50 shadow-sm">
             <h4 className="text-sm font-bold mb-6">
@@ -1430,19 +1630,25 @@ const NewLicence = () => {
             </h4>
             <div className="flex justify-between mb-2">
               <span className="text-sm font-medium">
-                {t("checkout_price_j")} ({formData.licenses}{" "}
-                {t("checkout_licence")})
+                {t("checkout_price_j")} ({includedLicensesCount}{" "}
+                {includedLicensesCount > 1 ? t("checkout_licences") : t("checkout_licence")})
               </span>
               <span className="font-bold text-sm">
-                {formData.licenses * pricePerDay} €
+                {includedLicensesCount * pricePerDay} €
               </span>
             </div>
 
             <div className="flex flex-col mb-4 border-b border-gray-100 pb-4">
               <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-semibold text-gray-700">{t("pay_01_exp_date")}</span>
+                <span className="font-bold text-sm text-gray-900">
+                  {formData.expirationDate ? formatDate(formData.expirationDate) : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center mb-1">
                 <span className="text-sm font-semibold text-gray-700">{t("dashboardClient_orders_cumulativeDays")}</span>
                 <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-sm">
-                  {formData.daysUntilExpiration} {t("pay_03_j")}
+                  {totalAdditionalDays} {t("pay_03_j")}
                 </span>
               </div>
               <p className="text-[10px] text-slate-400 italic leading-tight">
@@ -1491,7 +1697,7 @@ const NewLicence = () => {
             <div className="flex justify-between items-end pt-4 border-t border-gray-100 mb-6 bg-gradient-to-r from-transparent to-primary/5 -mx-10 px-10 py-4">
               <span className="font-bold text-gray-900">{t("checkout_total")}</span>
               <div className="flex flex-col items-end">
-                {(CouponValue.value > 0 || formData.licenses > 4) && (
+                {(CouponValue.value > 0 || includedLicensesCount > 4) && (
                   <span className="line-through text-red-500 text-[10px] font-medium">
                     {(basedPrice * (1 + tva)).toFixed(2)} € TTC
                   </span>
@@ -1675,6 +1881,7 @@ const NewLicence = () => {
             </div>
           </div>
         </div>
+        </div>
       </div>
 
       <div>
@@ -1685,7 +1892,7 @@ const NewLicence = () => {
           </Link>
         </p>
       </div>
-    </div>
+    </>
   );
 };
 

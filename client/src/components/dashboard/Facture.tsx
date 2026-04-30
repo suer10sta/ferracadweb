@@ -266,10 +266,11 @@ const Facture = ({
 
   return (
     <div
-      className={`fixed ${isHide
-        ? "opacity-0 pointer-events-none z-0 bottom-[100%]"
-        : "top-0 left-0 z-[100]"
-        } bg-black/30 w-full h-screen flex justify-center items-center`}
+      className={`fixed ${
+        isHide
+          ? "opacity-0 pointer-events-none z-0 bottom-[100%]"
+          : "top-0 left-0 z-[150]"
+      } bg-black/30 w-full h-screen flex justify-center items-center`}
     >
       <div className="bg-white p-3 w-[70%] rounded-lg">
         <div className="flex justify-between items-center pb-5 px-4">
@@ -518,117 +519,119 @@ const Facture = ({
           </div>
         </div>
         <div className="flex justify-end items-center gap-2 pt-5">
-          {
-            user?.role === "admin" ? (
-              <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger asChild>
+          {user?.role === "admin" && (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="text-xs font-medium bg-stone-800 transition-all duration-200 hover:bg-stone-900 text-white flex items-center gap-2 p-2 rounded-full cursor-pointer"
+                  disabled={isLoading}
+                >
+                  <IoIosSend className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] z-[200]">
+                <DialogHeader>
+                  <DialogTitle>Envoyer la facture</DialogTitle>
+                  <DialogDescription>
+                    Choisissez la méthode d'envoi pour cette facture
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="py-6">
+                  <RadioGroup
+                    value={selectedOption}
+                    onValueChange={(value: "email" | "peppol") => setSelectedOption(value)}
+                    className="space-y-4"
+                  >
+                    <div 
+                      className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-stone-50 cursor-pointer"
+                      onClick={() => setSelectedOption("email")}
+                    >
+                      <RadioGroupItem value="email" id="email" />
+                      <Label
+                        htmlFor="email"
+                        className="flex-1 cursor-pointer flex flex-col space-y-1"
+                      >
+                        <span className="font-medium">Envoyer par email</span>
+                        <span className="text-sm text-stone-500">
+                          La facture sera envoyée par email au client
+                        </span>
+                      </Label>
+                    </div>
+
+                    <div 
+                      className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-stone-50 cursor-pointer"
+                      onClick={() => setSelectedOption("peppol")}
+                    >
+                      <RadioGroupItem value="peppol" id="peppol" />
+                      <Label
+                        htmlFor="peppol"
+                        className="flex-1 cursor-pointer flex flex-col space-y-1"
+                      >
+                        <span className="font-medium">Envoyer via Peppol</span>
+                        <span className="text-sm text-stone-500">
+                          La facture sera transmise via le réseau Peppol (e-invoicing)
+                        </span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <DialogFooter className="gap-2">
                   <Button
-                    variant="default"
-                    size="sm"
-                    className="text-xs font-medium bg-stone-800 transition-all duration-200 hover:bg-stone-900 text-white flex items-center gap-2 p-2 rounded-full cursor-pointer"
+                    variant="outline"
+                    onClick={() => setOpen(false)}
                     disabled={isLoading}
                   >
-                    <IoIosSend className="h-4 w-4" />
+                    Annuler
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Envoyer la facture</DialogTitle>
-                    <DialogDescription>
-                      Choisissez la méthode d'envoi pour cette facture
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="py-6">
-                    <RadioGroup
-                      value={selectedOption}
-                      onValueChange={(value: "email" | "peppol") => setSelectedOption(value)}
-                      className="space-y-4"
-                    >
-                      <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-stone-50 cursor-pointer">
-                        <RadioGroupItem value="email" id="email" />
-                        <Label
-                          htmlFor="email"
-                          className="flex-1 cursor-pointer flex flex-col space-y-1"
-                        >
-                          <span className="font-medium">Envoyer par email</span>
-                          <span className="text-sm text-stone-500">
-                            La facture sera envoyée par email au client
-                          </span>
-                        </Label>
-                      </div>
-
-                      <div className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-stone-50 cursor-pointer">
-                        <RadioGroupItem value="peppol" id="peppol" />
-                        <Label
-                          htmlFor="peppol"
-                          className="flex-1 cursor-pointer flex flex-col space-y-1"
-                        >
-                          <span className="font-medium">Envoyer via Peppol</span>
-                          <span className="text-sm text-stone-500">
-                            La facture sera transmise via le réseau Peppol (e-invoicing)
-                          </span>
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setOpen(false)}
-                      disabled={isLoading}
-                    >
-                      Annuler
-                    </Button>
-                    <AlertDialog open={openAlert} onOpenChange={setOpenAlert}>
-                      {/* Trigger button */}
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          disabled={isLoading}
+                  <AlertDialog open={openAlert} onOpenChange={setOpenAlert}>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        disabled={isLoading}
+                        className="bg-stone-800 hover:bg-stone-900"
+                      >
+                        {isLoading ? (
+                          <>
+                            <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                            Envoi en cours...
+                          </>
+                        ) : (
+                          <>
+                            <IoIosSend className="mr-2 h-4 w-4" />
+                            {selectedOption === "peppol" ? "Envoyer via Peppol" : "Envoyer par email"}
+                          </>
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="z-[200]">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmer l'envoi</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Êtes-vous sûr de vouloir envoyer cette facture{" "}
+                          {selectedOption === "peppol" ? "via Peppol" : "par email"} ?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Annuler</AlertDialogCancel>
+                        <AlertDialogAction 
                           className="bg-stone-800 hover:bg-stone-900"
+                          onClick={() => {
+                            sendFacture(selectedOption === "peppol");
+                            setOpen(false);
+                          }}
                         >
-                          {isLoading ? (
-                            <>
-                              <span className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                              Envoi en cours...
-                            </>
-                          ) : (
-                            <>
-                              <IoIosSend className="mr-2 h-4 w-4" />
-                              {selectedOption === "peppol"
-                                ? "Envoyer via Peppol"
-                                : "Envoyer par email"}
-                            </>
-                          )}
-                        </Button>
-                      </AlertDialogTrigger>
-
-                      {/* Dialog content */}
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Confirmer l'envoi</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Êtes-vous sûr de vouloir envoyer cette facture{" "}
-                            {selectedOption === "peppol"
-                              ? "via Peppol"
-                              : "par email"} ?
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => sendFacture(selectedOption === "peppol" ? true : false)}>
-                            Confirmer
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            ) : null
-          }
+                          Confirmer
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
 
           <button
             onClick={exportPDF}
