@@ -376,6 +376,8 @@ const PaymentsAdmin: React.FC = () => {
                 </SelectItem>
                 <SelectItem value="stripe">Stripe</SelectItem>
                 <SelectItem value="paypal">PayPal</SelectItem>
+                <SelectItem value="cash">{t("dashboard_payment_cash")}</SelectItem>
+                <SelectItem value="free">{t("dashboard_payment_free")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -149,6 +149,8 @@ const PaymentsClient = ({ userIdn }: any) => {
       return <Badge variant="outline" className="bg-blue-50 text-blue-700">Stripe</Badge>;
     } else if (method === 'paypal') {
       return <Badge variant="outline" className="bg-yellow-50 text-yellow-700">PayPal</Badge>;
+    } else if (method === 'free') {
+      return <Badge variant="outline" className="bg-gray-50 text-gray-700">{t('dashboard_payment_free')}</Badge>;
     } else {
       return <Badge variant="outline" className="bg-green-50 text-green-700">{t('dashboard_payment_cash')}</Badge>;
     }
@@ -278,6 +280,8 @@ const PaymentsClient = ({ userIdn }: any) => {
                 <SelectItem value="all">{t('dashboard_payment_allMethods')}</SelectItem>
                 <SelectItem value="stripe">Stripe</SelectItem>
                 <SelectItem value="paypal">PayPal</SelectItem>
+                <SelectItem value="cash">{t("dashboard_payment_cash")}</SelectItem>
+                <SelectItem value="free">{t("dashboard_payment_free")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -102,6 +102,7 @@ const Facture = ({
           tvaAcheteur: dataTarget.userId.nTva || "",
           isPaymentSuccess: dataTarget.payId.status === "success",
           isPaymentOnline: dataTarget.payId.type === "stripe",
+          paymentType: dataTarget.payId.type,
           isAutoPay: dataTarget.registrationIds[0].rentalId.deductionAuto,
           totalDays: dataTarget.registrationIds[0].rentalId.duration,
         });
@@ -142,7 +143,7 @@ const Facture = ({
     }
 
     const facturePromise = (async () => {
-      const canvas = await html2canvas(facture, { 
+      const canvas = await html2canvas(facture, {
         scale: 1,
         useCORS: true,
         onclone: (clonedDoc) => {
@@ -222,7 +223,7 @@ const Facture = ({
   const exportPDF = () => {
     const facture = document.getElementById("card");
     if (!facture) return;
-    html2canvas(facture, { 
+    html2canvas(facture, {
       scale: 1,
       useCORS: true,
       onclone: (clonedDoc) => {
@@ -266,11 +267,10 @@ const Facture = ({
 
   return (
     <div
-      className={`fixed ${
-        isHide
+      className={`fixed ${isHide
           ? "opacity-0 pointer-events-none z-0 bottom-[100%]"
           : "top-0 left-0 z-[150]"
-      } bg-black/30 w-full h-screen flex justify-center items-center`}
+        } bg-black/30 w-full h-screen flex justify-center items-center`}
     >
       <div className="bg-white p-3 w-[70%] rounded-lg">
         <div className="flex justify-between items-center pb-5 px-4">
@@ -298,6 +298,7 @@ const Facture = ({
                 <p className="text-xs mt-1">
                   {t('dashboard_invoice_paidOn')}{" "}
                   <span className="font-medium">{factureData.createdAt}</span>
+                  {factureData.paymentType === "stripe" ? ` ${t('dashboard_invoice_via')} Stripe` : factureData.paymentType === "cash" ? ` ${t('dashboard_invoice_by')} ${t("dashboard_payment_cash").toLowerCase()}` : factureData.paymentType === "paypal" ? ` ${t('dashboard_invoice_via')} PayPal` : ""}
                 </p>
               </div>
             </div>
@@ -438,7 +439,7 @@ const Facture = ({
                       <TableRow key={index} className="">
                         <TableCell className="font-medium">{index + 1}</TableCell>
                         <TableCell className="font-medium">
-                          {regis.computerName} 
+                          {regis.computerName}
                           <span className="text-[10px] text-gray-400 ml-2">({addedDays} {t("pay_03_j")})</span>
                         </TableCell>
                         <TableCell className="font-mono text-xs">{regis.computerCode}</TableCell>
@@ -545,7 +546,7 @@ const Facture = ({
                     onValueChange={(value: "email" | "peppol") => setSelectedOption(value)}
                     className="space-y-4"
                   >
-                    <div 
+                    <div
                       className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-stone-50 cursor-pointer"
                       onClick={() => setSelectedOption("email")}
                     >
@@ -561,7 +562,7 @@ const Facture = ({
                       </Label>
                     </div>
 
-                    <div 
+                    <div
                       className="flex items-center space-x-2 p-4 border rounded-lg hover:bg-stone-50 cursor-pointer"
                       onClick={() => setSelectedOption("peppol")}
                     >
@@ -616,7 +617,7 @@ const Facture = ({
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Annuler</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                           className="bg-stone-800 hover:bg-stone-900"
                           onClick={() => {
                             sendFacture(selectedOption === "peppol");
