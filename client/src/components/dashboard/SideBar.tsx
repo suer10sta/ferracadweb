@@ -61,6 +61,12 @@ const SideBar = ({ setActiveSidebar, activeSidebar }: any) => {
       role: "admin"
     },
     {
+      icon: IoIosMail,
+      title: t("sidebarTickets"),
+      path: "/tableau-de-board/support",
+      role: "admin"
+    },
+    {
       icon: IoSettings,
       title: t("sidebarSettings"),
       path: "/tableau-de-board/parametres",

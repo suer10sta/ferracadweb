@@ -8,6 +8,13 @@ const contactSchema = new Schema({
     subject: String,
     message: String,
     isActiveAcc: { type: Boolean, default: false },
+    status: { type: String, enum: ['pending', 'replied', 'closed'], default: 'pending' },
+    ticketNum: Number,
+    replies: [{
+        adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        message: String,
+        createdAt: { type: Date, default: Date.now }
+    }]
 }, { timestamps: true });
   
 const Contact = mongoose.model('Contact', contactSchema);

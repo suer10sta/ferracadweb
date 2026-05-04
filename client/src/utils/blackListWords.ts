@@ -1,8 +1,11 @@
-// Function to check if keywords exist in text
+// Function to check if keywords exist in text as whole words
 function containsKeywords(text: string, keywords: string[]) {
     const lowerText = text.toLowerCase();
     for (const keyword of keywords) {
-        if (lowerText.includes(keyword.toLowerCase())) {
+        // Use regex with word boundaries (\b) for better accuracy
+        // This avoids matching "pro" inside "probleme"
+        const regex = new RegExp(`\\b${keyword.toLowerCase()}\\b`, 'i');
+        if (regex.test(lowerText)) {
             return true;
         }
     }

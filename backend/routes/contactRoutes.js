@@ -19,4 +19,13 @@ router.post('/', contactValidation, contactController.createContact);
 // Get all
 router.get('/', auth, contactController.getAllContacts);
 
+// Reply
+router.post('/reply/:id', auth, contactController.replyContact);
+
+// Close
+router.patch('/close/:id', auth, contactController.closeContact);
+
+// Delete
+router.delete('/:id', auth, contactController.deleteContact);
+
 module.exports = router;

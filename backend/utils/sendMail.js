@@ -167,6 +167,37 @@ const sendEmail = async ({
       `;
       break;
 
+    case "contact-reply":
+      subject = `Réponse à votre message : ${data.subject || "Ferracad"}`;
+      html = `
+        <div style="font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 40px 20px;">
+          <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 32px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+            <div style="text-align: center; margin-bottom: 24px;">
+              <img src="https://ferracad.com/assets/ferracad-logo-B4kX6JH0.png" style="width: 160px;" alt="Ferracad logo" />
+            </div>
+            <h2 style="color: #8B0000; text-align: center; margin-bottom: 20px;">Réponse de l'équipe Ferracad</h2>
+            <p style="font-size: 15px; color: #333333; line-height: 1.6;">
+              Bonjour ${data.name || ""},
+            </p>
+            <p style="font-size: 15px; color: #333333; line-height: 1.6;">
+              Nous avons bien reçu votre message concernant "<strong>${data.subject || ""}</strong>". Voici notre réponse :
+            </p>
+            <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #8B0000; margin: 20px 0; font-size: 15px; color: #333333; line-height: 1.6; white-space: pre-wrap;">
+              ${data.replyMessage}
+            </div>
+            <p style="font-size: 15px; color: #333333; line-height: 1.6;">
+              N'hésitez pas à nous recontacter si vous avez d'autres questions.
+            </p>
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eeeeee;" />
+            <p style="font-size: 13px; color: #777777; text-align: center;">
+              Cordialement,<br/>
+              L’équipe Ferracad
+            </p>
+          </div>
+        </div>
+      `;
+      break;
+
     case "password-reset":
       subject = "Réinitialisation de votre mot de passe";
       const resetLink = `${process.env.FRONTEND_LIEN}/connexion/reset-password/${code}`;
