@@ -602,6 +602,8 @@
   "dashboard_invoice_sendInvoiceError": "Fout bij het verzenden van de factuur",
   "dashboard_invoice_preview": "Factuurvoorbeeld van",
   "dashboard_invoice_paidOn": "De factuur is betaald op",
+  "dashboard_invoice_invoice_date": "Factuurdatum:",
+  "dashboard_invoice_limit_date": "Uiterste betaaldatum:",
   "dashboard_invoice_via": "via",
   "dashboard_invoice_by": "via",
   "dashboard_invoice_seller": "Verkoper:",

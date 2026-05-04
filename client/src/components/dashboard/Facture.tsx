@@ -295,11 +295,24 @@ const Facture = ({
               <div className="text-right">
                 <h1 className="text-2xl font-bold">{t('dashboard_invoice_invoice')}</h1>
                 <p className="text-sm font-semibold mt-1">{factureData.id}</p>
-                <p className="text-xs mt-1">
-                  {t('dashboard_invoice_paidOn')}{" "}
-                  <span className="font-medium">{factureData.createdAt}</span>
-                  {factureData.paymentType === "stripe" ? ` ${t('dashboard_invoice_via')} Stripe` : factureData.paymentType === "cash" ? ` ${t('dashboard_invoice_by')} ${t("dashboard_payment_cash").toLowerCase()}` : factureData.paymentType === "paypal" ? ` ${t('dashboard_invoice_via')} PayPal` : ""}
-                </p>
+                {factureData.paymentType === "cash" ? (
+                  <>
+                    <p className="text-xs mt-1">
+                      {t('dashboard_invoice_invoice_date')}{" "}
+                      <span className="font-medium">{factureData.createdAt}</span>
+                    </p>
+                    <p className="text-xs mt-1">
+                      {t('dashboard_invoice_limit_date')}{" "}
+                      <span className="font-medium">{factureData.createdAt}</span>
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xs mt-1">
+                    {t('dashboard_invoice_paidOn')}{" "}
+                    <span className="font-medium">{factureData.createdAt}</span>
+                    {factureData.paymentType === "stripe" ? ` ${t('dashboard_invoice_via')} Stripe` : factureData.paymentType === "paypal" ? ` ${t('dashboard_invoice_via')} PayPal` : ""}
+                  </p>
+                )}
               </div>
             </div>
 

@@ -603,6 +603,8 @@
   "dashboard_invoice_sendInvoiceError": "Erreur lors de l'envoi de la facture",
   "dashboard_invoice_preview": "Aperçu facture de",
   "dashboard_invoice_paidOn": "La facture a été payée le",
+  "dashboard_invoice_invoice_date": "Date de facture :",
+  "dashboard_invoice_limit_date": "Date limite de paiement :",
   "dashboard_invoice_via": "via",
   "dashboard_invoice_by": "par",
   "dashboard_invoice_seller": "Vendeur :",

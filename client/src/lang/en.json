@@ -603,6 +603,8 @@
   "dashboard_invoice_sendInvoiceError": "Error while sending the invoice",
   "dashboard_invoice_preview": "Invoice preview of",
   "dashboard_invoice_paidOn": "The invoice was paid on",
+  "dashboard_invoice_invoice_date": "Invoice date:",
+  "dashboard_invoice_limit_date": "Payment deadline:",
   "dashboard_invoice_via": "via",
   "dashboard_invoice_by": "by",
   "dashboard_invoice_seller": "Seller:",
