@@ -5,6 +5,8 @@ import { MdInfo } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
+import { DatePicker } from "../ui/date-picker";
+import { parseISO, format } from "date-fns";
 import { useLanguage } from "@/lang/LanguageProvider";
 import countries from "@/data/countries.json";
 import { getUser } from "@/utils/auth";
@@ -1481,11 +1483,13 @@ const NewLicence = () => {
                           <Label className="text-xs font-semibold text-blue-800">
                             Date de début (Poste {index + 1})
                           </Label>
-                          <Input
-                            type="date"
-                            name="startDate"
-                            value={user.startDate || ""}
-                            onChange={(e) => handleUserChange(index, e)}
+                          <DatePicker
+                            date={user.startDate ? parseISO(user.startDate) : undefined}
+                            setDate={(date) => {
+                              if (date) {
+                                handleUserChange(index, { target: { name: 'startDate', value: format(date, 'yyyy-MM-dd') } } as any);
+                              }
+                            }}
                             className="h-9 text-sm bg-white border-blue-200 focus:border-blue-500"
                           />
                         </div>
@@ -1493,11 +1497,13 @@ const NewLicence = () => {
                           <Label className="text-xs font-semibold text-blue-800">
                             Date d'expiration (Poste {index + 1})
                           </Label>
-                          <Input
-                            type="date"
-                            name="expirationDate"
-                            value={user.expirationDate || ""}
-                            onChange={(e) => handleUserChange(index, e)}
+                          <DatePicker
+                            date={user.expirationDate ? parseISO(user.expirationDate) : undefined}
+                            setDate={(date) => {
+                              if (date) {
+                                handleUserChange(index, { target: { name: 'expirationDate', value: format(date, 'yyyy-MM-dd') } } as any);
+                              }
+                            }}
                             className="h-9 text-sm bg-white border-blue-200 focus:border-blue-500"
                           />
                         </div>
@@ -1520,21 +1526,15 @@ const NewLicence = () => {
                     <div className="flex flex-col sm:flex-row gap-3">
                       {/* Date Input with Icon */}
                       <div className="relative flex-1">
-                        <Input
-                          id="expirationDate"
-                          name="expirationDate"
-                          type="date"
-                          min={minDate}
-                          value={formData.expirationDate}
-                          onChange={handleOtherChange}
-                          readOnly={freeTrial}
-                          className="bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500 pl-10 pr-4 py-2.5 h-11 transition-colors"
+                        <DatePicker
+                          date={formData.expirationDate ? parseISO(formData.expirationDate) : undefined}
+                          setDate={(date) => {
+                            if (date) {
+                              handleOtherChange({ target: { name: 'expirationDate', value: format(date, 'yyyy-MM-dd') } });
+                            }
+                          }}
+                          placeholder={t("dashboardClient_orders_expirationDate")}
                         />
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
                       </div>
 
                       {/* Validation Button */}
