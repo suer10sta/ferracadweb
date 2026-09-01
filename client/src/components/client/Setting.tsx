@@ -40,6 +40,84 @@ import {
 } from "@/components/ui/drawer";
 import countries from "@/data/countries.json";
 
+const getVatFormatDescription = (countryCode: string): string => {
+  const country = countries.find((e) => e.code === countryCode);
+  if (!country || !country.VATFormat) return "";
+
+  const cleanExp = country.VATFormat.replace(/^\/|\/$/g, "");
+
+  // Specific user-friendly descriptions for common EU formats
+  if (countryCode === "FR") {
+    return "Format requis : FR + 2 caractères (lettres/chiffres) + 9 chiffres. Exemple : FR89123456789. Ne pas saisir le SIRET (14 chiffres).";
+  }
+  if (countryCode === "BE") {
+    return "Format requis : BE + 10 chiffres. Exemple : BE0123456789.";
+  }
+  if (countryCode === "IE") {
+    return "Format requis : IE + 1 chiffre + 1 lettre/chiffre (ou +/*) + 5 chiffres + 1 lettre. Exemple : IE8D23456T.";
+  }
+  if (countryCode === "ES") {
+    return "Format requis : ES + 1 lettre/chiffre + 7 chiffres + 1 lettre/chiffre. Exemple : ESX1234567Y.";
+  }
+  if (countryCode === "CY") {
+    return "Format requis : CY + 8 chiffres + 1 lettre. Exemple : CY12345678X.";
+  }
+  if (countryCode === "IN") {
+    return "Format requis : 11 chiffres + 1 lettre + 1 chiffre + Z + 1 lettre/chiffre (15 caractères au total). Exemple : 22AAAAA1111A1Z1.";
+  }
+
+  // Refined generic parser to convert regex to human-readable format
+  let desc = cleanExp
+    .replace(/\^/g, "")
+    .replace(/\$/g, "")
+    .replace(/\{1\}/g, "") // Remove quantifier of exactly 1
+    .replace(/-\?/g, " - (optionnel) "); // Replace optional hyphen early
+
+  // Handle custom bracket ranges with min,max (e.g. [A-Z&Ñ]{3,4})
+  desc = desc.replace(/\[([^\]]+)\]\{(\d+),(\d+)\}/g, (_, chars, min, max) => {
+    let type = "caractères";
+    if (chars.includes("A-Z") && chars.includes("0-9")) type = "lettres/chiffres";
+    else if (chars.includes("A-Z")) type = "lettres";
+    else if (chars.includes("0-9") || chars.includes("\\d")) type = "chiffres";
+    return ` + ${min} à ${max} ${type}`;
+  });
+
+  // Handle custom bracket ranges with exact count (e.g. [A-Z0-9]{3})
+  desc = desc.replace(/\[([^\]]+)\]\{(\d+)\}/g, (_, chars, count) => {
+    let type = "caractères";
+    if (chars.includes("A-Z") && chars.includes("0-9")) type = "lettres/chiffres";
+    else if (chars.includes("A-Z")) type = "lettres";
+    else if (chars.includes("0-9") || chars.includes("\\d")) type = "chiffres";
+    return ` + ${count} ${type}`;
+  });
+
+  desc = desc
+    .replace(/\\d\{(\d+)\}/g, (_, count) => ` + ${count} chiffres`)
+    .replace(/\\d\{(\d+),(\d+)\}/g, (_, min, max) => ` + ${min} à ${max} chiffres`)
+    .replace(/\[([^\]]+)\]/g, (_, chars) => {
+      if (chars.length === 1) return chars;
+      if (chars.includes("+") || chars.includes("*")) return " + 1 lettre/chiffre/symbole";
+      if (chars.includes("A-Z") && chars.includes("0-9")) return " + 1 lettre/chiffre";
+      if (chars.includes("A-Z")) return " + 1 lettre";
+      if (chars.includes("0-9") || chars.includes("\\d")) return " + 1 chiffre";
+      return " + 1 caractère";
+    })
+    .replace(/\\d/g, " + 1 chiffre")
+    .replace(/\|/g, " OU ")
+    .replace(/\\/g, "")
+    .replace(/\s*-\s*\(optionnel\)\s*\+\s*/g, " - (optionnel) ") // Clean up plus signs after optional hyphens
+    .replace(/\s*\+\s*-\s*\(optionnel\)\s*/g, " - (optionnel) ") // Clean up plus signs before optional hyphens
+    .replace(/\s*\+\s*/g, " + ") // Clean spaces around plus signs
+    .trim();
+
+  // If the string starts with a plus, remove it
+  if (desc.startsWith("+")) {
+    desc = desc.substring(1).trim();
+  }
+
+  return `Format requis : ${desc}`;
+};
+
 const SettingsClient = () => {
   const { t } = useLanguage();
   const [userData, setuserData] = useState<any>({});
@@ -717,6 +795,12 @@ const SettingsClient = () => {
                       value={settingsData.nTva}
                       onChange={(e) => updateSettingsData("nTva", e.target.value)}
                     />
+                    {settingsData.country && (
+                      <p className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
+                        <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
+                        <span>{getVatFormatDescription(settingsData.country)}</span>
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

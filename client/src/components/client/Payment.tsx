@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Search, CheckCircle, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 const PaymentsClient = ({ userIdn }: any) => {
   const { t } = useLanguage()
   const location = useLocation();
+  const navigate = useNavigate();
   const [rentalData, setRentalData] = useState<any[]>([]);
   const [registrationData, setregistrationData] = useState<any[]>([]);
   const [userData, setuserData] = useState<any[]>([]);
@@ -81,7 +82,8 @@ const PaymentsClient = ({ userIdn }: any) => {
     sessionStorage.setItem(onceKey, "1");
     setOpenFacture(pay);
     setAutoSendFacture(true);
-  }, [loading, location.state, rentalData, paymentData]);
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [loading, location.state, location.pathname, rentalData, paymentData, navigate]);
 
   const enrichedPayments: any = paymentData?.filter((e) => e.userId === userIdn?.id).map(payment => {
     const facture = FacturesData.find((e) => e.payId._id === payment._id)
@@ -318,7 +320,12 @@ const PaymentsClient = ({ userIdn }: any) => {
                       <button
                         className='cursor-pointer'
                         onClick={() => {
-                          if (payment.status !== "success") {
+                          const canViewInvoice =
+                            payment.status === "success" ||
+                            (payment.type === "cash" &&
+                              payment.status === "unsuccess");
+
+                          if (!canViewInvoice) {
                             toast.warning(t('dashboard_payment_invoiceRestriction'));
                             return;
                           }

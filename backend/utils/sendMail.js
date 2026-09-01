@@ -86,6 +86,186 @@ const sendEmail = async ({
       `;
       break;
 
+    case "auth-code-provisional":
+      // Email for provisional authorization code (awaiting payment)
+      const provDuration = data?.provisionalDurationDays || 15;
+      const provRealDuration = data?.realDuration || data?.rental?.duration || 0;
+      const provExpDate = data?.provisionalExpDate
+        ? new Date(data.provisionalExpDate)
+        : (() => { const d = new Date(); d.setDate(d.getDate() + provDuration); return d; })();
+      const provRealExpDate = data?.realExpirationDate
+        ? new Date(data.realExpirationDate)
+        : (data?.rental?.nextBillingDate ? new Date(data.rental.nextBillingDate) : null);
+
+      const formattedProvExpDate = new Intl.DateTimeFormat('fr-FR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      }).format(provExpDate);
+
+      const formattedRealExpDate = provRealExpDate
+        ? new Intl.DateTimeFormat('fr-FR', {
+          day: '2-digit',
+          month: 'long',
+          year: 'numeric'
+        }).format(provRealExpDate)
+        : "N/A";
+
+      subject = `⏳ Code provisoire — ${data.computerName} — En attente de paiement`;
+      html = `
+        <div style="font-family: Arial, sans-serif; padding: 40px 20px;">
+          <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 32px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+    
+            <!-- Header -->
+            <div style="text-align: center; margin-bottom: 24px;">
+              <img src="https://ferracad.com/assets/ferracad-logo-B4kX6JH0.png" style="width: 120px;" alt="Ferracad" />
+            </div>
+
+            <!-- Provisional Badge -->
+            <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; text-align: center;">
+              <strong style="color: #856404; font-size: 14px;">⏳ CODE PROVISOIRE — En attente de paiement</strong>
+            </div>
+
+            <h2 style="color: #ff3a3a; font-size: 22px; text-align: center; margin-bottom: 20px;">Activation provisoire de votre licence Ferracad</h2>
+    
+            <p style="font-size: 16px; color: #333333;">Bonjour ${user.name},</p>
+    
+            <p style="font-size: 15px; color: #444444; line-height: 1.6;">
+              Suite à la création de votre commande, voici votre <strong>code d'autorisation provisoire</strong> pour le logiciel Ferracad.
+              Ce code est <strong>temporaire</strong> et sera remplacé par un code définitif une fois votre paiement confirmé.
+            </p>
+    
+            <p style="font-size: 15px; color: #444444;">Votre code d'activation provisoire :</p>
+    
+            <!-- Activation Code -->
+            <div style="text-align: center; margin: 20px 0;">
+              <div style="font-size: 17px; font-weight: bold; letter-spacing: 2px; background: #fff4f4; color: #d80000; padding: 16px 24px; border-radius: 6px; display: inline-block;">
+                ${code}
+              </div>
+            </div>
+
+            <!-- Warning Box -->
+            <div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 16px; border-radius: 6px; margin: 20px 0;">
+              <p style="color: #721c24; margin: 0 0 8px 0; font-weight: bold; font-size: 14px;">⚠️ Important — Délai de paiement</p>
+              <p style="color: #721c24; margin: 0; font-size: 14px; line-height: 1.5;">
+                Ce code provisoire est valable <strong>${provDuration} jour${provDuration > 1 ? 's' : ''}</strong> (jusqu'au <strong>${formattedProvExpDate}</strong>).
+                <br/>Si votre paiement n'est pas reçu dans ce délai, <strong>ce code expirera automatiquement</strong> et vous ne recevrez pas le code définitif pour la durée complète de votre abonnement.
+              </p>
+            </div>
+    
+            <!-- Subscription Info -->
+            <div style="background: #f8f9fa; padding: 16px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #ffc107;">
+              <p style="margin: 0 0 8px 0; font-size: 15px; color: #444444;"><strong>Détails de votre commande :</strong></p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Nom de l'ordinateur :</strong> ${data.computerName}</p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Durée provisoire :</strong> ${provDuration} jours (jusqu'au ${formattedProvExpDate})</p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Durée totale de l'abonnement :</strong> ${provRealDuration} jours (jusqu'au ${formattedRealExpDate})</p>
+            </div>
+
+            <!-- What happens next -->
+            <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 16px; border-radius: 6px; margin: 20px 0;">
+              <p style="color: #155724; margin: 0 0 8px 0; font-weight: bold; font-size: 14px;">✅ Que se passe-t-il après le paiement ?</p>
+              <p style="color: #155724; margin: 0; font-size: 14px; line-height: 1.5;">
+                Une fois votre virement bancaire reçu et confirmé, vous recevrez par email un <strong>code d'activation définitif</strong> 
+                valable pour la durée complète de votre abonnement (${provRealDuration} jours, jusqu'au ${formattedRealExpDate}).
+              </p>
+            </div>
+    
+            <p style="font-size: 14px; color: #555555; margin-top: 24px;">
+              Si vous avez des questions ou avez déjà effectué le virement, n'hésitez pas à nous contacter.
+            </p>
+    
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;" />
+    
+            <!-- Footer -->
+            <div style="text-align: center;">
+              <p style="font-size: 13px; color: #999999; margin-bottom: 4px;">Merci de votre confiance,</p>
+              <p style="font-size: 13px; color: #999999; margin: 0;">— L'équipe Ferracad</p>
+              <p style="font-size: 12px; color: #cccccc; margin-top: 16px;">© ${new Date().getFullYear()} Ferracad. Tous droits réservés.</p>
+            </div>
+    
+          </div>
+        </div>
+      `;
+      break;
+
+    case "auth-code-final":
+      // Email for definitive authorization code (after payment confirmed)
+      const finalDuration = data?.rental?.duration || 0;
+      const finalNextBillingDate = data?.rental?.nextBillingDate
+        ? new Date(data.rental.nextBillingDate)
+        : (data?.expirationDate ? new Date(data.expirationDate) : new Date());
+
+      const formattedFinalExpDate = new Intl.DateTimeFormat('fr-FR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric'
+      }).format(finalNextBillingDate);
+
+      subject = `✅ Paiement confirmé — Votre code définitif pour ${data.computerName}`;
+      html = `
+        <div style="font-family: Arial, sans-serif; padding: 40px 20px;">
+          <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 32px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+    
+            <!-- Header -->
+            <div style="text-align: center; margin-bottom: 24px;">
+              <img src="https://ferracad.com/assets/ferracad-logo-B4kX6JH0.png" style="width: 120px;" alt="Ferracad" />
+            </div>
+
+            <!-- Success Badge -->
+            <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; text-align: center;">
+              <strong style="color: #155724; font-size: 14px;">✅ PAIEMENT CONFIRMÉ — Code définitif activé</strong>
+            </div>
+
+            <h2 style="color: #28a745; font-size: 22px; text-align: center; margin-bottom: 20px;">Votre licence Ferracad est maintenant active</h2>
+    
+            <p style="font-size: 16px; color: #333333;">Bonjour ${user.name},</p>
+    
+            <p style="font-size: 15px; color: #444444; line-height: 1.6;">
+              Nous avons bien reçu votre paiement. Voici votre <strong>code d'autorisation définitif</strong> qui remplace le code provisoire précédent.
+            </p>
+    
+            <p style="font-size: 15px; color: #444444;">Votre nouveau code d'activation définitif :</p>
+    
+            <!-- Activation Code -->
+            <div style="text-align: center; margin: 20px 0;">
+              <div style="font-size: 17px; font-weight: bold; letter-spacing: 2px; background: #d4edda; color: #155724; padding: 16px 24px; border-radius: 6px; display: inline-block;">
+                ${code}
+              </div>
+            </div>
+    
+            <!-- Subscription Info -->
+            <div style="background: #f8f9fa; padding: 16px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #28a745;">
+              <p style="margin: 0 0 8px 0; font-size: 15px; color: #444444;"><strong>Détails de votre abonnement :</strong></p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Nom de l'ordinateur :</strong> ${data.computerName}</p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Durée de l'abonnement :</strong> ${finalDuration} jours</p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Ce code est valable jusqu'au :</strong> ${formattedFinalExpDate}</p>
+            </div>
+
+            <div style="background: #e8f4fd; border: 1px solid #bee5eb; padding: 14px; border-radius: 6px; margin: 20px 0;">
+              <p style="color: #0c5460; margin: 0; font-size: 14px; line-height: 1.5;">
+                💡 <strong>Rappel :</strong> Ce code remplace votre ancien code provisoire. 
+                Veuillez utiliser ce nouveau code dans le logiciel Ferracad pour activer votre licence.
+              </p>
+            </div>
+    
+            <p style="font-size: 14px; color: #555555; margin-top: 24px;">
+              Si vous avez des questions, n'hésitez pas à nous contacter.
+            </p>
+    
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;" />
+    
+            <!-- Footer -->
+            <div style="text-align: center;">
+              <p style="font-size: 13px; color: #999999; margin-bottom: 4px;">Merci de votre confiance,</p>
+              <p style="font-size: 13px; color: #999999; margin: 0;">— L'équipe Ferracad</p>
+              <p style="font-size: 12px; color: #cccccc; margin-top: 16px;">© ${new Date().getFullYear()} Ferracad. Tous droits réservés.</p>
+            </div>
+    
+          </div>
+        </div>
+      `;
+      break;
+
     case "verify-account":
       subject = `Confirmez votre adresse e-mail, ${data.name || ""} !`;
       html = `
@@ -280,7 +460,7 @@ const sendEmail = async ({
       }
 
       const licensesList = dataRental.licenses || dataRental.registerInfos || [];
-      
+
       // Prioritize the cumulative sum of added days for the email display
       const cumulativeDays = licensesList.reduce((acc, reg) => acc + (reg.addedDays || 0), 0);
 
@@ -1562,6 +1742,123 @@ const sendEmail = async ({
     </div>
   `;
       break;
+
+    case "payment-reminder":
+      subject = `⏳ Rappel de paiement — Ferracad ${data.factureId || ""}`;
+      html = `
+        <div style="font-family: Arial, sans-serif; padding: 40px 20px; background-color: #f5f5f5;">
+          <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 32px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+    
+            <!-- Header -->
+            <div style="text-align: center; margin-bottom: 24px;">
+              <img src="https://ferracad.com/assets/ferracad-logo-B4kX6JH0.png" style="width: 120px;" alt="Ferracad" />
+            </div>
+ 
+            <!-- Badge -->
+            <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; text-align: center;">
+              <strong style="color: #856404; font-size: 14px;">⏳ RAPPEL DE PAIEMENT — En attente de virement</strong>
+            </div>
+ 
+            <h2 style="color: #ff3a3a; font-size: 22px; text-align: center; margin-bottom: 20px;">Rappel : Règlement de votre facture en attente</h2>
+    
+            <p style="font-size: 16px; color: #333333;">Bonjour ${user.name || "client"},</p>
+    
+            <p style="font-size: 15px; color: #444444; line-height: 1.6;">
+              Sauf erreur ou omission de notre part, le paiement de votre facture <strong>${data.factureId || ""}</strong> d'un montant de <strong>${data.totalPricePay || 0} €</strong> pour votre commande Ferracad n'a pas encore été validé.
+            </p>
+            
+            <p style="font-size: 15px; color: #444444; line-height: 1.6;">
+              Nous vous rappelons que l'activation définitive de vos licences est conditionnée par la réception de votre paiement. Afin de ne pas interrompre l'accès à vos licences, nous vous invitons à procéder au virement bancaire dans les plus brefs délais.
+            </p>
+ 
+            <!-- Details Box -->
+            <div style="background: #f8f9fa; padding: 16px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #ffc107;">
+              <p style="margin: 0 0 8px 0; font-size: 15px; color: #444444;"><strong>Détails du règlement en attente :</strong></p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Numéro de facture :</strong> ${data.factureId || "N/A"}</p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Montant total dû :</strong> ${data.totalPricePay || 0} €</p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Statut :</strong> En attente de virement bancaire</p>
+            </div>
+ 
+            <p style="font-size: 14px; color: #555555; margin-top: 24px;">
+              Si vous avez déjà effectué le virement, ou si vous avez des questions, n'hésitez pas à nous contacter en répondant directement à cet e-mail.
+            </p>
+    
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;" />
+    
+            <!-- Footer -->
+            <div style="text-align: center;">
+              <p style="font-size: 13px; color: #999999; margin-bottom: 4px;">Merci pour votre confiance,</p>
+              <p style="font-size: 13px; color: #999999; margin: 0;">— L'équipe Ferracad</p>
+              <p style="font-size: 12px; color: #cccccc; margin-top: 16px;">© ${new Date().getFullYear()} Ferracad. Tous droits réservés.</p>
+            </div>
+    
+          </div>
+        </div>
+      `;
+      break;
+
+    case "credit-note":
+      subject = `❌ Note de crédit ${data.creditNoteId || ""} — Annulation de votre facture ${data.factureId || ""}`;
+      html = `
+        <div style="font-family: Arial, sans-serif; padding: 40px 20px; background-color: #f5f5f5;">
+          <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 32px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+    
+            <!-- Header -->
+            <div style="text-align: center; margin-bottom: 24px;">
+              <img src="https://ferracad.com/assets/ferracad-logo-B4kX6JH0.png" style="width: 120px;" alt="Ferracad" />
+            </div>
+
+            <!-- Badge -->
+            <div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; text-align: center;">
+              <strong style="color: #721c24; font-size: 14px;">❌ NOTE DE CRÉDIT — Commande annulée</strong>
+            </div>
+
+            <h2 style="color: #dc3545; font-size: 22px; text-align: center; margin-bottom: 20px;">Note de crédit ${data.creditNoteId || ""}</h2>
+    
+            <p style="font-size: 16px; color: #333333;">Bonjour ${user.name || "client"},</p>
+    
+            <p style="font-size: 15px; color: #444444; line-height: 1.6;">
+              Nous vous informons que votre commande Ferracad référencée <strong>${data.factureId || ""}</strong> d'un montant de <strong>${data.totalPricePay || 0} €</strong> a été <strong>annulée</strong>.
+            </p>
+            
+            <p style="font-size: 15px; color: #444444; line-height: 1.6;">
+              La présente note de crédit annule et remplace la facture correspondante. Vous trouverez ci-joint la note de crédit au format PDF pour vos archives.
+            </p>
+
+            <!-- Details Box -->
+            <div style="background: #f8f9fa; padding: 16px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #dc3545;">
+              <p style="margin: 0 0 8px 0; font-size: 15px; color: #444444;"><strong>Détails de l'annulation :</strong></p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Numéro de note de crédit :</strong> ${data.creditNoteId || "N/A"}</p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Numéro de facture annulée :</strong> ${data.factureId || "N/A"}</p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Montant crédité :</strong> - ${data.totalPricePay || 0} €</p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Date de note de crédit :</strong> ${new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date())}</p>
+              <p style="margin: 4px 0; font-size: 14px; color: #555;"><strong>Statut :</strong> <span style="color: #dc3545; font-weight: bold;">Annulée</span></p>
+            </div>
+
+            <!-- Info Box -->
+            <div style="background: #e8f4fd; border: 1px solid #bee5eb; padding: 14px; border-radius: 6px; margin: 20px 0;">
+              <p style="color: #0c5460; margin: 0; font-size: 14px; line-height: 1.5;">
+                💡 <strong>Information :</strong> Les licences provisoires associées à cette commande ont été désactivées. Si vous souhaitez effectuer une nouvelle commande, vous pouvez vous connecter à votre espace client.
+              </p>
+            </div>
+
+            <p style="font-size: 14px; color: #555555; margin-top: 24px;">
+              Si vous avez des questions concernant cette annulation, n'hésitez pas à nous contacter en répondant directement à cet e-mail.
+            </p>
+    
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;" />
+    
+            <!-- Footer -->
+            <div style="text-align: center;">
+              <p style="font-size: 13px; color: #999999; margin-bottom: 4px;">Merci pour votre confiance,</p>
+              <p style="font-size: 13px; color: #999999; margin: 0;">— L'équipe Ferracad</p>
+              <p style="font-size: 12px; color: #cccccc; margin-top: 16px;">© ${new Date().getFullYear()} Ferracad. Tous droits réservés.</p>
+            </div>
+    
+          </div>
+        </div>
+      `;
+      break;
     default:
       throw new Error(`Unknown email type: ${type}`);
   }
@@ -1573,7 +1870,7 @@ const sendEmail = async ({
     await transporter.sendMail({
       from: `"Ferracad Support " <${process.env.SMTP_USER}>`,
       to: email,
-      //cc: (email !== adminSupport && !disableCc) ? adminSupport : undefined,
+      // cc: (email !== adminSupport && !disableCc) ? adminSupport : undefined,
       subject,
       html,
       attachments: data.path

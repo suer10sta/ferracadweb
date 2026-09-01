@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 
 const Card = ({ analytic }: any) => {
   const isPositive = analytic.trend && !analytic.trend.includes('-');
+  const isActive = analytic.isActive;
   
   return (
     <Link 
@@ -16,7 +17,19 @@ const Card = ({ analytic }: any) => {
           }
         }}
         className={cn(
-          "flex flex-col justify-between rounded-xl p-4 transition-all duration-300 hover:shadow-2xl border bg-[#111827] border-slate-800 text-white group cursor-pointer"
+          "flex flex-col justify-between rounded-xl p-4 transition-all duration-300 hover:shadow-xl border group cursor-pointer text-white",
+          isActive
+            ? cn(
+                analytic.activeBg || analytic.cardBg || "bg-[#111827]",
+                analytic.activeBorder || "border-slate-500",
+                "ring-2 shadow-lg",
+                analytic.activeRing || "ring-white/20"
+              )
+            : cn(
+                analytic.cardBg || "bg-[#111827]",
+                analytic.cardBorder || "border-slate-800",
+                "hover:border-slate-600 hover:shadow-md"
+              )
         )}
     >
         <div className='flex items-center justify-between gap-2'>

@@ -9,7 +9,7 @@ const { createAuthCode } = require("../services/auth");
 const sendEmail = require('../utils/sendMail');
 const addActivityLog = require("../utils/addActivityLog");
 const geoip = require('geoip-lite');
-const { 
+const {
   stripe,
   updateSubscriptionPrice,
   createSubscription,
@@ -24,9 +24,21 @@ const {
 } = require('../utils/stripe');
 const { createNotification } = require('../utils/notification');
 const TemporaryOrder = require('../models/TemporaryOrder');
+const { getEndOfDay } = require('../utils/date');
 
 exports.freeTrialCommande = async (req, res) => {
   try {
+    if (req.body.expirationDate) {
+      req.body.expirationDate = getEndOfDay(req.body.expirationDate);
+    }
+    if (req.body.users && Array.isArray(req.body.users)) {
+      req.body.users.forEach(user => {
+        if (user.expirationDate) {
+          user.expirationDate = getEndOfDay(user.expirationDate);
+        }
+      });
+    }
+
     const {
       userId,
       licenses,
@@ -44,11 +56,11 @@ exports.freeTrialCommande = async (req, res) => {
       daysUntilExpiration
     } = req.body;
 
-    if(idRental) {
+    if (idRental) {
       return;
     }
 
-    if(!freeTrial || licenses > 1 || users.length !== licenses || !expirationDate) {
+    if (!freeTrial || licenses > 1 || users.length !== licenses || !expirationDate) {
       return res.status(400).json({ message: "Informations nécessaires non incluses" });
     }
 
@@ -66,7 +78,7 @@ exports.freeTrialCommande = async (req, res) => {
         });
 
         const now = new Date();
-        const activeRegistration = registration.find(reg => 
+        const activeRegistration = registration.find(reg =>
           reg.status !== 'expire' && new Date(reg.expirationDate) > now
         );
 
@@ -107,7 +119,7 @@ exports.freeTrialCommande = async (req, res) => {
         addedDays: license.addedDays,
         priceHT: license.priceHT
       });
-  
+
       await registration.save();
       listIds.push(registration._id);
 
@@ -117,7 +129,7 @@ exports.freeTrialCommande = async (req, res) => {
         startAt: new Date(),
         expirationDate: license.expirationDate || expirationDate
       });
-    
+
       await licenseHistory.save();
     }
 
@@ -158,13 +170,13 @@ exports.freeTrialCommande = async (req, res) => {
         priceHT: license.priceHT,
         rentalId: rental._id
       };
-    
+
       let result = await Registration.updateOne(
         { computerName: license.computerName, computerCode: license.identificationCode },
         { $set: update }
       );
 
-      const email = license.email !== ""? license.email : user.email;
+      const email = license.email !== "" ? license.email : user.email;
       const data = { computerName: license.computerName, username: license.username, rental: updateRental };
       await sendEmail({
         type: "auth-code",
@@ -174,7 +186,7 @@ exports.freeTrialCommande = async (req, res) => {
         user
       });
 
-      if(emailSociete?.factureMail) {
+      if (emailSociete?.factureMail) {
         await sendEmail({
           type: "auth-code",
           email: emailSociete.factureMail,
@@ -188,7 +200,7 @@ exports.freeTrialCommande = async (req, res) => {
     const geo = geoip.lookup(req.realIp);
     const country = geo?.country || "Auter";
 
-    if(userIdReq !== req.user.id) {
+    if (userIdReq !== req.user.id) {
       // this is a license for client not for Admin
       await createNotification({
         target: user._id,
@@ -207,7 +219,7 @@ exports.freeTrialCommande = async (req, res) => {
       idAdress: req.realIp,
       country
     });
-    
+
     return res.status(201).json({ valid: true, id: updateRental._id })
   } catch (error) {
     console.error(err);
@@ -217,6 +229,17 @@ exports.freeTrialCommande = async (req, res) => {
 
 exports.createPaymentIntent = async (req, res) => {
   try {
+    if (req.body.expirationDate) {
+      req.body.expirationDate = getEndOfDay(req.body.expirationDate);
+    }
+    if (req.body.users && Array.isArray(req.body.users)) {
+      req.body.users.forEach(user => {
+        if (user.expirationDate) {
+          user.expirationDate = getEndOfDay(user.expirationDate);
+        }
+      });
+    }
+
     const {
       userId,
       licenses,
@@ -253,7 +276,7 @@ exports.createPaymentIntent = async (req, res) => {
         });
 
         const now = new Date();
-        const activeRegistration = registration.find(reg => 
+        const activeRegistration = registration.find(reg =>
           reg.status !== 'expire' && new Date(reg.expirationDate) > now
         );
 
@@ -289,7 +312,7 @@ exports.createPaymentIntent = async (req, res) => {
       currency: 'eur',
       customer: getCustomer.id,
       payment_method: paymentMethodId,
-      confirmation_method: 'automatic' ,
+      confirmation_method: 'automatic',
       capture_method: 'automatic',
       confirm: false, // Important: ne pas confirmer immédiatement
       payment_method_types: ['card'],
@@ -339,7 +362,7 @@ exports.createPaymentIntent = async (req, res) => {
 exports.confirmPayment = async (req, res) => {
   try {
     const { paymentIntentId } = req.body;
-    
+
     // Récupérer et confirmer le Payment Intent
     let paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
@@ -360,17 +383,28 @@ exports.confirmPayment = async (req, res) => {
     }
 
     // Récupérer les données temporaires
-    const temporaryOrder = await TemporaryOrder.findOne({ 
-      paymentIntentId: paymentIntentId 
+    const temporaryOrder = await TemporaryOrder.findOne({
+      paymentIntentId: paymentIntentId
     });
-    
+
     if (!temporaryOrder) {
-      return res.status(404).json({ 
-        message: "Commande temporaire non trouvée" 
+      return res.status(404).json({
+        message: "Commande temporaire non trouvée"
       });
     }
 
     const formData = temporaryOrder.formData;
+    if (formData.expirationDate) {
+      formData.expirationDate = getEndOfDay(formData.expirationDate);
+    }
+    if (formData.users && Array.isArray(formData.users)) {
+      formData.users.forEach(user => {
+        if (user.expirationDate) {
+          user.expirationDate = getEndOfDay(user.expirationDate);
+        }
+      });
+    }
+
     const {
       paymentMethodId,
       userId,
@@ -478,7 +512,7 @@ exports.confirmPayment = async (req, res) => {
         const checkRegistration = await Registration.findOne({
           computerCode: license.identificationCode,
         });
-        
+
         // If registration exists → update it
         if (checkRegistration) {
           registration = await Registration.findOne({ computerCode: license.identificationCode })
@@ -506,10 +540,10 @@ exports.confirmPayment = async (req, res) => {
             addedDays: license.addedDays,
             priceHT: license.priceHT
           });
-        
+
           await registration.save();
         }
-        
+
         listIds.push(registration._id);
       }
 
@@ -569,9 +603,9 @@ exports.confirmPayment = async (req, res) => {
 
         // Créer l'abonnement APRÈS le paiement réussi
         const subscriptionResult = await createSubscriptionWithPrepaid(
-          getCustomer.id, 
-          priceProcess.id, 
-          paymentIntentId, 
+          getCustomer.id,
+          priceProcess.id,
+          paymentIntentId,
           autoRenewal,
           expirationDate
         );
@@ -593,7 +627,7 @@ exports.confirmPayment = async (req, res) => {
           await Payment.findByIdAndUpdate(payment._id, { status: 'failed' });
           return res.status(500).json({ message: 'Échec de la création de l\'abonnement Stripe' });
         }
-  
+
         // VÉRIFICATION PLUS FLEXIBLE DU STATUT
         if (subscription.status !== 'active' && subscription.status !== 'trialing') {
           console.warn("Subscription not fully active:", subscription.status);
@@ -607,7 +641,7 @@ exports.confirmPayment = async (req, res) => {
         const updateRentalPrice = await Rental.findById(getRental._id);
         updateRentalPrice.price = newPrice / 100;
         updateRentalPrice.save();
-        
+
         const newCustomPrice = await createCustomIntervalPrice(getProduct.id, newPrice, getRental.duration, 'day');
         if (!newCustomPrice) return res.status(500).json({ message: "Erreur lors de la création du prix Stripe" });
 
@@ -619,11 +653,11 @@ exports.confirmPayment = async (req, res) => {
 
         const trialEndTimestamp = Math.floor(new Date(expirationDate).getTime() / 1000);
         subscription = await updateSubscriptionPrice(
-          paymentRentalId.operatorId, 
-          priceProcess.id, 
-          isAutoDeduction, 
-          trialEndTimestamp, 
-          daysUntilExpiration, 
+          paymentRentalId.operatorId,
+          priceProcess.id,
+          isAutoDeduction,
+          trialEndTimestamp,
+          daysUntilExpiration,
           pricePay
         );
       }
@@ -634,10 +668,11 @@ exports.confirmPayment = async (req, res) => {
 
       // Créer l'abonnement APRÈS le paiement réussi
       const subscriptionResult = await createSubscriptionWithPrepaid(
-        getCustomer.id, 
-        priceProcess.id, 
-        paymentIntentId, 
+        getCustomer.id,
+        priceProcess.id,
+        paymentIntentId,
         autoRenewal,
+        expirationDate
       );
 
       // Si l'abonnement nécessite une action 3DS
@@ -680,7 +715,7 @@ exports.confirmPayment = async (req, res) => {
       stripePayId: priceProcess.id
     });
 
-    const user_data = await User.findById(userIdReq) 
+    const user_data = await User.findById(userIdReq)
     const dataUser = {
       name: user_data?.name,
       email: user_data?.email,
@@ -700,7 +735,7 @@ exports.confirmPayment = async (req, res) => {
     const currentCount = await Facture.countDocuments({
       startFrom: {
         $gte: new Date(`${year}-${month}-01`),
-        $lt: new Date(`${year}-${month}-31`),
+        $lt: new Date(year, parseInt(month), 1),
       },
     });
 
@@ -728,13 +763,13 @@ exports.confirmPayment = async (req, res) => {
       let expDate = new Date(license.expirationDate || expirationDate);
       let codeAuth = await createAuthCode(license.identificationCode, expDate);
       let code = codeAuth.data.code;
-      
+
 
       await Registration.updateOne(
         { computerName: license.computerName, computerCode: license.identificationCode },
-        { 
+        {
           $set: {
-            status: freeTrial? "freetrial" : "active",
+            status: freeTrial ? "freetrial" : "active",
             authCode: code,
             expirationDate: expDate,
             addedDays: license.addedDays,
@@ -754,7 +789,7 @@ exports.confirmPayment = async (req, res) => {
         user
       });
 
-      if(emailSociete?.factureMail) {
+      if (emailSociete?.factureMail) {
         await sendEmail({
           type: "auth-code",
           email: emailSociete.email,
@@ -814,10 +849,10 @@ exports.confirmPayment = async (req, res) => {
 async function createSubscriptionWithPrepaid(customerId, priceId, paymentIntentId, deductionAuto = true, expirationDate = null) {
   try {
     console.log("Creating subscription with payment intent:", paymentIntentId);
-    
+
     // Récupérer le Payment Intent confirmé
     const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    
+
     console.log("Payment Intent details:", {
       id: paymentIntent.id,
       status: paymentIntent.status,
@@ -849,8 +884,7 @@ async function createSubscriptionWithPrepaid(customerId, priceId, paymentIntentI
     const subscriptionData = {
       customer: customerId,
       items: [{ price: priceId }],
-      collection_method: "send_invoice", // Ne pas collecter automatiquement
-      days_until_due: 30,
+      collection_method: "charge_automatically", // Collecter automatiquement (éventuellement 0€ si trial)
       payment_settings: {
         payment_method_types: ['card'],
         save_default_payment_method: 'on_subscription',
@@ -888,6 +922,17 @@ async function createSubscriptionWithPrepaid(customerId, priceId, paymentIntentI
 
 exports.createRental = async (req, res) => {
   try {
+    if (req.body.expirationDate) {
+      req.body.expirationDate = getEndOfDay(req.body.expirationDate);
+    }
+    if (req.body.users && Array.isArray(req.body.users)) {
+      req.body.users.forEach(user => {
+        if (user.expirationDate) {
+          user.expirationDate = getEndOfDay(user.expirationDate);
+        }
+      });
+    }
+
     const {
       userId,
       licenses,
@@ -902,16 +947,16 @@ exports.createRental = async (req, res) => {
       paymentMethodId,
       freeTrial = false,
       tva,
-      daysUntilExpiration, 
+      daysUntilExpiration,
       startDate
     } = req.body;
 
-    if(
-      licenses < 1 || 
-      users.length !== licenses || 
-      !expirationDate || 
+    if (
+      licenses < 1 ||
+      users.length !== licenses ||
+      !expirationDate ||
       !paymentMethodId
-    ){
+    ) {
       return res.status(400).json({ message: "Informations nécessaires non incluses" });
     }
     const userIdReq = userId || req.user.id;
@@ -919,7 +964,7 @@ exports.createRental = async (req, res) => {
 
     let rental;
     for (const license of users) {
-      if(!license.id) {
+      if (!license.id) {
         const registration = await Registration.find({
           computerCode: license.identificationCode,
           $or: [
@@ -927,24 +972,24 @@ exports.createRental = async (req, res) => {
           ],
         });
 
-        if(registration.length > 0) {
+        if (registration.length > 0) {
           return res.status(409).json({
             message: 'Un enregistrement avec cette valeur existe déjà.'
-          }); 
+          });
         }
       }
     }
 
     // Rental  
     let newSub;
-    if(idRental) {
+    if (idRental) {
       const getRental = await Rental.findById(idRental);
-      if(!getRental){
+      if (!getRental) {
         return res.status(404).json({ message: "La commande n'existe pas" });
       }
 
       const registrationCount = await Registration.countDocuments({ rentalId: getRental._id });
-      if(registrationCount !== users.length) {
+      if (registrationCount !== users.length) {
         newSub = true;
         rental = new Rental({
           userId: user._id,
@@ -994,7 +1039,7 @@ exports.createRental = async (req, res) => {
         if (!emailRegex.test(license.email)) {
           return res.status(400).json({ message: "Adresse e-mail invalide." });
         }
-      }      
+      }
 
       if (license.id) {
         // Update existing registration
@@ -1011,7 +1056,7 @@ exports.createRental = async (req, res) => {
           },
           { new: true }
         );
-    
+
         // Add the updated registration ID to list
         listIds.push(registration._id);
       } else {
@@ -1028,27 +1073,27 @@ exports.createRental = async (req, res) => {
           addedDays: license.addedDays,
           priceHT: license.priceHT
         });
-    
+
         await registration.save();
         listIds.push(registration._id);
       }
-    
+
       // Create license history for each registration
       licenseHistory = new LicenseHistory({
         registerId: registration._id,
         startAt: new Date(),
         expirationDate: licenseExpDate
       });
-    
+
       await licenseHistory.save();
     }
-    
+
     // process of payment
     let getProduct = await getProductByName('Ferracad')
     const pricePay = totalPayer * 100;
-    if(!getProduct) {
+    if (!getProduct) {
       const createNewProduct = await createProduct("Ferracad", "Ferracad a plugin for autocad and zwcad and revit", "service");
-      if(createNewProduct) {
+      if (createNewProduct) {
         getProduct = await getProductByName('Ferracad')
       }
     }
@@ -1056,7 +1101,7 @@ exports.createRental = async (req, res) => {
     let subscription;
     let priceProcess;
     let getCustumer = await getCustomerByEmail(user.email)
-    if(!getCustumer){
+    if (!getCustumer) {
       // create custumer
       getCustumer = await createCustomer(user.email);
     }
@@ -1085,9 +1130,9 @@ exports.createRental = async (req, res) => {
         invoice_settings: { default_payment_method: paymentMethodId },
       });
 
-      if(idRental) {
+      if (idRental) {
         const getRental = await Rental.findById(idRental);
-        if(!getRental){
+        if (!getRental) {
           return res.status(404).json({ message: "La commande n'existe pas" });
         }
 
@@ -1100,7 +1145,7 @@ exports.createRental = async (req, res) => {
         }
 
         // update subscription of stripe and create new one for new order updateSubscriptionPrice
-        if(newSub) {
+        if (newSub) {
           priceProcess = await createCustomIntervalPrice(getProduct.id, pricePay, daysUntilExpiration, 'day');
           if (!priceProcess) return res.status(500).json({ message: "Erreur lors de la création du prix Stripe" });
 
@@ -1136,7 +1181,7 @@ exports.createRental = async (req, res) => {
         // test end
         priceProcess = await createCustomIntervalPrice(getProduct.id, pricePay, daysUntilExpiration, 'day');
         if (!priceProcess) return res.status(500).json({ message: "Erreur lors de la création du prix Stripe" });
-      
+
         subscription = await createSubscription(getCustumer.id, priceProcess.id, autoRenewal);
         if (!subscription) {
           await Rental.findByIdAndUpdate(rental._id, { status: 'failed' });
@@ -1150,16 +1195,16 @@ exports.createRental = async (req, res) => {
         type: error.type,
         stack: error.stack
       });
-    
+
       // Rollback Rental status
-      if(idRental) {
+      if (idRental) {
         const updateRental = await Rental.findById(rental._id);
         if (updateRental) {
           updateRental.payId = payment._id;
           updateRental.status = "inactive";
           await updateRental.save();
         }
-      
+
         // Rollback license statuses
         await Promise.all(
           users.map(async (license) => {
@@ -1174,7 +1219,7 @@ exports.createRental = async (req, res) => {
         await Registration.deleteMany({ rentalId: rental._id });
         await Rental.deleteOne({ _id: rental._id })
       }
-    
+
       // Handle Stripe specific errors
       if (error.type === "StripeCardError") {
         return res.status(402).json({
@@ -1182,21 +1227,21 @@ exports.createRental = async (req, res) => {
           error: error.message
         });
       }
-    
+
       if (error.type === "StripeInvalidRequestError") {
         return res.status(400).json({
           message: "Erreur de requête Stripe. Veuillez réessayer.",
           error: error.message
         });
       }
-    
+
       if (error.type === "StripeAPIError") {
         return res.status(502).json({
           message: "Problème de communication avec Stripe.",
           error: error.message
         });
       }
-    
+
       // Handle database errors
       if (error.name === "MongoError" || error.name === "MongooseError") {
         return res.status(500).json({
@@ -1204,7 +1249,7 @@ exports.createRental = async (req, res) => {
           error: error.message
         });
       }
-    
+
       // Generic fallback
       return res.status(500).json({
         message: "Une erreur est survenue lors du processus de paiement.",
@@ -1213,12 +1258,12 @@ exports.createRental = async (req, res) => {
     }
 
     // console.log("payment success: ", subscription, priceProcess, getCustumer)
-    const updateRental = await Rental.findById(rental._id) ;
+    const updateRental = await Rental.findById(rental._id);
     updateRental.payId = payment._id;
     updateRental.nextBillingDate = expirationDate;
     updateRental.duration = daysUntilExpiration;
     updateRental.subscriptionId = subscription.id;
-    updateRental.status = "active"; 
+    updateRental.status = "active";
     await updateRental.save();
 
     // update payment
@@ -1228,7 +1273,7 @@ exports.createRental = async (req, res) => {
       stripePayId: priceProcess.id
     });
 
-    const user_data = await User.findById(userIdReq) 
+    const user_data = await User.findById(userIdReq)
     const dataUser = {
       name: user_data?.name,
       email: user_data?.email,
@@ -1248,7 +1293,7 @@ exports.createRental = async (req, res) => {
     const currentCount = await Facture.countDocuments({
       startFrom: {
         $gte: new Date(`${year}-${month}-01`),
-        $lt: new Date(`${year}-${month}-31`),
+        $lt: new Date(year, parseInt(month), 1),
       },
     });
 
@@ -1267,7 +1312,7 @@ exports.createRental = async (req, res) => {
       endAt: expirationDate
     });
     await createFacture.save();
-    
+
     const emailSociete = await User.findOne({ mainAccount: true })
 
     // active License:
@@ -1283,12 +1328,12 @@ exports.createRental = async (req, res) => {
         priceHT: license.priceHT,
         rentalId: rental._id
       };
-    
+
       await Registration.updateOne(
         { computerName: license.computerName, computerCode: license.identificationCode },
         { $set: update }
       );
-      const email = license.email !== ""? license.email : user.email;
+      const email = license.email !== "" ? license.email : user.email;
 
       const data = { computerName: license.computerName, username: license.username, rental };
       await sendEmail({
@@ -1298,7 +1343,7 @@ exports.createRental = async (req, res) => {
         data,
         user
       });
-      if(emailSociete?.factureMail) {
+      if (emailSociete?.factureMail) {
         await sendEmail({
           type: "auth-code",
           email: emailSociete.email,
@@ -1342,7 +1387,7 @@ exports.createRental = async (req, res) => {
     });
   } catch (err) {
     console.error("❌ [createRental] Error:", err);
-  
+
     // Handle MongoDB duplicate key error
     if (err.code === 11000) {
       return res.status(409).json({
@@ -1351,7 +1396,7 @@ exports.createRental = async (req, res) => {
         value: err.keyValue[Object.keys(err.keyValue)[0]],
       });
     }
-  
+
     // Handle Stripe errors
     if (err.type === 'StripeCardError') {
       return res.status(402).json({
@@ -1365,7 +1410,7 @@ exports.createRental = async (req, res) => {
         error: err.message
       });
     }
-  
+
     // Handle validation errors (Mongoose)
     if (err.name === 'ValidationError') {
       const messages = Object.values(err.errors).map(e => e.message);
@@ -1374,14 +1419,14 @@ exports.createRental = async (req, res) => {
         errors: messages
       });
     }
-  
+
     // Handle cast errors (e.g. invalid Mongo ObjectId)
     if (err.name === 'CastError') {
       return res.status(400).json({
         message: `Identifiant invalide pour le champ ${err.path}.`
       });
     }
-  
+
     // Fallback for unexpected errors
     return res.status(500).json({
       message: 'Une erreur interne est survenue lors de la création de la location.',
@@ -1392,6 +1437,17 @@ exports.createRental = async (req, res) => {
 
 exports.createCommandByAdmin = async (req, res) => {
   try {
+    if (req.body.expirationDate) {
+      req.body.expirationDate = getEndOfDay(req.body.expirationDate);
+    }
+    if (req.body.users && Array.isArray(req.body.users)) {
+      req.body.users.forEach(user => {
+        if (user.expirationDate) {
+          user.expirationDate = getEndOfDay(user.expirationDate);
+        }
+      });
+    }
+
     const {
       userId,
       licenses,
@@ -1407,7 +1463,9 @@ exports.createCommandByAdmin = async (req, res) => {
       freetrial,
       startDate = new Date(),
       sendFacture,
-      daysUntilExpiration: daysUntilExpirationBody
+      daysUntilExpiration: daysUntilExpirationBody,
+      isProvisionalCode,
+      provisionalDurationDays
     } = req.body;
 
     const isFreeTrial =
@@ -1416,10 +1474,10 @@ exports.createCommandByAdmin = async (req, res) => {
       req.body?.freeTrial === true ||
       req.body?.freeTrial === "true";
 
-    if(
-      licenses < 1 || 
-      users.length !== licenses || 
-      !expirationDate 
+    if (
+      licenses < 1 ||
+      users.length !== licenses ||
+      !expirationDate
     ) {
       return res.status(400).json({ message: "Informations nécessaires non incluses" });
     }
@@ -1441,7 +1499,7 @@ exports.createCommandByAdmin = async (req, res) => {
     let rental;
 
     for (const license of users) {
-      if(!license.id) {
+      if (!license.id) {
         const registration = await Registration.find({
           computerCode: license.identificationCode,
           $or: [
@@ -1449,23 +1507,23 @@ exports.createCommandByAdmin = async (req, res) => {
           ],
         });
 
-        if(registration.length > 0) {
+        if (registration.length > 0) {
           return res.status(409).json({
             message: 'Un enregistrement avec cette valeur existe déjà.'
-          }); 
+          });
         }
       }
     }
 
-    if(idRental) {
+    if (idRental) {
       const getRental = await Rental.findById(idRental);
-      if(!getRental){
+      if (!getRental) {
         return res.status(404).json({ message: "La commande n'existe pas" });
       }
 
       const registrationCount = await Registration.countDocuments({ rentalId: getRental._id });
 
-      if(registrationCount !== users.length) {
+      if (registrationCount !== users.length) {
         rental = new Rental({
           userId: user._id,
           duration: daysUntilExpiration,
@@ -1479,7 +1537,7 @@ exports.createCommandByAdmin = async (req, res) => {
       } else {
         rental = await Rental.findOneAndUpdate(
           { _id: idRental },
-          { $set: { expirationDate, status: "pending", userId: user._id || user }},
+          { $set: { expirationDate, status: "pending", userId: user._id || user } },
           { new: true }
         );
       }
@@ -1503,7 +1561,7 @@ exports.createCommandByAdmin = async (req, res) => {
     for (const license of users) {
       let registration;
       let licenseHistory;
-      
+
       const currentLicenseExpDate = license.expirationDate ? new Date(license.expirationDate) : expirationDate;
 
       if (license.id) {
@@ -1519,6 +1577,7 @@ exports.createCommandByAdmin = async (req, res) => {
               computerCode: license.identificationCode,
               rentalId: rental._id,
               expirationDate: currentLicenseExpDate,
+              realExpirationDate: currentLicenseExpDate,
               status: "pending",
               addedDays: license.addedDays,
               priceHT: license.priceHT
@@ -1526,14 +1585,14 @@ exports.createCommandByAdmin = async (req, res) => {
           },
           { new: true }
         );
-    
+
         // Add the updated registration ID to list
         listIds.push(registration._id);
       } else {
         const checkRegistration = await Registration.findOne({
           computerCode: license.identificationCode,
         });
-        
+
         // If registration exists → update it
         if (checkRegistration) {
           registration = await Registration.findOne({ computerCode: license.identificationCode })
@@ -1541,7 +1600,9 @@ exports.createCommandByAdmin = async (req, res) => {
           registration.status = "pending";
           registration.username = license.username;
           registration.computerName = license.computerName;
+          registration.email = license.email;
           registration.expirationDate = currentLicenseExpDate;
+          registration.realExpirationDate = currentLicenseExpDate;
           registration.userId = user._id || user;
           registration.company = user.company;
           registration.addedDays = license.addedDays;
@@ -1554,20 +1615,22 @@ exports.createCommandByAdmin = async (req, res) => {
             rentalId: rental._id,
             company: user.company,
             username: license.username,
+            email: license.email,
             status: "pending",
             computerName: license.computerName,
             computerCode: license.identificationCode,
             expirationDate: currentLicenseExpDate,
+            realExpirationDate: currentLicenseExpDate,
             addedDays: license.addedDays,
             priceHT: license.priceHT,
           });
-        
+
           await registration.save();
         }
-        
+
         listIds.push(registration._id);
       }
-    
+
       // Create license history for each registration
       licenseHistory = new LicenseHistory({
         registerId: registration._id,
@@ -1596,7 +1659,7 @@ exports.createCommandByAdmin = async (req, res) => {
         userId: userIdReq,
         couponId: id_coupon || null,
         type: userIdReq === req.user.id ? "free" : "cash",
-        status: "success",
+        status: (isFreeTrial || userIdReq === req.user.id) ? "success" : "unsuccess",
         totalPricePay,
         paymentConfigId: id_paiement,
         currency: "€",
@@ -1622,7 +1685,7 @@ exports.createCommandByAdmin = async (req, res) => {
     await updateRental.save();
 
     // active License
-    const user_data = await User.findById(userIdReq) 
+    const user_data = await User.findById(userIdReq)
     const dataUser = {
       name: user_data?.name,
       email: user_data?.email,
@@ -1637,18 +1700,24 @@ exports.createCommandByAdmin = async (req, res) => {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, "0"); // months are 0-based
-  
+
     // Count how many invoices already exist for this year and month
     const currentCount = await Facture.countDocuments({
       startFrom: {
         $gte: new Date(`${year}-${month}-01`),
-        $lt: new Date(`${year}-${month}-31`),
+        $lt: new Date(year, parseInt(month), 1),
       },
     });
-  
+
     // Generate index (001, 002, etc.)
     const index = String(currentCount + 1).padStart(3, "0");
-  
+
+    const contractEndDate =
+      users.reduce((latest, license) => {
+        const d = new Date(license.expirationDate || expirationDate);
+        return !latest || d > latest ? d : latest;
+      }, null) || new Date(expirationDate);
+
     // Combine everything (create invoice record for any paid order)
     if (!isFreeTrial && payment?._id) {
       const factureId = `N°${year}${month}/${index}`;
@@ -1660,41 +1729,67 @@ exports.createCommandByAdmin = async (req, res) => {
         payId: payment._id,
         registrationIds: listIds,
         startFrom: new Date,
-        endAt: expirationDate
+        endAt: contractEndDate
       });
-  
+
       await createFacture.save();
     }
 
     const emailSociete = await User.findOne({ mainAccount: true })
 
     for (const license of users) {
-      let expDate = new Date(license.expirationDate || expirationDate);
+      let finalExpDate = new Date(license.expirationDate || expirationDate);
+      let expDate = finalExpDate;
+      let activeStatus = isFreeTrial ? "freetrial" : "active";
+
+      if (isProvisionalCode) {
+        expDate = new Date();
+        expDate.setDate(expDate.getDate() + Number(provisionalDurationDays || 15));
+        expDate.setHours(23, 59, 59, 999);
+        activeStatus = "provisional";
+      }
+
       let codeAuth = await createAuthCode(license.identificationCode, expDate);
       const code = codeAuth.data.code;
       let update = {
-        status: isFreeTrial ? "freetrial" : "active",
+        status: activeStatus,
         authCode: code,
         expirationDate: expDate,
+        realExpirationDate: finalExpDate,
+        isProvisional: !!isProvisionalCode,
         addedDays: license.addedDays,
         priceHT: license.priceHT,
         rentalId: rental._id
       };
-    
+
       await Registration.updateOne(
         { computerName: license.computerName, computerCode: license.identificationCode },
         { $set: update }
       );
 
-      const email = license.email !== ""? license.email : user.email;
-      const data = { computerName: license.computerName, username: license.username, duree: 15, rental: updateRental };
+      const email = license.email !== "" ? license.email : user.email;
+      const data = {
+        computerName: license.computerName,
+        username: license.username,
+        duree: isProvisionalCode ? Number(provisionalDurationDays || 15) : 15,
+        isProvisionalCode: !!isProvisionalCode,
+        realDuration: daysUntilExpiration,
+        provisionalDurationDays: Number(provisionalDurationDays || 15),
+        provisionalExpDate: expDate,
+        realExpirationDate: finalExpDate,
+        rental: {
+          ...updateRental.toObject(),
+          duration: isProvisionalCode ? Number(provisionalDurationDays || 15) : updateRental.duration,
+          nextBillingDate: isProvisionalCode ? finalExpDate : expDate
+        }
+      };
       await sendEmail({
-        type: "auth-code",
+        type: isProvisionalCode ? "auth-code-provisional" : "auth-code",
         email,
         code,
         data,
         user,
-        freetrial: isFreeTrial
+        freeTrial: isFreeTrial
       });
 
       // if(emailSociete?.factureMail) {
@@ -1711,7 +1806,7 @@ exports.createCommandByAdmin = async (req, res) => {
     const geo = geoip.lookup(req.realIp);
     const country = geo?.country || "Auter";
 
-    if(userIdReq !== req.user.id) {
+    if (userIdReq !== req.user.id) {
       // this is a license for client not for Admin
       await createNotification({
         target: user._id,
@@ -1730,7 +1825,7 @@ exports.createCommandByAdmin = async (req, res) => {
       idAdress: req.realIp,
       country
     });
-    
+
     return res.status(201).json({ valid: true, id: updateRental._id })
   } catch (err) {
     console.error(err);
@@ -1743,8 +1838,8 @@ exports.getRental = async (req, res) => {
     let rentalData;
     const roleUser = req.user.role;
     const userId = req.user.id;
-    
-    if(roleUser === "admin") {
+
+    if (roleUser === "admin") {
       rentalData = await Rental.find().sort({ createdAt: -1 });
     } else {
       rentalData = await Rental.find({ userId }).sort({ createdAt: -1 });
@@ -1763,7 +1858,7 @@ exports.updateRental = async (req, res) => {
     const { deductionAuto } = req.body;
 
     const rental = await Rental.findById(id);
-    if(!rental) {
+    if (!rental) {
       return res.status(404).json({ message: "Location introuvable." });
     }
     const paymentData = await Payment.findOne({ _id: rental.payId });
@@ -1789,7 +1884,7 @@ exports.removeRental = async (req, res) => {
     }
 
     const paymentData = await Payment.findOne({ _id: getRental.payId });
-    if(paymentData?.operatorId) {
+    if (paymentData?.operatorId) {
       await cancelSubscription(paymentData?.operatorId, false);
     }
 

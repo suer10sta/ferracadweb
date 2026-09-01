@@ -176,7 +176,7 @@ cron.schedule("0 9 * * *", async () => {
   try {
     console.log("🔔 Vérification des abonnements en cours...");
 
-    const reminders = [20, 10, 5, 2, 1];
+    const reminders = [7, 2, 1];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -343,7 +343,14 @@ cron.schedule("0 9 * * *", async () => {
 cron.schedule("0 0 */7 * *", async () => {
   try {
     console.log("opened schedule")
-    const userData = await User.find({ role: "client" });
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setDate(oneMonthAgo.getDate() - 30);
+
+    // Only target clients created within the last 30 days
+    const userData = await User.find({
+      role: "client",
+      createdAt: { $gte: oneMonthAgo }
+    });
     for (const user of userData) {
       const checkRental = await Rental.find({ userId: user._id })
       if (checkRental.length <= 0) {

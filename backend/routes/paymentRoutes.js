@@ -31,6 +31,9 @@ router.put('/:id', auth, validateRequest, paymentController.updatePayment);
 // Delete
 router.delete('/:id', auth, paymentController.deletePayment);
 
+// Send Reminder Email
+router.post('/remind/:id', auth, paymentController.sendPaymentReminder);
+
 // double check
 router.post('/create-setup-intent', auth, paymentController.createSetupIntent);
 

@@ -1,6 +1,7 @@
 import { IoClose } from "react-icons/io5";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { IoIosSend } from "react-icons/io";
+import { format, parseISO } from "date-fns";
 import {
   Table,
   TableBody,
@@ -10,10 +11,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getTotalLicenseDays } from "@/utils/getTotalLicenseDays";
-import { formatDate } from "@/utils/formatDate";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { dataAdmin, facturesData } from "@/data/mockData";
 import Loading from "../elements/Loading";
 import apiClient from "@/services/api";
@@ -46,6 +46,45 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
+const matchPayId = (facturePayId: any, paymentId: any) => {
+  const left = facturePayId?._id ?? facturePayId;
+  if (left == null || paymentId == null) return false;
+  return String(left) === String(paymentId);
+};
+
+/** Date de fin de contrat affichée sur la facture (jamais la date provisoire). */
+const getInvoiceExpirationDate = (regis: any, fallback?: any) => {
+  let expDate = regis?.expirationDate;
+  if (regis?.realExpirationDate) expDate = regis.realExpirationDate;
+  if (regis?.isProvisional && fallback) return fallback;
+  
+  // Si la date d'expiration actuelle est supérieure à la date de fin de cette facture,
+  // cela signifie que la licence a été renouvelée ultérieurement. On utilise alors la date de fin de la facture.
+  if (fallback && expDate && new Date(expDate) > new Date(fallback)) {
+    return fallback;
+  }
+  
+  return expDate || fallback;
+};
+
+const getFactureContractEndAt = (registrations: any[], factureEndAt: any) => {
+  const dates = (registrations || [])
+    .map((reg) => getInvoiceExpirationDate(reg, factureEndAt))
+    .filter(Boolean);
+  if (!dates.length) return factureEndAt;
+  return dates.reduce((latest, date) =>
+    new Date(date) > new Date(latest) ? date : latest
+  );
+};
+
+const formatInvoiceDate = (value: any) => {
+  if (!value) return "";
+  const iso =
+    typeof value === "string"
+      ? value.split("T")[0]
+      : new Date(value).toISOString().split("T")[0];
+  return format(parseISO(iso), "dd/MM/yyyy");
+};
 
 const Facture = ({
   payment,
@@ -53,6 +92,9 @@ const Facture = ({
   isFromPay = true,
   isHide = false,
   setisHide = null,
+  sendAsReminder = false,
+  sendAsCreditNote = false,
+  onCancelPayment,
 }: any) => {
   const { t } = useLanguage();
   const user: any = enrichedUser();
@@ -63,6 +105,8 @@ const Facture = ({
   const [selectedOption, setSelectedOption] = useState<"email" | "peppol">("email");
   const [isLoading, setIsLoading] = useState(false);
   const [openAlert, setOpenAlert] = useState(false);
+  const isSendingRef = useRef(false);
+  const autoSendDoneRef = useRef<string | null>(null);
 
   useEffect(() => {
     const getData = async () => {
@@ -73,38 +117,53 @@ const Facture = ({
         setAdminData(getDataAdmin)
         let dataTarget;
         if (isFromPay) {
-          dataTarget = getFactures.find(
-            (e: { payId: { _id: any } }) => e.payId?._id === payment?._id
+          dataTarget = getFactures.find((e: { payId: any }) =>
+            matchPayId(e.payId, payment?._id)
           );
         } else {
-          dataTarget = getFactures.find(
-            (e: { payId: { _id: any } }) =>
-              e.payId?._id === payment.paiements?._id
+          dataTarget = getFactures.find((e: { payId: any }) =>
+            matchPayId(e.payId, payment.paiements?._id)
           );
         }
 
+        if (!dataTarget?.payId) {
+          toast.error(t("dashboard_invoice_sendInvoiceError"));
+          setOpenFacture({});
+          return;
+        }
+
+        const payId = dataTarget.payId;
+        const firstRegistration = dataTarget.registrationIds?.[0];
+        const rental = firstRegistration?.rentalId;
+        const contractEndAt = getFactureContractEndAt(
+          dataTarget.registrationIds,
+          dataTarget.endAt
+        );
+
         setFactureData({
-          id:
-            `${dataTarget.factureId}`,
-          name: dataTarget.userId.name || "",
-          createdAt: dataTarget.payId.createdAt.split("T")[0] || "",
-          address: dataTarget.userId.address || "",
-          pays: dataTarget.userId.country || "",
-          registerInfos: dataTarget.registrationIds,
-          couponId: dataTarget.payId.couponId || "",
+          id: `${dataTarget.factureId}`,
+          creditNoteId: dataTarget.creditNoteId || "",
+          name: dataTarget.userId?.name || "",
+          createdAt: payId.createdAt
+            ? format(parseISO(payId.createdAt), "dd/MM/yyyy")
+            : "",
+          address: dataTarget.userId?.address || "",
+          pays: dataTarget.userId?.country || "",
+          registerInfos: dataTarget.registrationIds || [],
+          couponId: payId.couponId || "",
           coupon: dataTarget.coupon || {},
-          totalPricePay: dataTarget.payId.totalPricePay || 0,
-          endAt: dataTarget.endAt,
+          totalPricePay: Number(payId.totalPricePay ?? payment?.totalPricePay ?? 0),
+          endAt: contractEndAt,
           userData: dataTarget.userData,
           startFrom: dataTarget.startFrom,
-          company: dataTarget.userId.company,
-          tva: dataTarget.payId.tva / 100,
-          tvaAcheteur: dataTarget.userId.nTva || "",
-          isPaymentSuccess: dataTarget.payId.status === "success",
-          isPaymentOnline: dataTarget.payId.type === "stripe",
-          paymentType: dataTarget.payId.type,
-          isAutoPay: dataTarget.registrationIds[0].rentalId.deductionAuto,
-          totalDays: dataTarget.registrationIds[0].rentalId.duration,
+          company: dataTarget.userId?.company,
+          tva: Number(payId.tva ?? payment?.tva ?? 0) / 100,
+          tvaAcheteur: dataTarget.userId?.nTva || "",
+          isPaymentSuccess: payId.status === "success",
+          isPaymentOnline: payId.type === "stripe",
+          paymentType: payId.type,
+          isAutoPay: rental?.deductionAuto ?? false,
+          totalDays: rental?.duration ?? 0,
         });
       } catch (error) {
         // console.error('Failed to fetch facture:', error);
@@ -116,18 +175,32 @@ const Facture = ({
   }, [payment]);
 
   useEffect(() => {
-    if (!isHide || !payment || !factureData) return;
+    if (!isHide) {
+      autoSendDoneRef.current = null;
+      return;
+    }
+    if (!payment?._id || !factureData?.id) return;
+
+    const sendKey = `${payment._id}-${sendAsCreditNote ? "nc" : "inv"}-${sendAsReminder ? "reminder" : "normal"}`;
+    if (autoSendDoneRef.current === sendKey) return;
+    autoSendDoneRef.current = sendKey;
 
     const timeout = setTimeout(() => {
       sendFacture();
-    }, 300); // 3ms
+    }, 300);
 
     return () => clearTimeout(timeout);
-  }, [isHide, factureData]);
+  }, [isHide, factureData?.id, payment?._id, sendAsCreditNote, sendAsReminder]);
 
   const sendFacture = async (peppolSend: any = false) => {
     const facture = document.getElementById("card");
-    if (!facture) return;
+    if (!facture) {
+      isSendingRef.current = false;
+      return;
+    }
+
+    if (isSendingRef.current) return;
+    isSendingRef.current = true;
 
     // const countrySupport = countries.find((e)=> e.code === factureData.userData.country)?.isZero;
     // if(countrySupport) {
@@ -139,6 +212,7 @@ const Facture = ({
         setisHide(null);
       }
       setOpenFacture({});
+      isSendingRef.current = false;
       return;
     }
 
@@ -172,15 +246,17 @@ const Facture = ({
       const dataFacture = { ...payment, ...factureData };
       const originalId = factureData.id || "N/A"; // "N°202601/007"
       const renamedId = originalId.replace(/^N°/, '').replace('/', '-');
+      const renamedCreditNoteId = (factureData.creditNoteId || "NC").replace('/', '-');
+      const filename = sendAsCreditNote ? `Note_de_credit_${renamedCreditNoteId}.pdf` : `${renamedId}.pdf`;
       formData.append(
         "facture",
         pdfBlob,
-        `${renamedId}.pdf`
+        filename
       );
 
       formData.append("userId", payment?.userData?._id ? payment?.userData?._id : (payment?.user?._id || payment.userId));
       formData.append("freetrial", payment?.freeTrial ? "true" : "false");
-      formData.append("data", JSON.stringify({ ...dataFacture, peppolSend }));
+      formData.append("data", JSON.stringify({ ...dataFacture, peppolSend, sendAsReminder, sendAsCreditNote }));
 
       const res = await apiClient.post("/facture/send", formData, {
         headers: {
@@ -196,13 +272,13 @@ const Facture = ({
     })();
 
     toast.promise(facturePromise, {
-      loading: t('dashboard_invoice_sending'),
-      success: () => t('dashboard_invoice_sendSuccess'),
+      loading: sendAsCreditNote ? "Envoi de la note de crédit..." : t('dashboard_invoice_sending'),
+      success: () => sendAsCreditNote ? "Note de crédit envoyée avec succès !" : t('dashboard_invoice_sendSuccess'),
       error: (err) => {
         if (err.response?.data?.message === "Peppol Error") {
           return "Merci de vérifier la valeur de votre TVA - Peppol"
         }
-        return err.message || t('dashboard_invoice_sendInvoiceError');
+        return err.message || (sendAsCreditNote ? "Erreur lors de l'envoi de la note de crédit" : t('dashboard_invoice_sendInvoiceError'));
       },
     });
 
@@ -216,6 +292,7 @@ const Facture = ({
         setisHide(null);
       }
       setIsLoading(false)
+      isSendingRef.current = false;
       setOpenFacture({});
     }
   };
@@ -246,7 +323,9 @@ const Facture = ({
       pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
       const originalId = factureData.id || "N/A";
       const renamedId = originalId.replace(/^N°/, '').replace('/', '-');
-      pdf.save(`${renamedId}.pdf`);
+      const renamedCreditNoteId = (factureData.creditNoteId || "NC").replace('/', '-');
+      const filename = sendAsCreditNote ? `Note_de_credit_${renamedCreditNoteId}.pdf` : `${renamedId}.pdf`;
+      pdf.save(filename);
     });
   };
 
@@ -259,7 +338,11 @@ const Facture = ({
   //   return <>search</>;
   // }
 
-  const reduce = factureData?.id === "N°202601/001" ? 31.50 : 0
+  const reduce = factureData?.id === "N°202601/001" ? 31.50 : 0;
+  const totalTTC = Number(factureData.totalPricePay ?? payment?.totalPricePay ?? 0);
+  const tvaRate = Number(factureData.tva ?? 0);
+  const totalHT = tvaRate > -1 ? totalTTC / (1 + tvaRate) : totalTTC;
+  const totalTvaAmount = totalTTC - totalHT;
 
   if (loading) {
     return <Loading />
@@ -268,8 +351,8 @@ const Facture = ({
   return (
     <div
       className={`fixed ${isHide
-          ? "opacity-0 pointer-events-none z-0 bottom-[100%]"
-          : "top-0 left-0 z-[150]"
+        ? "opacity-0 pointer-events-none z-0 bottom-[100%]"
+        : "top-0 left-0 z-[150]"
         } bg-black/30 w-full h-screen flex justify-center items-center`}
     >
       <div className="bg-white p-3 w-[70%] rounded-lg">
@@ -293,9 +376,22 @@ const Facture = ({
                 />
               </div>
               <div className="text-right">
-                <h1 className="text-2xl font-bold">{t('dashboard_invoice_invoice')}</h1>
-                <p className="text-sm font-semibold mt-1">{factureData.id}</p>
-                {factureData.paymentType === "cash" ? (
+                <h1 className="text-2xl font-bold">
+                  {sendAsCreditNote
+                    ? `NOTE DE CRÉDIT sur la facture ${factureData.id}`
+                    : t('dashboard_invoice_invoice')}
+                </h1>
+                <p className="text-sm font-semibold mt-1">
+                  {sendAsCreditNote
+                    ? (factureData.creditNoteId || "NC...")
+                    : factureData.id}
+                </p>
+                {sendAsCreditNote ? (
+                  <p className="text-xs mt-1">
+                    Date de note de crédit :{" "}
+                    <span className="font-medium">{format(new Date(), "dd/MM/yyyy")}</span>
+                  </p>
+                ) : factureData.paymentType === "cash" ? (
                   <>
                     <p className="text-xs mt-1">
                       {t('dashboard_invoice_invoice_date')}{" "}
@@ -443,10 +539,27 @@ const Facture = ({
                 </TableHeader>
                 <TableBody>
                   {factureData?.registerInfos?.map((regis: any, index: number) => {
-                    // Use the stored price if available, otherwise fallback to division
-                    const priceHT = regis.priceHT || ((factureData.totalPricePay / factureData.registerInfos.length) / (1 + Number(factureData.tva)));
-                    const tvaUnitaire = priceHT * Number(factureData.tva);
-                    const addedDays = regis.addedDays || getTotalLicenseDays(factureData.startFrom, factureData.endAt);
+                    // Recalculer chaque prix HT proportionnellement au total corrigé
+                    const licenseCount = factureData.registerInfos?.length || 1;
+                    const storedTotalHT = factureData.registerInfos?.reduce(
+                      (acc: number, r: any) => acc + (Number(r.priceHT) || 0),
+                      0
+                    ) || 0;
+                    const priceHT = Number(
+                      storedTotalHT > 0
+                        ? (totalHT * (Number(regis.priceHT) || 0)) / storedTotalHT
+                        : totalHT / licenseCount
+                    );
+                    const tvaUnitaire = priceHT * tvaRate;
+                    const licenseExpiration = getInvoiceExpirationDate(
+                      regis,
+                      factureData.endAt
+                    );
+                    const hasBeenRenewed = factureData.endAt && regis?.expirationDate && new Date(regis.expirationDate) > new Date(factureData.endAt);
+                    const addedDays =
+                      (regis.addedDays && !hasBeenRenewed)
+                        ? regis.addedDays
+                        : getTotalLicenseDays(factureData.startFrom, licenseExpiration) - 1;
 
                     return (
                       <TableRow key={index} className="">
@@ -457,10 +570,10 @@ const Facture = ({
                         </TableCell>
                         <TableCell className="font-mono text-xs">{regis.computerCode}</TableCell>
                         <TableCell className="font-medium text-xs">
-                          {formatDate(regis.expirationDate || factureData.endAt)}
+                          {formatInvoiceDate(licenseExpiration)}
                         </TableCell>
-                        <TableCell className="text-right">€ {priceHT.toFixed(2)}</TableCell>
-                        <TableCell className="text-right">€ {tvaUnitaire.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">{sendAsCreditNote ? "- " : ""}€ {priceHT.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">{sendAsCreditNote ? "- " : ""}€ {tvaUnitaire.toFixed(2)}</TableCell>
                       </TableRow>
                     );
                   })}
@@ -475,19 +588,19 @@ const Facture = ({
                 <div className="flex justify-between items-center border-b pb-2 mb-2">
                   <span className="font-semibold">{t('dashboard_invoice_priceht')}:</span>
                   <span className="font-semibold">
-                    € {(factureData.totalPricePay / (1 + Number(factureData.tva))).toFixed(2)}
+                    {sendAsCreditNote ? "- " : ""}€ {totalHT.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center border-b pb-2 mb-2">
-                  <span className="font-semibold">{t('checkout_tva')} ({Number(factureData.tva) * 100}%):</span>
+                  <span className="font-semibold">{t('checkout_tva')} ({tvaRate * 100}%):</span>
                   <span className="font-semibold">
-                    € {((factureData.totalPricePay) - ((factureData.totalPricePay) / (1 + Number(factureData.tva)))).toFixed(2)}
+                    {sendAsCreditNote ? "- " : ""}€ {totalTvaAmount.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center border-b pb-2 mb-2">
                   <span className="font-semibold">Total TTC :</span>
                   <span className="font-semibold">
-                    € {factureData.totalPricePay.toFixed(2)}
+                    {sendAsCreditNote ? "- " : ""}€ {totalTTC.toFixed(2)}
                   </span>
                 </div>
                 {
@@ -495,11 +608,11 @@ const Facture = ({
                     <>
                       <div className="flex justify-between items-center border-b pb-2 mb-2">
                         <span className="font-semibold">Remise pour première connexion :</span>
-                        <span className="font-semibold">- € {reduce}</span>
+                        <span className="font-semibold">{sendAsCreditNote ? "" : "- "}€ {reduce}</span>
                       </div>
                       <div className="flex justify-between items-center border-b pb-2 mb-2">
                         <span className="font-bold text-lg">Total :</span>
-                        <span className="font-bold text-lg">€ {(factureData.totalPricePay - reduce)?.toFixed(2)}</span>
+                        <span className="font-bold text-lg">{sendAsCreditNote ? "- " : ""}€ {(totalTTC - reduce).toFixed(2)}</span>
                       </div>
                     </>
                   )
@@ -547,9 +660,9 @@ const Facture = ({
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px] z-[200]">
                 <DialogHeader>
-                  <DialogTitle>Envoyer la facture</DialogTitle>
+                  <DialogTitle>{sendAsCreditNote ? "Envoyer la note de crédit" : "Envoyer la facture"}</DialogTitle>
                   <DialogDescription>
-                    Choisissez la méthode d'envoi pour cette facture
+                    {sendAsCreditNote ? "Choisissez la méthode d'envoi pour cette note de crédit" : "Choisissez la méthode d'envoi pour cette facture"}
                   </DialogDescription>
                 </DialogHeader>
 
@@ -570,7 +683,9 @@ const Facture = ({
                       >
                         <span className="font-medium">Envoyer par email</span>
                         <span className="text-sm text-stone-500">
-                          La facture sera envoyée par email au client
+                          {sendAsCreditNote
+                            ? "La note de crédit sera envoyée par email au client"
+                            : "La facture sera envoyée par email au client"}
                         </span>
                       </Label>
                     </div>
@@ -586,7 +701,9 @@ const Facture = ({
                       >
                         <span className="font-medium">Envoyer via Peppol</span>
                         <span className="text-sm text-stone-500">
-                          La facture sera transmise via le réseau Peppol (e-invoicing)
+                          {sendAsCreditNote
+                            ? "La note de crédit sera transmise via le réseau Peppol (e-invoicing)"
+                            : "La facture sera transmise via le réseau Peppol (e-invoicing)"}
                         </span>
                       </Label>
                     </div>
@@ -624,7 +741,7 @@ const Facture = ({
                       <AlertDialogHeader>
                         <AlertDialogTitle>Confirmer l'envoi</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Êtes-vous sûr de vouloir envoyer cette facture{" "}
+                          Êtes-vous sûr de vouloir envoyer {sendAsCreditNote ? "cette note de crédit" : "cette facture"}{" "}
                           {selectedOption === "peppol" ? "via Peppol" : "par email"} ?
                         </AlertDialogDescription>
                       </AlertDialogHeader>
@@ -645,6 +762,37 @@ const Facture = ({
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+          )}
+
+          {onCancelPayment && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="text-xs font-medium bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 p-1.5 px-4 rounded-xl cursor-pointer"
+                >
+                  Annuler la commande et envoyer note de crédit
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="z-[250]">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Annuler la commande</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Êtes-vous sûr de vouloir annuler cette commande ? Les accès et licences provisoires associés seront immédiatement désactivés et une note de crédit sera envoyée.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Retour</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={onCancelPayment}
+                    className="bg-destructive text-white hover:bg-destructive/90"
+                  >
+                    Confirmer l'annulation
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
 
           <button

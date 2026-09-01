@@ -39,6 +39,7 @@ import {
   ListFilter,
   Mail,
   Plus,
+  Info,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -95,6 +96,10 @@ import {
 } from "@/components/ui/popover";
 import { TbReload } from "react-icons/tb";
 import { getTotalLicenseDays } from "@/utils/getTotalLicenseDays";
+import {
+  getLicenseDisplayStatus,
+  getUserLicenseSummary,
+} from "@/utils/licenseStatus";
 import FilterByType from "@/components/dashboard/FilterByType";
 import { formatDate } from "@/utils/formatDate";
 import { IoCopyOutline } from "react-icons/io5";
@@ -125,6 +130,84 @@ function calculateTotalDays(histories: any[]): number {
 
   return totalDays;
 }
+
+const getVatFormatDescription = (countryCode: string): string => {
+  const country = countries.find((e) => e.code === countryCode);
+  if (!country || !country.VATFormat) return "";
+
+  const cleanExp = country.VATFormat.replace(/^\/|\/$/g, "");
+
+  // Specific user-friendly descriptions for common EU formats
+  if (countryCode === "FR") {
+    return "Format requis : FR + 2 caractères (lettres/chiffres) + 9 chiffres. Exemple : FR89123456789. Ne pas saisir le SIRET (14 chiffres).";
+  }
+  if (countryCode === "BE") {
+    return "Format requis : BE + 10 chiffres. Exemple : BE0123456789.";
+  }
+  if (countryCode === "IE") {
+    return "Format requis : IE + 1 chiffre + 1 lettre/chiffre (ou +/*) + 5 chiffres + 1 lettre. Exemple : IE8D23456T.";
+  }
+  if (countryCode === "ES") {
+    return "Format requis : ES + 1 lettre/chiffre + 7 chiffres + 1 lettre/chiffre. Exemple : ESX1234567Y.";
+  }
+  if (countryCode === "CY") {
+    return "Format requis : CY + 8 chiffres + 1 lettre. Exemple : CY12345678X.";
+  }
+  if (countryCode === "IN") {
+    return "Format requis : 11 chiffres + 1 lettre + 1 chiffre + Z + 1 lettre/chiffre (15 caractères au total). Exemple : 22AAAAA1111A1Z1.";
+  }
+
+  // Refined generic parser to convert regex to human-readable format
+  let desc = cleanExp
+    .replace(/\^/g, "")
+    .replace(/\$/g, "")
+    .replace(/\{1\}/g, "") // Remove quantifier of exactly 1
+    .replace(/-\?/g, " - (optionnel) "); // Replace optional hyphen early
+
+  // Handle custom bracket ranges with min,max (e.g. [A-Z&Ñ]{3,4})
+  desc = desc.replace(/\[([^\]]+)\]\{(\d+),(\d+)\}/g, (_, chars, min, max) => {
+    let type = "caractères";
+    if (chars.includes("A-Z") && chars.includes("0-9")) type = "lettres/chiffres";
+    else if (chars.includes("A-Z")) type = "lettres";
+    else if (chars.includes("0-9") || chars.includes("\\d")) type = "chiffres";
+    return ` + ${min} à ${max} ${type}`;
+  });
+
+  // Handle custom bracket ranges with exact count (e.g. [A-Z0-9]{3})
+  desc = desc.replace(/\[([^\]]+)\]\{(\d+)\}/g, (_, chars, count) => {
+    let type = "caractères";
+    if (chars.includes("A-Z") && chars.includes("0-9")) type = "lettres/chiffres";
+    else if (chars.includes("A-Z")) type = "lettres";
+    else if (chars.includes("0-9") || chars.includes("\\d")) type = "chiffres";
+    return ` + ${count} ${type}`;
+  });
+
+  desc = desc
+    .replace(/\\d\{(\d+)\}/g, (_, count) => ` + ${count} chiffres`)
+    .replace(/\\d\{(\d+),(\d+)\}/g, (_, min, max) => ` + ${min} à ${max} chiffres`)
+    .replace(/\[([^\]]+)\]/g, (_, chars) => {
+      if (chars.length === 1) return chars;
+      if (chars.includes("+") || chars.includes("*")) return " + 1 lettre/chiffre/symbole";
+      if (chars.includes("A-Z") && chars.includes("0-9")) return " + 1 lettre/chiffre";
+      if (chars.includes("A-Z")) return " + 1 lettre";
+      if (chars.includes("0-9") || chars.includes("\\d")) return " + 1 chiffre";
+      return " + 1 caractère";
+    })
+    .replace(/\\d/g, " + 1 chiffre")
+    .replace(/\|/g, " OU ")
+    .replace(/\\/g, "")
+    .replace(/\s*-\s*\(optionnel\)\s*\+\s*/g, " - (optionnel) ") // Clean up plus signs after optional hyphens
+    .replace(/\s*\+\s*-\s*\(optionnel\)\s*/g, " - (optionnel) ") // Clean up plus signs before optional hyphens
+    .replace(/\s*\+\s*/g, " + ") // Clean spaces around plus signs
+    .trim();
+
+  // If the string starts with a plus, remove it
+  if (desc.startsWith("+")) {
+    desc = desc.substring(1).trim();
+  }
+
+  return `Format requis : ${desc}`;
+};
 
 const Users: React.FC = () => {
   const { t } = useLanguage();
@@ -285,31 +368,8 @@ const Users: React.FC = () => {
     }
 
     const hasDownloaded = downloads.length > 0;
-    const now = new Date();
 
-    const activeCount = registration.filter((l) => {
-      const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
-      return l.status?.toLowerCase() === "active" && !isDatePassed;
-    }).length;
-
-    const trialCount = registration.filter((l) => {
-      const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
-      return (l.status?.toLowerCase() === "freetrial" || l.status?.toLowerCase() === "période d'essai") && !isDatePassed;
-    }).length;
-
-    const expiredCount = registration.filter((l) => {
-      const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
-      return l.status?.toLowerCase() === "expire" || l.status?.toLowerCase() === "expired" || isDatePassed;
-    }).length;
-
-    let licenseStatus = "none";
-    if (activeCount > 0) {
-      licenseStatus = "active";
-    } else if (trialCount > 0) {
-      licenseStatus = "trial";
-    } else if (expiredCount > 0) {
-      licenseStatus = "expired";
-    }
+    const { licenseStatus, licenseStats } = getUserLicenseSummary(registration);
 
     return {
       ...user,
@@ -319,12 +379,7 @@ const Users: React.FC = () => {
       downloads,
       hasDownloaded,
       licenseStatus,
-      licenseStats: {
-        active: activeCount,
-        trial: trialCount,
-        expired: expiredCount,
-        total: registration.length,
-      },
+      licenseStats,
     };
   });
 
@@ -346,15 +401,7 @@ const Users: React.FC = () => {
         ...user,
         currentRegistration: reg,
         daysUntilExpiration,
-        // On surcharge l'état de la licence pour cette ligne spécifique
-        licenseStatus:
-          reg.status?.toLowerCase() === "active" &&
-          (!reg.expirationDate || new Date(reg.expirationDate) > new Date())
-            ? "active"
-            : reg.status?.toLowerCase() === "freetrial" ||
-              reg.status?.toLowerCase() === "période d'essai"
-            ? "trial"
-            : "expired",
+        licenseStatus: getLicenseDisplayStatus(reg),
       };
     });
   });
@@ -531,24 +578,24 @@ const Users: React.FC = () => {
     };
 
     // Calculs des statistiques de licences
-    const activeLicensesItems = registrationData.filter((l) => {
-      const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
-      return l.status?.toLowerCase() === "active" && !isDatePassed;
-    });
+    const activeLicensesItems = registrationData.filter(
+      (l) => getLicenseDisplayStatus(l) === "active"
+    );
     const activeLicensesCount = activeLicensesItems.length;
 
-    const trialLicensesItems = registrationData.filter((l) => {
-      const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
-      const statusLower = l.status?.toLowerCase();
-      return (statusLower === "freetrial" || statusLower === "période d'essai") && !isDatePassed;
-    });
+    const provisionalLicensesItems = registrationData.filter(
+      (l) => getLicenseDisplayStatus(l) === "provisional"
+    );
+    const provisionalLicensesCount = provisionalLicensesItems.length;
+
+    const trialLicensesItems = registrationData.filter(
+      (l) => getLicenseDisplayStatus(l) === "trial"
+    );
     const trialLicensesCount = trialLicensesItems.length;
 
-    const expiredLicensesItems = registrationData.filter((l) => {
-      const isDatePassed = l.expirationDate && new Date(l.expirationDate) < now;
-      const statusLower = l.status?.toLowerCase();
-      return statusLower === "expire" || statusLower === "expired" || isDatePassed;
-    });
+    const expiredLicensesItems = registrationData.filter(
+      (l) => getLicenseDisplayStatus(l) === "expired"
+    );
     const expiredLicensesCount = expiredLicensesItems.length;
 
     const handleQuickFilter = (type: string, value: string) => {
@@ -653,6 +700,18 @@ const Users: React.FC = () => {
         onClick: () => handleQuickFilter("license", "trial"),
         isDark: true,
         parag: "Périodes de test",
+      },
+      {
+        title: t("dashboard_rent_provisional"),
+        icon: FaRegClock,
+        value: provisionalLicensesCount,
+        trend: getTrend(provisionalLicensesItems),
+        iconBg: "bg-amber-500/20",
+        iconColor: "text-amber-400",
+        path: "#",
+        onClick: () => handleQuickFilter("license", "provisional"),
+        isDark: true,
+        parag: t("dashboard_rent_provisionalDescription"),
       },
       {
         title: "Expirées",
@@ -800,11 +859,9 @@ const Users: React.FC = () => {
   };
 
   const getStatusBadge = (license: any) => {
-    const now = new Date();
-    const expirationDate = license.expirationDate ? new Date(license.expirationDate) : null;
-    const isExpired = expirationDate && expirationDate < now;
+    const displayStatus = getLicenseDisplayStatus(license);
 
-    if (isExpired || license.status.toLocaleLowerCase() === "expired") {
+    if (displayStatus === "expired") {
       return (
         <Badge variant="destructive" className="flex items-center gap-1">
           <AlertTriangle className="h-3 w-3" />
@@ -813,7 +870,19 @@ const Users: React.FC = () => {
       );
     }
 
-    if (license.status.toLocaleLowerCase() === "période d'essai" || license.status.toLocaleLowerCase() === "freetrial") {
+    if (displayStatus === "provisional") {
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-amber-100 text-amber-800 hover:bg-amber-200 flex items-center gap-1"
+        >
+          <FaRegClock className="h-3 w-3" />
+          {t("dashboard_rent_provisional")}
+        </Badge>
+      );
+    }
+
+    if (displayStatus === "trial") {
       return (
         <Badge
           variant="secondary"
@@ -823,7 +892,21 @@ const Users: React.FC = () => {
           {t("dashboardClient_orders_freeTrial")}
         </Badge>
       );
-    } else if (license.status.toLocaleLowerCase() === "expiring") {
+    }
+
+    if (displayStatus === "pending") {
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-blue-100 text-blue-800 hover:bg-blue-200 flex items-center gap-1"
+        >
+          <FaRegClock className="h-3 w-3" />
+          Pending
+        </Badge>
+      );
+    }
+
+    if (license.status?.toLocaleLowerCase() === "expiring") {
       return (
         <Badge
           variant="secondary"
@@ -1006,8 +1089,8 @@ const Users: React.FC = () => {
               Gestion Licences
             </h4>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {QuickAnalytic.slice(4, 8).map((analytic, index) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+            {QuickAnalytic.slice(4).map((analytic, index) => (
               <CardDetails key={index} analytic={analytic} />
             ))}
           </div>
@@ -1049,6 +1132,7 @@ const Users: React.FC = () => {
                         <SelectItem value="all">Tous les statuts</SelectItem>
                         <SelectItem value="with-license">Possède une licence</SelectItem>
                         <SelectItem value="active">Payante</SelectItem>
+                        <SelectItem value="provisional">{t("dashboard_rent_provisional")}</SelectItem>
                         <SelectItem value="trial">Essai</SelectItem>
                         <SelectItem value="expired">Expirée</SelectItem>
                         <SelectItem value="none">Aucune</SelectItem>
@@ -1320,15 +1404,21 @@ const Users: React.FC = () => {
                         className={cn(
                           "text-[10px] py-0 h-5 border-transparent",
                           user.licenseStatus === "active" && "bg-purple-100 text-purple-800",
+                          user.licenseStatus === "provisional" && "bg-amber-100 text-amber-800",
                           user.licenseStatus === "trial" && "bg-blue-100 text-blue-800",
+                          user.licenseStatus === "pending" && "bg-sky-100 text-sky-800",
                           user.licenseStatus === "expired" && "bg-orange-100 text-orange-800",
                           user.licenseStatus === "none" && "bg-gray-100 text-gray-500"
                         )}
                       >
                         {user.licenseStatus === "active"
                           ? "Payante"
+                          : user.licenseStatus === "provisional"
+                            ? t("dashboard_rent_provisional")
                           : user.licenseStatus === "trial"
                             ? "Essai"
+                            : user.licenseStatus === "pending"
+                              ? "Pending"
                             : user.licenseStatus === "expired"
                               ? "Expirée"
                               : "Aucune"}
@@ -1517,6 +1607,12 @@ const Users: React.FC = () => {
                                         <div className="grid gap-2">
                                           <Label htmlFor="nTva">{t("checkout_tva")}</Label>
                                           <Input id="nTva" name="nTva" onChange={handleChangeUpdate} value={newFormData.nTva} type="text" />
+                                          {newFormData.country && (
+                                            <p className="text-xs text-muted-foreground mt-1 flex items-start gap-1">
+                                              <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
+                                              <span>{getVatFormatDescription(newFormData.country)}</span>
+                                            </p>
+                                          )}
                                         </div>
                                         <div className="grid gap-2">
                                           <Label htmlFor="platform">Platform</Label>
@@ -1695,15 +1791,15 @@ const Users: React.FC = () => {
                                     <p className="text-sm font-medium text-black/80">Compte activé : <span className={cn("font-semibold", user.status !== "pending" ? "text-green-600" : "text-red-500")}>{user.status !== "pending" ? "Oui" : "Non"}</span></p>
                                     <hr className="my-1 border-t border-black/5" />
                                     <p className="text-sm font-medium text-black/80">Téléchargement Ferracad : <span className={cn("font-semibold", user.hasDownloaded ? "text-green-600" : "text-red-500")}>{user.hasDownloaded ? "Oui" : "Non"}</span></p>
-                                    <p className="text-sm font-medium text-black/80">Licences : <span className="text-black/40">{user.licenseStats.total} ({user.licenseStats.active} Actives, {user.licenseStats.trial} Essai, {user.licenseStats.expired} Expirées)</span></p>
+                                    <p className="text-sm font-medium text-black/80">Licences : <span className="text-black/40">{user.licenseStats.total} ({user.licenseStats.active} Actives, {user.licenseStats.provisional} {t("dashboard_rent_provisional")}, {user.licenseStats.trial} Essai, {user.licenseStats.expired} Expirées)</span></p>
                                     <div className="flex flex-wrap gap-2 items-center">
                                       <p className="text-sm font-medium text-black/80">Compte :</p>
                                       <Badge className={cn("px-2 py-0 h-5 text-[10px] uppercase font-bold border-transparent cursor-help", user.status === "active" && "bg-green-100 text-green-800", user.status === "pending" && "bg-slate-100 text-slate-800", user.status === "inactive" && "bg-red-100 text-red-800")}>
                                         {user.status === "active" ? "Actif" : user.status === "pending" ? "Pending" : "Suspendu"}
                                       </Badge>
                                       <p className="text-sm font-medium text-black/80 ml-2">Licence :</p>
-                                      <Badge className={cn("px-2 py-0 h-5 text-[10px] uppercase font-bold border-transparent cursor-help", user.licenseStatus === "active" && "bg-purple-100 text-purple-800", user.licenseStatus === "trial" && "bg-blue-100 text-blue-800", user.licenseStatus === "expired" && "bg-orange-100 text-orange-800", user.licenseStatus === "none" && "bg-gray-100 text-gray-500")}>
-                                        {user.licenseStatus === "active" ? "Payante" : user.licenseStatus === "trial" ? "Essai" : user.licenseStatus === "expired" ? "Expirée" : "Aucune"}
+                                      <Badge className={cn("px-2 py-0 h-5 text-[10px] uppercase font-bold border-transparent cursor-help", user.licenseStatus === "active" && "bg-purple-100 text-purple-800", user.licenseStatus === "provisional" && "bg-amber-100 text-amber-800", user.licenseStatus === "trial" && "bg-blue-100 text-blue-800", user.licenseStatus === "pending" && "bg-sky-100 text-sky-800", user.licenseStatus === "expired" && "bg-orange-100 text-orange-800", user.licenseStatus === "none" && "bg-gray-100 text-gray-500")}>
+                                        {user.licenseStatus === "active" ? "Payante" : user.licenseStatus === "provisional" ? t("dashboard_rent_provisional") : user.licenseStatus === "trial" ? "Essai" : user.licenseStatus === "pending" ? "Pending" : user.licenseStatus === "expired" ? "Expirée" : "Aucune"}
                                       </Badge>
                                     </div>
                                     <hr className="my-2 border-stone-100" />

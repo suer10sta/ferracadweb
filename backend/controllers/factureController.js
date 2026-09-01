@@ -164,11 +164,27 @@ exports.sendFacture = async (req, res) => {
       }
     }
 
+    const isReminder = dataRental.sendAsReminder || dataRental.isReminder;
+    const isCreditNote = dataRental.sendAsCreditNote || dataRental.isCreditNote;
+    let emailType = "send-facture";
+    if (isReminder) {
+      emailType = "payment-reminder";
+    } else if (isCreditNote) {
+      emailType = "credit-note";
+    }
+
     await sendEmail({
-      type: "send-facture",
+      type: emailType,
       email: getUser.email,
       code: "",
-      data: { file, path: fileUrl, dataRental: dataRental },
+      data: { 
+        file, 
+        path: fileUrl, 
+        dataRental: dataRental,
+        totalPricePay: dataRental.totalPricePay,
+        factureId: getFacture ? getFacture.factureId : "N/A",
+        creditNoteId: getFacture ? (getFacture.creditNoteId || "NC...") : "N/A"
+      },
       user: getUser,
     });
 

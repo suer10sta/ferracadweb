@@ -65,6 +65,8 @@ const NewLicenceAdmin = () => {
     tva: "",
     freetrial: false,
     sendFacture: false,
+    isProvisionalCode: false,
+    provisionalDurationDays: 15
   });
 
   const [formDataUser, setFormDataUser] = useState({
@@ -210,7 +212,7 @@ const NewLicenceAdmin = () => {
 
     if (reg && reg.expirationDate) {
       const regExp = new Date(reg.expirationDate);
-      if (regExp > new Date()) {
+      if (regExp > new Date() && regExp > currentExp) {
         currentExp = regExp;
       }
     }
@@ -555,19 +557,24 @@ const NewLicenceAdmin = () => {
   }, [formData.freeTrial]);
 
   useEffect(() => {
-    // Fetch the applicable VAT (TVA) rate for the selected user based on country and VAT status
+    // Fetch the applicable VAT (TVA) rate: 21% (taux belge, pays du vendeur) par défaut,
+    // 0% si le client est une entreprise / professionnel assujetti hors Belgique avec un n°TVA valide
     const fetchTax = async () => {
-      if (!formData.userId) return
+      if (!formData.userId) return;
       const getTax = await tauxTva(formData.userId);
-      const tvaActive = usersData.find(
+      const selectedUser = usersData.find(
         (e: { _id: any }) => e._id === formData.userId
-      )?.nTva;
+      );
 
-      const checkIfItsZero = countries.find(
-        (e) => e.code === getTax.country
-      )?.isZero;
+      let valueTva = getTax?.taux_tva || 21;
+      const userCountry = selectedUser?.country || "";
+      const countryData = countries.find((c) => c.code === userCountry);
+      const isEuCountry = countryData?.isZero === true;
 
-      const valueTva = checkIfItsZero && tvaActive ? 0 : getTax.taux_tva;
+      if (isEuCountry && selectedUser?.nTva) {
+        valueTva = 0;
+      }
+
       setFormData((prev: any) => ({
         ...prev,
         tva: valueTva,
@@ -575,7 +582,7 @@ const NewLicenceAdmin = () => {
     };
 
     fetchTax();
-  }, [formData.userId, loading]);
+  }, [formData.userId, usersData, loading]);
 
   useEffect(() => {
     // When a client is selected, populate the billing information summary
@@ -1535,18 +1542,54 @@ const NewLicenceAdmin = () => {
               rows={3}
             ></textarea>
           </div>
-          <label className="flex items-start text-xs text-gray-600 mb-1 mt-4">
-            <input
-              type="checkbox"
-              className="mr-2"
-              name="freeTrial"
-              checked={formData.freeTrial}
-              onChange={handleOtherChange}
-            />
-            <p className="font-medium text-stone-500">
-              Envoyer un code provisoire
-            </p>
-          </label>
+          {state === "Client" ? (
+            <div className="mt-4 space-y-2">
+              <label className="flex items-start text-xs text-gray-600">
+                <input
+                  type="checkbox"
+                  className="mr-2 mt-0.5"
+                  name="isProvisionalCode"
+                  checked={formData.isProvisionalCode}
+                  onChange={handleOtherChange}
+                />
+                <p className="font-medium text-blue-500  text-sm">
+                  Générer un code provisoire (virement attendu)
+                </p>
+              </label>
+
+              {formData.isProvisionalCode && (
+                <div className="flex items-center gap-2 pl-6 mt-2">
+                  <label htmlFor="provisionalDurationDays" className="text-xs text-gray-500 font-medium">
+                    Durée de validité :
+                  </label>
+                  <input
+                    type="number"
+                    id="provisionalDurationDays"
+                    name="provisionalDurationDays"
+                    value={formData.provisionalDurationDays}
+                    onChange={handleOtherChange}
+                    min={1}
+                    max={90}
+                    className="border border-gray-300 rounded px-2 py-1 text-xs w-16 text-center text-stone-800"
+                  />
+                  <span className="text-xs text-gray-500 font-medium">jours</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <label className="flex items-start text-xs text-gray-600 mb-1 mt-4">
+              <input
+                type="checkbox"
+                className="mr-2"
+                name="freeTrial"
+                checked={formData.freeTrial}
+                onChange={handleOtherChange}
+              />
+              <p className="font-medium text-stone-500">
+                Envoyer un code provisoire (Essai gratuit)
+              </p>
+            </label>
+          )}
           <label className="flex items-start text-xs text-gray-600 mb-1 mt-4">
             <input
               type="checkbox"

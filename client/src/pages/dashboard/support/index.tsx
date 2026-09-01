@@ -51,6 +51,7 @@ interface Ticket {
   replies: Reply[];
   isActiveAcc: boolean;
   ip: string;
+  ticketNum?: number;
   createdAt: string;
 }
 
@@ -62,6 +63,14 @@ export default function SupportPage() {
   const [replyMessage, setReplyMessage] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [expandedTickets, setExpandedTickets] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = (id: string) => {
+    setExpandedTickets(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
 
   const fetchTickets = async () => {
     try {
@@ -267,9 +276,18 @@ export default function SupportPage() {
                   <p className="text-xs">{ticket.email}</p>
                 </div>
                 
-                <p className="text-sm text-black/80 line-clamp-3 mb-4 italic flex-grow">
+                <p className={`text-sm text-black/80 mb-4 italic flex-grow ${expandedTickets[ticket._id] ? "whitespace-pre-wrap" : "line-clamp-3"}`}>
                   "{ticket.message}"
                 </p>
+
+                {ticket.message && (ticket.message.length > 120 || ticket.message.includes('\n')) && (
+                  <button
+                    onClick={() => toggleExpand(ticket._id)}
+                    className="text-xs text-red-600 hover:text-red-700 font-semibold mb-3 self-start cursor-pointer hover:underline"
+                  >
+                    {expandedTickets[ticket._id] ? "Voir moins" : "Voir plus"}
+                  </button>
+                )}
 
                 <div className="pt-4 border-t flex justify-between items-center">
                   <p className="text-[10px] text-black/40">

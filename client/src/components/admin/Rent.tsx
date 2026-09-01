@@ -56,6 +56,7 @@ import {
 } from "react-icons/md";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import CardDetails from "@/components/dashboard/Card";
+import { getLicenseDisplayStatus } from "@/utils/licenseStatus";
 import { Button } from "@/components/ui/button";
 import { IoCloseCircleOutline, IoCopyOutline } from "react-icons/io5";
 import { Label } from "@/components/ui/label";
@@ -138,7 +139,6 @@ const LicensesAdmin: React.FC = () => {
       );
       const expirationDate = new Date(license.expirationDate);
       const now = new Date();
-      const isExpired = expirationDate < now;
       const daysUntilExpiration = Math.ceil(
         (expirationDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
       );
@@ -146,13 +146,15 @@ const LicensesAdmin: React.FC = () => {
       return {
         ...license,
         user,
-        isExpired,
+        isExpired: getLicenseDisplayStatus(license) === "expired",
         licenseHistories,
         daysUntilExpiration,
         status:
           license.status === "freetrial"
             ? "Période d'essai"
-            : isExpired
+            : getLicenseDisplayStatus(license) === "provisional"
+            ? "provisional"
+            : getLicenseDisplayStatus(license) === "expired"
             ? "expired"
             : license.status === "pending"
             ? "pending"
@@ -176,9 +178,9 @@ const LicensesAdmin: React.FC = () => {
   const activeLicenses = enrichedLicenses.filter(
     (l) => l.status === "active"
   ).length;
-  // const expiringLicenses = enrichedLicenses.filter(
-  //   (l) => l.status === "expiring"
-  // ).length;
+  const provisionalLicenses = enrichedLicenses.filter(
+    (l) => l.status === "provisional"
+  ).length;
   const expiredLicenses = enrichedLicenses.filter(
     (l) => l.status === "expired"
   ).length;
@@ -204,6 +206,16 @@ const LicensesAdmin: React.FC = () => {
         >
           <FaRegClock className="h-3 w-3" />
           Pending
+        </Badge>
+      );
+    } else if (status === "provisional") {
+      return (
+        <Badge
+          variant="secondary"
+          className="bg-amber-100 text-amber-800 hover:bg-amber-200 flex items-center gap-1"
+        >
+          <FaRegClock className="h-3 w-3" />
+          {t("dashboard_rent_provisional")}
         </Badge>
       );
     } else if (status === "expired") {
@@ -264,18 +276,18 @@ const LicensesAdmin: React.FC = () => {
         parag: t("dashboard_rent_activeDescription"),
         path: "/tableau-de-board/locations?filter=active",
       },
-      // {
-      //   title: t("dashboard_rent_expiringSoon"),
-      //   icon: MdLoop,
-      //   value: expiringLicenses,
-      //   isGrowth: true,
-      //   isCurrency: false,
-      //   valueGrowth: 2,
-      //   isDark: false,
-      //   isPercent: false,
-      //   parag: t("dashboard_rent_expiringSoonDescription"),
-      //   path: "/tableau-de-board/locations?filter=expiring",
-      // },
+      {
+        title: t("dashboard_rent_provisional"),
+        icon: FaRegClock,
+        value: provisionalLicenses,
+        isGrowth: true,
+        isCurrency: false,
+        valueGrowth: 2,
+        isDark: false,
+        isPercent: false,
+        parag: t("dashboard_rent_provisionalDescription"),
+        path: "/tableau-de-board/locations?filter=provisional",
+      },
       {
         title: t("dashboard_rent_expired"),
         icon: IoCloseCircleOutline,
@@ -400,7 +412,7 @@ const LicensesAdmin: React.FC = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {QuickAnalytic.map((analytic, index) => (
           <CardDetails key={index} analytic={analytic} />
         ))}

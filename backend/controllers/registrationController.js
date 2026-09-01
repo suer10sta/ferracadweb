@@ -11,6 +11,7 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const LicenseHistory = require('../models/LicenseHistory');
 const jwt = require('jsonwebtoken');
+const { getEndOfDay } = require('../utils/date');
 
 const allowedFields = [
   'userId',
@@ -103,7 +104,7 @@ exports.updateRegistration = async (req, res) => {
 
     if(registration.computerCode !== codeComputer) {
       // regenerate auth code and send email
-      const dateExp = expirationDate ? new Date(expirationDate) : registration.expirationDate;
+      const dateExp = getEndOfDay(expirationDate ? new Date(expirationDate) : registration.expirationDate);
       authCode = await createAuthCode(codeComputer, dateExp);
       registration.authCode = authCode.data.code;
 
@@ -130,7 +131,7 @@ exports.updateRegistration = async (req, res) => {
         link: "/tableau-de-board/locations"
       });
       
-      if (expirationDate) registration.expirationDate = new Date(expirationDate);
+      if (expirationDate) registration.expirationDate = getEndOfDay(expirationDate);
       if (status) registration.status = status;
     }
 
@@ -307,6 +308,7 @@ exports.freeTrialLicense = async (req, res) => {
     // 6. Création de la Licence (Trial 30 jours)
     const dateExp = new Date();
     dateExp.setDate(dateExp.getDate() + 30);
+    dateExp.setHours(23, 59, 59, 999);
 
     const authCodeData = await createAuthCode(computer_code, dateExp);
     const authCode = authCodeData.data.code;

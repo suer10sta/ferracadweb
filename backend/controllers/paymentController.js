@@ -1,4 +1,9 @@
 const Payment = require('../models/Payment');
+const Rental = require('../models/Rental');
+const Registration = require('../models/Registration');
+const LicenseHistory = require('../models/LicenseHistory');
+const { createAuthCode } = require("../services/auth");
+const sendEmail = require('../utils/sendMail');
 const mongoose = require('mongoose');
 const addActivityLog = require("../utils/addActivityLog");
 const {
@@ -12,14 +17,15 @@ const {
 } = require('../utils/stripe');
 const Stripe = require("stripe");
 const User = require('../models/User');
-const stripe = Stripe(
-  process.env.STRIPE_SECRET_KEY_TEST ||
-  "sk_test_51SI4slB4LVww0NzzB0Ok33mLnJu3BEFBl8urO3e82If6hrGAsdqd2fHNtfVCLRazjlELcdGivZYjEyOeXqsS76vT00tolSUdNi"
-);
+const { getEndOfDay } = require('../utils/date');
 // const stripe = Stripe(
-//   process.env.STRIPE_SECRET_KEY ||
-//   "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"
+//   process.env.STRIPE_SECRET_KEY_TEST ||
+//   "sk_test_51SI4slB4LVww0NzzB0Ok33mLnJu3BEFBl8urO3e82If6hrGAsdqd2fHNtfVCLRazjlELcdGivZYjEyOeXqsS76vT00tolSUdNi"
 // );
+const stripe = Stripe(
+  process.env.STRIPE_SECRET_KEY ||
+  "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"
+);
 // Champs autorisés pour insert/update
 const allowedFields = [
   'operatorId',
@@ -46,7 +52,7 @@ function validatePaymentData(data) {
   if (data.type && !['stripe', 'paypal', 'cash'].includes(data.type)) {
     return 'Invalid payment type';
   }
-  if (data.status && !['success', 'unsuccess'].includes(data.status)) {
+  if (data.status && !['success', 'unsuccess', 'failed'].includes(data.status)) {
     return 'Invalid status';
   }
   if (data.totalPricePay !== undefined && typeof data.totalPricePay !== 'number') {
@@ -112,6 +118,7 @@ exports.getPaymentById = async (req, res) => {
 // Update
 exports.updatePayment = async (req, res) => {
   try {
+    let isCodeSent = false;
     if (!mongoose.Types.ObjectId.isValid(req.params.id))
       return res.status(400).json({ message: 'Invalid ID' });
 
@@ -119,14 +126,103 @@ exports.updatePayment = async (req, res) => {
     const error = validatePaymentData(filteredData);
     if (error) return res.status(400).json({ message: error });
 
+    const payment = await Payment.findById(req.params.id);
+    if (!payment) return res.status(404).json({ message: 'Payment not found' });
+
+    const previousStatus = payment.status;
+
     const updated = await Payment.findByIdAndUpdate(req.params.id, filteredData, {
       new: true,
       runValidators: true,
     });
 
-    if (!updated) return res.status(404).json({ message: 'Payment not found' });
+    // Side effects for activation or cancellation
+    if (previousStatus === 'unsuccess' && filteredData.status === 'success') {
+      // Activer les codes provisoires
+      const rental = await Rental.findOne({ payId: payment._id });
+      if (rental) {
+        // Mettre à jour la commande
+        rental.status = "active";
+        await rental.save();
 
-    res.json(updated);
+        const registrations = await Registration.find({ rentalId: rental._id });
+        for (const reg of registrations) {
+          if (reg.isProvisional) {
+            isCodeSent = true;
+            const finalExpDate = getEndOfDay(reg.realExpirationDate || reg.expirationDate);
+
+            let codeAuth = await createAuthCode(reg.computerCode, finalExpDate);
+            const finalCode = codeAuth.data.code;
+
+            reg.authCode = finalCode;
+            reg.expirationDate = finalExpDate;
+            reg.status = "active";
+            reg.isProvisional = false;
+            await reg.save();
+
+            const user = await User.findById(reg.userId);
+            const email = reg.email && reg.email !== "" ? reg.email : user?.email;
+            if (email && user) {
+              const data = {
+                computerName: reg.computerName,
+                username: reg.username,
+                expirationDate: finalExpDate,
+                rental: {
+                  ...rental.toObject(),
+                  nextBillingDate: finalExpDate
+                }
+              };
+              await sendEmail({
+                type: "auth-code-final",
+                email,
+                code: finalCode,
+                data,
+                user
+              });
+            }
+          } else {
+            reg.status = "active";
+            await reg.save();
+          }
+        }
+      }
+    } else if (
+      (previousStatus === 'success' && filteredData.status === 'unsuccess') ||
+      (previousStatus !== 'failed' && filteredData.status === 'failed')
+    ) {
+      // Désactiver/annuler les licences suite à une annulation
+      const rental = await Rental.findOne({ payId: payment._id });
+      if (rental) {
+        rental.status = "inactive";
+        await rental.save();
+
+        const registrations = await Registration.find({ rentalId: rental._id });
+        for (const reg of registrations) {
+          reg.status = "inactive";
+          await reg.save();
+        }
+      }
+
+      // Renseigner l'identifiant de la note de crédit (NC...)
+      const FactureModel = require("../models/Facture");
+      const getFacture = await FactureModel.findOne({ payId: payment._id });
+      if (getFacture && !getFacture.creditNoteId) {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const currentCount = await FactureModel.countDocuments({
+          creditNoteId: { $regex: `^NC${year}${month}/` }
+        });
+        const index = String(currentCount + 1).padStart(3, "0");
+        getFacture.creditNoteId = `NC${year}${month}/${index}`;
+        await getFacture.save();
+      }
+    }
+
+    res.json({
+      ...updated.toObject(),
+      codeSent: isCodeSent
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error on update payment' });
@@ -149,6 +245,43 @@ exports.deletePayment = async (req, res) => {
   }
 };
 
+// Send Payment Reminder
+exports.sendPaymentReminder = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden. Admin access required.' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id))
+      return res.status(400).json({ message: 'Invalid ID' });
+
+    const payment = await Payment.findById(req.params.id);
+    if (!payment) return res.status(404).json({ message: 'Payment not found' });
+
+    const user = await User.findById(payment.userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const Facture = require('../models/Facture');
+    const facture = await Facture.findOne({ payId: payment._id });
+
+    await sendEmail({
+      type: "payment-reminder",
+      email: user.email,
+      code: "",
+      data: {
+        totalPricePay: payment.totalPricePay,
+        factureId: facture ? facture.factureId : "N/A",
+      },
+      user: user,
+    });
+
+    res.status(200).json({ message: 'Relance envoyée avec succès par e-mail' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error on sending payment reminder' });
+  }
+};
+
 exports.createSetupIntent = async (req, res) => {
   try {
     const setupIntent = await stripe.setupIntents.create({
@@ -163,20 +296,9 @@ exports.createSetupIntent = async (req, res) => {
 // get TVA rate
 exports.getTauxTva = async (req, res) => {
   try {
-    const { id } = req.params;
-    console.log("payment")
-    const userId = id !== 'null' ? id : req.user.id;
-
-    // Récupérer l'utilisateur et son pays
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: "Utilisateur non trouvé" });
-    }
-
-    const countryCode = user.country; // Supposant que le champ s'appelle "country"
-    if (!countryCode) {
-      return res.status(400).json({ error: "Pays non défini pour cet utilisateur" });
-    }
+    // Le vendeur est basé en Belgique → le taux de TVA est toujours le taux belge (21%),
+    // quelle que soit la valeur du pays de l'utilisateur.
+    const countryCode = 'BE';
 
     // Récupérer le taux TVA depuis Stripe
     const taxRate = await getTaxRateForCountry(countryCode);

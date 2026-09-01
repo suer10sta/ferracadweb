@@ -12,6 +12,8 @@ const registrationSchema = new Schema({
     computerCode: { type: String, unique: true },
     authCode: String,
     expirationDate: Date,
+    realExpirationDate: Date,
+    isProvisional: { type: Boolean, default: false },
     addedDays: Number,
     priceHT: Number,
 }, { timestamps: true });

@@ -6,7 +6,7 @@ const paymentSchema = new Schema({
     userId: { type: Schema.Types.ObjectId, ref: 'User' },
     couponId: { type: Schema.Types.ObjectId, ref: 'Coupon' },
     type: { type: String, enum: ['cart', 'paypal', 'cash', 'stripe', 'free'] },
-    status: { type: String, enum: ['success', 'unsuccess'] },
+    status: { type: String, enum: ['success', 'unsuccess', 'failed'] },
     totalPricePay: Number,
     paymentConfigId: String,
     currency: String,

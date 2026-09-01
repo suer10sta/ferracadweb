@@ -83,7 +83,7 @@ const NewLicence = () => {
   const elements = useElements();
   const [selectedRegistrations, setSelectedRegistrations] = useState<string[]>([]);
   const [ValidateDateExp, setValidateDateExp] = useState(false);
-  const [minDate, setMinDate] = useState("");
+  const [, setMinDate] = useState("");
 
   const [formData, setFormData] = useState<any>({
     licenses: 1,
@@ -121,17 +121,15 @@ const NewLicence = () => {
         const getTax = await tauxTva();
         const getRegistrations = await registrations();
         
-        // New VAT Logic based on Belgian seller rules
-        let valueTva = getTax?.taux_tva || 0;
+        // TVA : 21% (taux belge, pays du vendeur) par défaut
+        // 0% si pays UE (isZero) avec un n°TVA valide (autoliquidation)
+        let valueTva = getTax?.taux_tva || 21;
         const userCountry = getUser?.country || '';
-        const isOutsideBelgium = userCountry !== 'Belgique' && userCountry !== 'BE';
+        const countryData = countries.find((c) => c.code === userCountry);
+        const isEuCountry = countryData?.isZero === true;
         
-        if (isOutsideBelgium) {
-          if (getUser?.clientType === 'company' && getUser?.nTva) {
-            valueTva = 0;
-          } else if (getUser?.clientType === 'professional' && getUser?.isVatSubject && getUser?.nTva) {
-            valueTva = 0;
-          }
+        if (isEuCountry && getUser?.nTva) {
+          valueTva = 0;
         }
 
         setFormData((prev: any) => ({

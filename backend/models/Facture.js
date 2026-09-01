@@ -50,6 +50,10 @@ const FactureSchema = new Schema({
     type: String,
     required: true
   },
+  creditNoteId: {
+    type: String,
+    required: false
+  },
   startFrom: {
     type: Date,
     required: true
