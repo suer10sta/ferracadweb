@@ -24,17 +24,17 @@ const {
 } = require('../utils/stripe');
 const { createNotification } = require('../utils/notification');
 const TemporaryOrder = require('../models/TemporaryOrder');
-const { getEndOfDay } = require('../utils/date');
+const { combineWithCurrentTime } = require('../utils/date');
 
 exports.freeTrialCommande = async (req, res) => {
   try {
     if (req.body.expirationDate) {
-      req.body.expirationDate = getEndOfDay(req.body.expirationDate);
+      req.body.expirationDate = combineWithCurrentTime(req.body.expirationDate);
     }
     if (req.body.users && Array.isArray(req.body.users)) {
       req.body.users.forEach(user => {
         if (user.expirationDate) {
-          user.expirationDate = getEndOfDay(user.expirationDate);
+          user.expirationDate = combineWithCurrentTime(user.expirationDate);
         }
       });
     }
@@ -177,7 +177,13 @@ exports.freeTrialCommande = async (req, res) => {
       );
 
       const email = license.email !== "" ? license.email : user.email;
-      const data = { computerName: license.computerName, username: license.username, rental: updateRental };
+      const data = {
+        computerName: license.computerName,
+        username: license.username,
+        rental: updateRental,
+        expirationDate: expDate,
+        duration: license.addedDays || updateRental.duration
+      };
       await sendEmail({
         type: "auth-code",
         email,
@@ -230,12 +236,12 @@ exports.freeTrialCommande = async (req, res) => {
 exports.createPaymentIntent = async (req, res) => {
   try {
     if (req.body.expirationDate) {
-      req.body.expirationDate = getEndOfDay(req.body.expirationDate);
+      req.body.expirationDate = combineWithCurrentTime(req.body.expirationDate);
     }
     if (req.body.users && Array.isArray(req.body.users)) {
       req.body.users.forEach(user => {
         if (user.expirationDate) {
-          user.expirationDate = getEndOfDay(user.expirationDate);
+          user.expirationDate = combineWithCurrentTime(user.expirationDate);
         }
       });
     }
@@ -395,12 +401,12 @@ exports.confirmPayment = async (req, res) => {
 
     const formData = temporaryOrder.formData;
     if (formData.expirationDate) {
-      formData.expirationDate = getEndOfDay(formData.expirationDate);
+      formData.expirationDate = combineWithCurrentTime(formData.expirationDate);
     }
     if (formData.users && Array.isArray(formData.users)) {
       formData.users.forEach(user => {
         if (user.expirationDate) {
-          user.expirationDate = getEndOfDay(user.expirationDate);
+          user.expirationDate = combineWithCurrentTime(user.expirationDate);
         }
       });
     }
@@ -780,7 +786,13 @@ exports.confirmPayment = async (req, res) => {
       );
 
       const email = license.email !== "" ? license.email : user.email;
-      const data = { computerName: license.computerName, username: license.username, rental };
+      const data = {
+        computerName: license.computerName,
+        username: license.username,
+        rental,
+        expirationDate: expDate,
+        duration: license.addedDays || daysUntilExpiration || rental.duration
+      };
       await sendEmail({
         type: "auth-code",
         email,
@@ -923,12 +935,12 @@ async function createSubscriptionWithPrepaid(customerId, priceId, paymentIntentI
 exports.createRental = async (req, res) => {
   try {
     if (req.body.expirationDate) {
-      req.body.expirationDate = getEndOfDay(req.body.expirationDate);
+      req.body.expirationDate = combineWithCurrentTime(req.body.expirationDate);
     }
     if (req.body.users && Array.isArray(req.body.users)) {
       req.body.users.forEach(user => {
         if (user.expirationDate) {
-          user.expirationDate = getEndOfDay(user.expirationDate);
+          user.expirationDate = combineWithCurrentTime(user.expirationDate);
         }
       });
     }
@@ -1335,7 +1347,13 @@ exports.createRental = async (req, res) => {
       );
       const email = license.email !== "" ? license.email : user.email;
 
-      const data = { computerName: license.computerName, username: license.username, rental };
+      const data = {
+        computerName: license.computerName,
+        username: license.username,
+        rental,
+        expirationDate: expDate,
+        duration: license.addedDays || daysUntilExpiration || rental.duration
+      };
       await sendEmail({
         type: "auth-code",
         email,
@@ -1438,12 +1456,12 @@ exports.createRental = async (req, res) => {
 exports.createCommandByAdmin = async (req, res) => {
   try {
     if (req.body.expirationDate) {
-      req.body.expirationDate = getEndOfDay(req.body.expirationDate);
+      req.body.expirationDate = combineWithCurrentTime(req.body.expirationDate);
     }
     if (req.body.users && Array.isArray(req.body.users)) {
       req.body.users.forEach(user => {
         if (user.expirationDate) {
-          user.expirationDate = getEndOfDay(user.expirationDate);
+          user.expirationDate = combineWithCurrentTime(user.expirationDate);
         }
       });
     }
@@ -1772,6 +1790,8 @@ exports.createCommandByAdmin = async (req, res) => {
         computerName: license.computerName,
         username: license.username,
         duree: isProvisionalCode ? Number(provisionalDurationDays || 15) : 15,
+        duration: license.addedDays || daysUntilExpiration || updateRental.duration,
+        expirationDate: expDate,
         isProvisionalCode: !!isProvisionalCode,
         realDuration: daysUntilExpiration,
         provisionalDurationDays: Number(provisionalDurationDays || 15),

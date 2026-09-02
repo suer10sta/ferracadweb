@@ -61,6 +61,14 @@ const FactureSchema = new Schema({
   endAt: {
     type: Date,
     required: true
+  },
+  isSent: {
+    type: Boolean,
+    default: false
+  },
+  sentAt: {
+    type: Date,
+    required: false
   }
 });
 

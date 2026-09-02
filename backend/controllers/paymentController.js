@@ -17,7 +17,7 @@ const {
 } = require('../utils/stripe');
 const Stripe = require("stripe");
 const User = require('../models/User');
-const { getEndOfDay } = require('../utils/date');
+const { combineWithCurrentTime } = require('../utils/date');
 // const stripe = Stripe(
 //   process.env.STRIPE_SECRET_KEY_TEST ||
 //   "sk_test_51SI4slB4LVww0NzzB0Ok33mLnJu3BEFBl8urO3e82If6hrGAsdqd2fHNtfVCLRazjlELcdGivZYjEyOeXqsS76vT00tolSUdNi"
@@ -149,7 +149,7 @@ exports.updatePayment = async (req, res) => {
         for (const reg of registrations) {
           if (reg.isProvisional) {
             isCodeSent = true;
-            const finalExpDate = getEndOfDay(reg.realExpirationDate || reg.expirationDate);
+            const finalExpDate = combineWithCurrentTime(reg.realExpirationDate || reg.expirationDate);
 
             let codeAuth = await createAuthCode(reg.computerCode, finalExpDate);
             const finalCode = codeAuth.data.code;

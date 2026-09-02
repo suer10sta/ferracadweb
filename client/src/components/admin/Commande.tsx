@@ -254,26 +254,19 @@ const CommandeAdmin = () => {
         setRentalId("");
         localStorage.removeItem("reloadCount"); // reset after second reload
       } else {
-        const getRentalData = enrichedCommande.find((e) => e._id === rentalId);
-        if (!getRentalData) return;
-        const freeTrial = location.state?.freetrial;
-        const newData = {
-          ...getRentalData,
-          freeTrial,
-        };
-
-        sendFacture({...newData, peppolSend: true});
+        // const getRentalData = enrichedCommande.find((e) => e._id === rentalId);
+        // Invoice is no longer auto-sent on order creation
         setRentalId(location.state?.id || "");
       }
     }
   }, [rentalId, rentalData]);
 
-  const sendFacture = async (data: any) => {
-    if (!rentalId) return;
-    if (!data) return;
-    setisHide(true);
-    setFactureOpen(data);
-  };
+  // const sendFacture = async (data: any) => {
+  //   if (!rentalId) return;
+  //   if (!data) return;
+  //   setisHide(true);
+  //   setFactureOpen(data);
+  // };
 
   const handleRemove = async (id: string) => {
     try {

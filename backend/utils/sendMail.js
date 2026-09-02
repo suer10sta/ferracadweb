@@ -18,22 +18,24 @@ const sendEmail = async ({
   switch (type) {
     case "auth-code":
       // Si c'est un free trial, on définit les valeurs correspondantes
-      let duration = data?.rental?.duration;
-      let startDate = data?.rental?.startDate;
-      let nextBillingDate = data?.rental?.nextBillingDate;
+      let duration = data?.duration || data?.license?.addedDays || data?.rental?.duration || 0;
+      let startDate = data?.startDate || data?.rental?.startDate;
+      let nextBillingDate = data?.expirationDate || data?.license?.expirationDate || data?.rental?.nextBillingDate;
 
       if (freeTrial) {
-        duration = data.duree;
+        duration = data.duree || duration;
         startDate = new Date();
         nextBillingDate = new Date();
-        nextBillingDate.setDate(startDate.getDate() + duration);
+        nextBillingDate.setDate(startDate.getDate() + (duration || 30));
       }
+
+      const expDateObj = nextBillingDate ? new Date(nextBillingDate) : new Date();
 
       const formattedNextBillingDate = new Intl.DateTimeFormat('fr-FR', {
         day: '2-digit',
         month: 'short',
         year: 'numeric'
-      }).format(nextBillingDate);
+      }).format(expDateObj);
 
       subject = `Votre code d'authentification de ${data.computerName} - ${data.username}`;
       html = `
@@ -1870,7 +1872,7 @@ const sendEmail = async ({
     await transporter.sendMail({
       from: `"Ferracad Support " <${process.env.SMTP_USER}>`,
       to: email,
-      // cc: (email !== adminSupport && !disableCc) ? adminSupport : undefined,
+      cc: (email !== adminSupport && !disableCc) ? adminSupport : undefined,
       subject,
       html,
       attachments: data.path

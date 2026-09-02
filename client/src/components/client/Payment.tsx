@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
-import { Search, CheckCircle, XCircle } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,10 +24,10 @@ const PaymentsClient = ({ userIdn }: any) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [rentalData, setRentalData] = useState<any[]>([]);
-  const [registrationData, setregistrationData] = useState<any[]>([]);
-  const [userData, setuserData] = useState<any[]>([]);
-  const [paymentData, setpaymentData] = useState<any[]>([]);
-  const [couponData, setcouponData] = useState<any[]>([]);
+  const [registrationData, setRegistrationData] = useState<any[]>([]);
+  const [userData, setUserData] = useState<any>({});
+  const [paymentData, setPaymentData] = useState<any[]>([]);
+  const [couponData, setCouponData] = useState<any[]>([]);
   const [FacturesData, setFacturesData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,10 +43,10 @@ const PaymentsClient = ({ userIdn }: any) => {
 
         setFacturesData(getfactures || [])
         setRentalData(getRentls || []);
-        setregistrationData(getRegistrations || []);
-        setuserData(getUser || []);
-        setpaymentData(getPayment || []);
-        setcouponData(getCoupon || []);
+        setRegistrationData(getRegistrations || []);
+        setUserData(getUser || []);
+        setPaymentData(getPayment || []);
+        setCouponData(getCoupon || []);
       } catch (error) {
         // console.error('Failed to fetch:', error);
       } finally {
@@ -60,6 +60,7 @@ const PaymentsClient = ({ userIdn }: any) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [methodFilter, setMethodFilter] = useState<string>('all');
+  const [invoiceSentFilter, setInvoiceSentFilter] = useState<string>('all');
   const [openFacture, setOpenFacture] = useState<any>({});
   const [autoSendFacture, setAutoSendFacture] = useState<any>(false);
 
@@ -80,8 +81,7 @@ const PaymentsClient = ({ userIdn }: any) => {
     if (!pay?._id) return;
 
     sessionStorage.setItem(onceKey, "1");
-    setOpenFacture(pay);
-    setAutoSendFacture(true);
+    // Invoice is no longer auto-sent on purchase navigation
     navigate(location.pathname, { replace: true, state: {} });
   }, [loading, location.state, location.pathname, rentalData, paymentData, navigate]);
 
@@ -113,8 +113,12 @@ const PaymentsClient = ({ userIdn }: any) => {
 
     const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
     const matchesMethod = methodFilter === 'all' || payment.type === methodFilter;
+    const matchesInvoiceSent =
+      invoiceSentFilter === "all" ||
+      (invoiceSentFilter === "sent" && payment.facture?.isSent) ||
+      (invoiceSentFilter === "unsent" && !payment.facture?.isSent);
 
-    return matchesSearch && matchesStatus && matchesMethod;
+    return matchesSearch && matchesStatus && matchesMethod && matchesInvoiceSent;
   });
 
 
@@ -286,6 +290,16 @@ const PaymentsClient = ({ userIdn }: any) => {
                 <SelectItem value="free">{t("dashboard_payment_free")}</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={invoiceSentFilter} onValueChange={setInvoiceSentFilter}>
+              <SelectTrigger className="w-full sm:w-[190px]">
+                <SelectValue placeholder="Statut Facture" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les factures</SelectItem>
+                <SelectItem value="sent">Factures envoyées</SelectItem>
+                <SelectItem value="unsent">Factures non envoyées</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="rounded-md border">
@@ -296,6 +310,7 @@ const PaymentsClient = ({ userIdn }: any) => {
                   <TableHead>{t('dashboard_payment_method')}</TableHead>
                   <TableHead>{t('dashboard_payment_amount')}</TableHead>
                   <TableHead>{t('dashboard_payment_status')}</TableHead>
+                  <TableHead>Statut Facture</TableHead>
                   <TableHead>{t('dashboard_payment_date')}</TableHead>
                   {<TableHead className="text-center">{t('dashboard_payment_action')}</TableHead>}
                 </TableRow>
@@ -312,6 +327,19 @@ const PaymentsClient = ({ userIdn }: any) => {
                     </TableCell>
                     <TableCell>
                       {getPaymentStatusBadge(payment.status)}
+                    </TableCell>
+                    <TableCell>
+                      {payment.facture?.isSent ? (
+                        <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800 gap-1 font-normal text-xs py-0.5">
+                          <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                          Envoyée
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800 gap-1 font-normal text-xs py-0.5">
+                          <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                          Non envoyée
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm">
                       {formatDate(payment.createdAt)}

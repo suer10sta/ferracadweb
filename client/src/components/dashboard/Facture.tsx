@@ -45,6 +45,8 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, Clock } from "lucide-react";
 
 const matchPayId = (facturePayId: any, paymentId: any) => {
   const left = facturePayId?._id ?? facturePayId;
@@ -106,7 +108,7 @@ const Facture = ({
   const [isLoading, setIsLoading] = useState(false);
   const [openAlert, setOpenAlert] = useState(false);
   const isSendingRef = useRef(false);
-  const autoSendDoneRef = useRef<string | null>(null);
+  // const autoSendDoneRef = useRef<string | null>(null);
 
   useEffect(() => {
     const getData = async () => {
@@ -164,6 +166,8 @@ const Facture = ({
           paymentType: payId.type,
           isAutoPay: rental?.deductionAuto ?? false,
           totalDays: rental?.duration ?? 0,
+          isSent: dataTarget.isSent ?? false,
+          sentAt: dataTarget.sentAt ? format(parseISO(dataTarget.sentAt), "dd/MM/yyyy HH:mm") : "",
         });
       } catch (error) {
         // console.error('Failed to fetch facture:', error);
@@ -173,24 +177,6 @@ const Facture = ({
     };
     getData();
   }, [payment]);
-
-  useEffect(() => {
-    if (!isHide) {
-      autoSendDoneRef.current = null;
-      return;
-    }
-    if (!payment?._id || !factureData?.id) return;
-
-    const sendKey = `${payment._id}-${sendAsCreditNote ? "nc" : "inv"}-${sendAsReminder ? "reminder" : "normal"}`;
-    if (autoSendDoneRef.current === sendKey) return;
-    autoSendDoneRef.current = sendKey;
-
-    const timeout = setTimeout(() => {
-      sendFacture();
-    }, 300);
-
-    return () => clearTimeout(timeout);
-  }, [isHide, factureData?.id, payment?._id, sendAsCreditNote, sendAsReminder]);
 
   const sendFacture = async (peppolSend: any = false) => {
     const facture = document.getElementById("card");
@@ -275,9 +261,8 @@ const Facture = ({
       loading: sendAsCreditNote ? "Envoi de la note de crédit..." : t('dashboard_invoice_sending'),
       success: () => sendAsCreditNote ? "Note de crédit envoyée avec succès !" : t('dashboard_invoice_sendSuccess'),
       error: (err) => {
-        if (err.response?.data?.message === "Peppol Error") {
-          return "Merci de vérifier la valeur de votre TVA - Peppol"
-        }
+        const msg = err.response?.data?.message;
+        if (msg) return msg;
         return err.message || (sendAsCreditNote ? "Erreur lors de l'envoi de la note de crédit" : t('dashboard_invoice_sendInvoiceError'));
       },
     });
@@ -285,6 +270,11 @@ const Facture = ({
     try {
       setIsLoading(true)
       await facturePromise;
+      setFactureData((prev: any) => ({
+        ...prev,
+        isSent: true,
+        sentAt: format(new Date(), "dd/MM/yyyy HH:mm")
+      }));
     } catch (err) {
       // console.error("Erreur envoi facture :", err);
     } finally {
@@ -645,8 +635,22 @@ const Facture = ({
             </div>
           </div>
         </div>
-        <div className="flex justify-end items-center gap-2 pt-5">
-          {user?.role === "admin" && (
+        <div className="flex justify-between items-center gap-2 pt-5">
+          <div>
+            {factureData.isSent ? (
+              <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800 flex items-center gap-1 font-medium text-xs py-1 px-2.5">
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                Facture envoyée {factureData.sentAt ? `(${factureData.sentAt})` : ""}
+              </Badge>
+            ) : (
+              <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800 flex items-center gap-1 font-medium text-xs py-1 px-2.5">
+                <Clock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                Facture non envoyée
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {user?.role === "admin" && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button
@@ -802,6 +806,7 @@ const Facture = ({
             <MdOutlineFileDownload />
             {t('telechargement')}
           </button>
+          </div>
         </div>
       </div>
     </div>

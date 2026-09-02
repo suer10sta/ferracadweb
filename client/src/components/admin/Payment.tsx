@@ -101,6 +101,7 @@ const PaymentsAdmin: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [methodFilter, setMethodFilter] = useState<string>("all");
+  const [invoiceSentFilter, setInvoiceSentFilter] = useState<string>("all");
   const [openFacture, setOpenFacture] = useState<any>({});
   const [autoSendFacture, setAutoSendFacture] = useState<any>(false);
   const [isReminderSend, setIsReminderSend] = useState(false);
@@ -124,8 +125,7 @@ const PaymentsAdmin: React.FC = () => {
     if (!pay?._id) return;
 
     sessionStorage.setItem(onceKey, "1");
-    setOpenFacture(pay);
-    setAutoSendFacture(true);
+    // Invoice is no longer auto-sent on purchase navigation
     navigate(location.pathname, { replace: true, state: {} });
   }, [loading, location.state, location.pathname, rentalData, paymentData, navigate]);
 
@@ -161,8 +161,12 @@ const PaymentsAdmin: React.FC = () => {
       statusFilter === "all" || payment.status === statusFilter;
     const matchesMethod =
       methodFilter === "all" || payment.type === methodFilter;
+    const matchesInvoiceSent =
+      invoiceSentFilter === "all" ||
+      (invoiceSentFilter === "sent" && payment.facture?.isSent) ||
+      (invoiceSentFilter === "unsent" && !payment.facture?.isSent);
 
-    return matchesSearch && matchesStatus && matchesMethod;
+    return matchesSearch && matchesStatus && matchesMethod && matchesInvoiceSent;
   });
 
   const totalRevenue = paymentData
@@ -522,6 +526,16 @@ const PaymentsAdmin: React.FC = () => {
                 <SelectItem value="free">{t("dashboard_payment_free")}</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={invoiceSentFilter} onValueChange={setInvoiceSentFilter}>
+              <SelectTrigger className="w-full sm:w-[190px]">
+                <SelectValue placeholder="Statut Facture" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes les factures</SelectItem>
+                <SelectItem value="sent">Factures envoyées</SelectItem>
+                <SelectItem value="unsent">Factures non envoyées</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <FilterByType
@@ -542,6 +556,7 @@ const PaymentsAdmin: React.FC = () => {
                   <TableHead>{t("dashboard_payment_method")}</TableHead>
                   <TableHead>{t("dashboard_payment_amount")}</TableHead>
                   <TableHead>{t("dashboard_payment_status")}</TableHead>
+                  <TableHead>Statut Facture</TableHead>
                   <TableHead>{t("dashboard_payment_date")}</TableHead>
                   <TableHead>{t("dashboard_payment_action")}</TableHead>
                 </TableRow>
@@ -589,6 +604,19 @@ const PaymentsAdmin: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         {getPaymentStatusBadge(payment.status, payment.type)}
+                      </TableCell>
+                      <TableCell>
+                        {payment.facture?.isSent ? (
+                          <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800 gap-1 font-normal text-xs py-0.5">
+                            <CheckCircle className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                            Envoyée
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800 gap-1 font-normal text-xs py-0.5">
+                            <Clock className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                            Non envoyée
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm">
                         {formatDate(payment.createdAt)}

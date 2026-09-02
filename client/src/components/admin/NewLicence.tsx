@@ -353,7 +353,6 @@ const NewLicenceAdmin = () => {
           state: {
             freetrial: formData.freetrial,
             id: res.data.id,
-            isSend: formData.sendFacture,
           },
         });
       } else {

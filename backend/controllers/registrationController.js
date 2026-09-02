@@ -11,7 +11,7 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const LicenseHistory = require('../models/LicenseHistory');
 const jwt = require('jsonwebtoken');
-const { getEndOfDay } = require('../utils/date');
+const { combineWithCurrentTime } = require('../utils/date');
 
 const allowedFields = [
   'userId',
@@ -104,7 +104,7 @@ exports.updateRegistration = async (req, res) => {
 
     if(registration.computerCode !== codeComputer) {
       // regenerate auth code and send email
-      const dateExp = getEndOfDay(expirationDate ? new Date(expirationDate) : registration.expirationDate);
+      const dateExp = combineWithCurrentTime(expirationDate ? new Date(expirationDate) : registration.expirationDate);
       authCode = await createAuthCode(codeComputer, dateExp);
       registration.authCode = authCode.data.code;
 
@@ -131,7 +131,7 @@ exports.updateRegistration = async (req, res) => {
         link: "/tableau-de-board/locations"
       });
       
-      if (expirationDate) registration.expirationDate = getEndOfDay(expirationDate);
+      if (expirationDate) registration.expirationDate = combineWithCurrentTime(expirationDate);
       if (status) registration.status = status;
     }
 

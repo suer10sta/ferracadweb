@@ -446,7 +446,6 @@ const NewLicence = () => {
       navigate("/tableau-de-board/paiements", {
         state: {
           id: confirmResponse.data.id,
-          isSend: true,
         },
       });
 

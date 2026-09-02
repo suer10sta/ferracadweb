@@ -5,7 +5,7 @@ const Facture = require('../models/Facture');
 // Configure storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Make sure this folder exists
+    cb(null, 'uploads/');
   },
   filename: async (req, file, cb) => {
     const baseName = file.originalname || Date.now().toString().slice(-6);

@@ -63,28 +63,31 @@ exports.sendFacture = async (req, res) => {
     if (getUser.nTva && getUser.country === "BE" && dataRental.peppolSend) {
       // reseau peppol
       const billit = axios.create({
-        baseURL: "https://api.sandbox.billit.be",
+        baseURL: process.env.BILLIT_API_URL || "https://api.billit.be",
         headers: {
           "ApiKey": process.env.BILLIT_API_KEY,
           "Content-Type": "application/json"
         }
       });
 
-      // Read the file into a buffer
-      const fileBuffer = fs.readFileSync(`uploads\\${fileName}`);
+      // Read the file into a buffer using multer's file.path
+      const fileBuffer = fs.readFileSync(file.path);
 
       // Convert to Base64
       const fileBase64 = fileBuffer.toString('base64');
+
+      const tvaRate = parseFloat(dataRental.tva) || 0;
+      const tvaPercent = tvaRate <= 1 ? Math.round(tvaRate * 100) : Math.round(tvaRate);
 
       const licensesList = dataRental.registerInfos || dataRental.licenses || [];
       const orderLines = licensesList.map((item) => ({
         Quantity: 1,
         UnitPriceExcl:
-          (dataRental.totalPricePay / (1 + dataRental.tva)) /
+          (dataRental.totalPricePay / (1 + tvaRate)) /
           dataRental.registerInfos.length,
         Description: item.computerName || "Item",
         DescriptionExtended: `Auth Code: ${item.authCode}`,
-        VATPercentage: dataRental.tva * 100
+        VATPercentage: tvaPercent
       }));
 
       // Add discount line only this facture
@@ -155,12 +158,29 @@ exports.sendFacture = async (req, res) => {
         const response = await billit.post("/v1/orders", invoiceData);
 
         if (response.status === 200) {
-          return res.status(200).json({ message: "Facture sent successfully via peppol" });
+          if (getFacture) {
+            getFacture.isSent = true;
+            getFacture.sentAt = new Date();
+            await getFacture.save();
+          }
+          return res.status(200).json({ message: "Facture sent successfully via peppol", facture: getFacture });
         } else {
           return res.status(400).json({ message: "Peppol Error", })
         }
       } catch (error) {
-        return res.status(500).json({ message: "Peppol Error", })
+        const errData = error.response?.data;
+        let errorMessage = "Peppol Error";
+
+        if (errData?.errors?.length > 0) {
+          errorMessage = errData.errors.map(e => e.Description || e.Code || JSON.stringify(e)).join('; ');
+        } else if (errData?.message) {
+          errorMessage = errData.message;
+        } else if (errData) {
+          errorMessage = typeof errData === 'string' ? errData : JSON.stringify(errData);
+        }
+
+        console.error("Peppol API Error:", errorMessage);
+        return res.status(500).json({ message: errorMessage })
       }
     }
 
@@ -188,6 +208,12 @@ exports.sendFacture = async (req, res) => {
       user: getUser,
     });
 
+    if (getFacture) {
+      getFacture.isSent = true;
+      getFacture.sentAt = new Date();
+      await getFacture.save();
+    }
+
     /*     if(factureMail) {
           await sendEmail({
             type: "send-facture",
@@ -207,7 +233,7 @@ exports.sendFacture = async (req, res) => {
       }
     });
 
-    return res.status(200).json({ message: "Facture sent successfully" });
+    return res.status(200).json({ message: "Facture sent successfully", facture: getFacture });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Server error on sending Facture" });

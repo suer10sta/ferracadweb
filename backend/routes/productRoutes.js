@@ -45,9 +45,10 @@ router.post(
   productController.createProduct
 );
 
-router.get('/download/:filename', auth, async (req, res) => {
-  const filePath = "uploads\\" + req.params.filename;
-  const getFile = await Product.findOne({ filePath: filePath });
+  const safeFilename = path.basename(req.params.filename);
+  const getFile = await Product.findOne({
+    filePath: { $in: [`uploads\\${safeFilename}`, `uploads/${safeFilename}`] }
+  });
   const geo = geoip.lookup(req.realIp);
 
   const newDownload = {
